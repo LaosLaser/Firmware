@@ -56,6 +56,7 @@ class LaosFileSystem : public SDFileSystem {
 void showfile();        // debug: list contents of long filesytem file
 void cleandir();        // delete all files in directory
 void printdir();        // list all files in directory (with long names)
+void getfilename(char *name, int filenr); // get name of the #filenr file
 void writefile(char *name); // example code to open a file
 void removefile(char *name);    // example code to remove a file
 

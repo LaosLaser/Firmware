@@ -327,6 +327,29 @@ void printdir() {
     }
 }
 
+void getfilename(char *name, int filenr) {
+    extern LaosFileSystem sd;
+    int cnt=0;
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if(d != NULL) {
+        while((p = readdir(d)) != NULL) {
+            if (strncmp(p->d_name, "longname.sy",11)) {
+                if (cnt++ == filenr) {
+                    sd.getlongname(name, p->d_name);
+                    closedir(d);
+                    return;
+                }
+            }
+        } // while
+        strcpy(name, "");
+        closedir(d);
+    } else {
+        printf("Getfilename: Could not open directory!\n\r");
+    }
+}
+
 void writefile(char *myfile) {
     extern LaosFileSystem sd;
     printf("Writing file %s\n\r", myfile);

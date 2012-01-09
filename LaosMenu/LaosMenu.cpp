@@ -65,12 +65,12 @@ static const char *screens[] = {
     "[cancel]    [ok]",   
 
 #define RUN (ORIGIN+1)
-    "RUN: $$$$$$$$$$$" 
-    "[cancel]<10><ok>",   
+    "RUN:     <c><ok>" 
+    "$$$$$$$$$$$$$$$$",   
 
 #define DELETE (RUN+1)
-    "DEL: $$$$$$$$$$$" 
-    "[cancel]<10>[ok]",   
+    "DEL:     <c><ok>" 
+    "$$$$$$$$$$$$$$$$",   
 
 #define IP (DELETE+1)
     "210.210.210.210 " 
@@ -119,6 +119,7 @@ LaosMenu::LaosMenu(LaosDisplay *display)
   screen=prevscreen=speed=0;
   lastscreen = new LastScreen;
   menu=1;
+  job=0;
   dsp = display;
   if ( dsp == NULL ) dsp = new LaosDisplay();
   dsp->cls();
@@ -282,12 +283,34 @@ void LaosMenu::Handle()
         switch ( c )
         {
             case K_OK: screen=lastscreen->prev(); waitup = 1; break; // INSERT: run current job
-            case K_UP: job++; // next job
-            case K_DOWN: job--; // prev job
+            case K_UP: job--; waitup = 1; break; // next job
+            case K_DOWN: job++; waitup = 1; break;// prev job
             case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
         }
+        if (job < 0) job = 0;
+        getfilename(curfile, job);
+        while ((strlen(curfile)==0) && (job>0)) getfilename(curfile, --job);
+        sarg = (char *)&curfile;
         break;
-          
+      
+       case 7: // DELETE JOB select job to run
+        switch ( c )
+        {
+            case K_OK: 
+                getfilename(curfile, job);
+                removefile(curfile); 
+                waitup = 1; 
+                break; // INSERT: delete current job
+            case K_UP: job--; waitup = 1; break; // next job
+            case K_DOWN: job++; waitup = 1; break;// prev job
+            case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
+        }
+        if (job < 0) job = 0;
+        getfilename(curfile, job);
+        while ((strlen(curfile)==0) && (job>0)) getfilename(curfile, --job);
+        sarg = (char *)&curfile;
+        break;
+            
       case IP: // IP
         switch ( c )
         {

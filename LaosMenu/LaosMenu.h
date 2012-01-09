@@ -30,6 +30,7 @@
 #include "global.h"
 #include "LaosDisplay.h"
 #include "LastScreen.h"
+#include "laosfilesystem.h"
 
 
     /** Menu system
@@ -71,6 +72,7 @@ private:
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
   int xoff, yoff, zoff;
+  char curfile[MAXFILESIZE];
   
 };
 
