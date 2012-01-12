@@ -127,7 +127,7 @@ int main()
   srv = new TFTPServer("/sd");
   mnu->SetScreen("SERVER OK...."); 
   wait(0.5);
-  mnu->SetScreen(8); // IP
+  mnu->SetScreen(9); // IP
   wait(1.0);
   
   printf("RUN...\n");

@@ -66,9 +66,9 @@ private:
   int speed;
   
   // menu states
-  int screen, prevscreen, menu;
+  int screen, prevscreen;
   LastScreen *lastscreen;
-  unsigned char ipfield, iofield;
+  unsigned char menu, ipfield, iofield;
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
   int xoff, yoff, zoff;

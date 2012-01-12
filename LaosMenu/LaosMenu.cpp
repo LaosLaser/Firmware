@@ -32,10 +32,11 @@ static const char *menus[] = {
     "HOME",        //4
     "ORIGIN",      //5
     "START JOB",   //6
-    "DELETE JOB",  //7 
-    "IP",          //8
-    "POWER / SPEED",//9
-    "IO", //10
+    "DELETE JOB",  //7
+    "REMOVE ALL JOBS", //8 
+    "IP",          //9
+    "POWER / SPEED",//10
+    "IO", //11
 };
 
 static const char *screens[] = {
@@ -46,7 +47,7 @@ static const char *screens[] = {
 
 #define MAIN (STARTUP+1)
     "$$$$$$$$$$$$$$$$" 
-    "<--- 0 ---> [ok]",
+    "<---10 ---> [ok]",
   
 #define MOVE (MAIN+1)
     "X: +6543210 MOVE" 
@@ -72,13 +73,17 @@ static const char *screens[] = {
     "DEL:     <c><ok>" 
     "$$$$$$$$$$$$$$$$",   
 
-#define IP (DELETE+1)
+#define DELETE_ALL (DELETE+1)
+    "DELETE ALL      "
+    "FILES?   <c><ok>",
+
+#define IP (DELETE_ALL+1)
     "210.210.210.210 " 
-    "$$$$$$$$<0> [ok]",    
+    "$$$$$$$$    [ok]",    
 
 #define POWER (IP+1)
     "$$$$$$$: 6543210" 
-    "[cancel] <0>[ok]",    
+    "[cancel]    [ok]",    
 
 #define IO (POWER+1)
     "$$$$$$$$$$$=0 IO" 
@@ -225,6 +230,7 @@ void LaosMenu::Handle()
           case K_FDOWN: lastscreen->set(MAIN); screen=FOCUS; menu=MAIN; break;
           case K_ORIGIN:  lastscreen->set(MAIN); screen=ORIGIN; waitup=MAIN; break;
         }
+        if (menu==255) menu = (sizeof(menus) / sizeof(menus[0])) -1;
         menu =  menu % (sizeof(menus) / sizeof(menus[0]));
         sarg = (char*)menus[menu]; 
         args[0] = menu;
@@ -283,8 +289,8 @@ void LaosMenu::Handle()
         switch ( c )
         {
             case K_OK: screen=lastscreen->prev(); waitup = 1; break; // INSERT: run current job
-            case K_UP: job--; waitup = 1; break; // next job
-            case K_DOWN: job++; waitup = 1; break;// prev job
+            case K_UP: case K_FUP: job--; waitup = 1; break; // next job
+            case K_DOWN: case K_FDOWN: job++; waitup = 1; break;// prev job
             case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
         }
         if (job < 0) job = 0;
@@ -301,8 +307,8 @@ void LaosMenu::Handle()
                 removefile(curfile); 
                 waitup = 1; 
                 break; // INSERT: delete current job
-            case K_UP: job--; waitup = 1; break; // next job
-            case K_DOWN: job++; waitup = 1; break;// prev job
+            case K_UP: case K_FUP: job--; waitup = 1; break; // next job
+            case K_DOWN: case K_FDOWN: job++; waitup = 1; break;// prev job
             case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
         }
         if (job < 0) job = 0;
@@ -310,21 +316,35 @@ void LaosMenu::Handle()
         while ((strlen(curfile)==0) && (job>0)) getfilename(curfile, --job);
         sarg = (char *)&curfile;
         break;
+      
+      case DELETE_ALL: // Delete all files
+      switch ( c )
+        {
+            case K_OK:
+                cleandir(); 
+                screen=lastscreen->prev();
+                waitup = 1; 
+                break; // INSERT: delete current job
+            case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
+        }
+        break;
             
       case IP: // IP
         switch ( c )
         {
           case K_RIGHT: ipfield++; waitup=1; break;
           case K_LEFT: ipfield--; waitup=1; break;
-          case K_OK: screen=lastscreen->prev(); break;
-          case K_CANCEL: screen=lastscreen->prev(); break;
+          case K_OK: screen=lastscreen->prev(); break; //TODO set IP
+          case K_CANCEL: screen=lastscreen->prev(); break; //TODO read current IP back into cfgvalues 
         }
         ipfield %= 4;
         sarg = (char*)ipfields[ipfield];
-        args[4] = ipfield;
         switch(ipfield)
         {
           case 0: memcpy(args, cfg->ip, 4*sizeof(int) ); break;
+          case 1: memcpy(args, cfg->nm, 4*sizeof(int) ); break;
+          case 2: memcpy(args, cfg->gw, 4*sizeof(int) ); break;
+          case 3: memcpy(args, cfg->dns, 4*sizeof(int) ); break;
           default: memset(args,0,4*sizeof(int)); break;
         }
         break; 
