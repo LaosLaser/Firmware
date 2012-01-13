@@ -55,8 +55,8 @@ public:
   void Handle();
   void SetScreen(int screen);
   void SetScreen(char *s);
+  void SetFileName(char * name);
   int x,y,z;
-  int job;
 
 private:
   // LaosDisplay *display;
@@ -64,6 +64,7 @@ private:
   unsigned char waitup, timeout;
   char *sarg;
   int speed;
+  char jobname[MAXFILESIZE];
   
   // menu states
   int screen, prevscreen;
@@ -72,7 +73,7 @@ private:
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
   int xoff, yoff, zoff;
-  char curfile[MAXFILESIZE];
+  FILE *runfile;
   
 };
 

@@ -96,7 +96,11 @@ static const char *screens[] = {
 
 #define HOMING (DELETE_OK+1) 
     "HOMING...6543210" 
-    "[cancel]        ",   
+    "[cancel]        ",  
+
+#define RUNNING (HOMING+1)
+    "RUNNING...   10%"
+    "[cancel]        ",
     
 #define BUSY (HOMING+1)
     "BUSY: $$$$$$$$$$" 
@@ -124,11 +128,12 @@ LaosMenu::LaosMenu(LaosDisplay *display)
   screen=prevscreen=speed=0;
   lastscreen = new LastScreen;
   menu=1;
-  job=0;
+  strcpy(jobname, "");
   dsp = display;
   if ( dsp == NULL ) dsp = new LaosDisplay();
   dsp->cls();
   SetScreen(NULL);
+  runfile = NULL;
 }
 
 
@@ -186,6 +191,8 @@ void LaosMenu::SetScreen(char *msg)
 **/
 void LaosMenu::Handle()
 {
+  extern LaosFileSystem sd;
+  extern LaosMotion *mot;
   static int count=0;
   int c = dsp->read();
   if ( count++ > 10) count = 0;
@@ -288,33 +295,32 @@ void LaosMenu::Handle()
       case 6: // START JOB select job to run
         switch ( c )
         {
-            case K_OK: screen=lastscreen->prev(); waitup = 1; break; // INSERT: run current job
-            case K_UP: case K_FUP: job--; waitup = 1; break; // next job
-            case K_DOWN: case K_FDOWN: job++; waitup = 1; break;// prev job
+            case K_OK: screen=HOMING; break;
+            case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+            case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
             case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
         }
-        if (job < 0) job = 0;
-        getfilename(curfile, job);
-        while ((strlen(curfile)==0) && (job>0)) getfilename(curfile, --job);
-        sarg = (char *)&curfile;
+        //if (job < 0) job = 0;
+        //getfilename(curfile, job);
+        //while ((strlen(curfile)==0) && (job>0)) getfilename(curfile, --job);
+        sarg = (char *)&jobname;
         break;
       
        case 7: // DELETE JOB select job to run
         switch ( c )
         {
             case K_OK: 
-                getfilename(curfile, job);
-                removefile(curfile); 
+                removefile(jobname); 
                 waitup = 1; 
                 break; // INSERT: delete current job
-            case K_UP: case K_FUP: job--; waitup = 1; break; // next job
-            case K_DOWN: case K_FDOWN: job++; waitup = 1; break;// prev job
+            case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+            case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
             case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
         }
-        if (job < 0) job = 0;
-        getfilename(curfile, job);
-        while ((strlen(curfile)==0) && (job>0)) getfilename(curfile, --job);
-        sarg = (char *)&curfile;
+        //if (job < 0) job = 0;
+        //getfilename(curfile, job);
+        //while ((strlen(curfile)==0) && (job>0)) getfilename(curfile, --job);
+        sarg = (char *)&jobname;
         break;
       
       case DELETE_ALL: // Delete all files
@@ -384,11 +390,49 @@ void LaosMenu::Handle()
         //mot->home(cfg->xhome,cfg->yhome);
         x = cfg->xhome; y = cfg->yhome;
         screen=lastscreen->prev();
-        break;     
+        break;
+      
+      case RUNNING: // Screen while running
+        // if (no open file) open file
+        if (runfile == NULL) runfile = sd.openfile(jobname, "r");
+         // if (not eof) {
+        //      get X lines
+        //      send X lines of instructions to planner
+        if (mot->ready()) {
+            int cnt = 0;
+            while ((!feof(runfile)) && (cnt < 20)) { 
+                cnt++;
+                mot->write(readint(runfile));
+                // if ( i++ & 128 ) {
+                //      plan_get_current_position_xyz(&x, &y, &z);
+                //      printf("%f %f\n", x,y);  
+                //      printf("%f\n", (float)pwm);
+                // }
+            }
+        }
+        if (feof(runfile)) {
+            fclose(runfile);
+            screen=MAIN;
+            break;
+        } else {
+            switch ( c )
+            {
+                case K_CANCEL: 
+                    // stop moving immediately
+                    // erase queue
+                    screen=MAIN;  
+                    break;
+            }
+        }
+        break;    
         
       default: screen = MAIN; break;    
     }  
     dsp->ShowScreen(screens[screen], args, sarg);
   }
   
+}
+
+void LaosMenu::SetFileName(char * name) {
+    strcpy(jobname, name);
 }

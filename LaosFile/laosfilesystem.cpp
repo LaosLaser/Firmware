@@ -327,6 +327,67 @@ void printdir() {
     }
 }
 
+void getprevjob(char *name) {
+    extern LaosFileSystem sd;
+    char shortname[SHORTFILESIZE], last[SHORTFILESIZE];
+    strcpy(last, "");
+    sd.getshortname(shortname, name);
+    //printf("getprevjob: in: %s, short: %s", name, shortname);
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if(d != NULL) {
+        while((p = readdir(d)) != NULL) {
+            if (strncmp(p->d_name, "longname.sy",11)) { // skip longname.sy*
+                if (! strcmp(shortname, p->d_name)) {   // shortname = current entry
+                    if (strcmp(last, "")) {
+                        sd.getlongname(name, last);     // return entry before
+                    } else {
+                        sd.getlongname(name, p->d_name);    // last="", so current = first
+                    }
+                    closedir(d);
+                    return;
+                }
+                strcpy(last, shortname);
+            }
+        } // while
+        closedir(d);
+    } else {
+        printf("Getfilename: Could not open directory!\n\r");
+    }
+    sd.getlongname(name, last); // name not found (return last) 
+                                // or no file found (return "") 
+}
+
+void getnextjob(char *name) {
+    extern LaosFileSystem sd;
+    char shortname[SHORTFILESIZE], last[SHORTFILESIZE];
+    strcpy(last, "");
+    sd.getshortname(shortname, name);
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if(d != NULL) {
+        while((p = readdir(d)) != NULL) {
+            if (strncmp(p->d_name, "longname.sy",11)) { // skip longname.sy*
+                if (! strcmp(shortname, last)) {        // if last was shortname
+                    sd.getlongname(name, p->d_name);    //    return current
+                    closedir(d);
+                    return;
+                }
+                strcpy(last, shortname);
+            }
+        } // while
+        closedir(d);
+    } else {
+        printf("Getfilename: Could not open directory!\n\r");
+    }
+    sd.getlongname(name, last);     // if last file was match, return the last
+                                    // if filename not found, return last
+                                    // if no file in directory, return ""
+}
+
+/*
 void getfilename(char *name, int filenr) {
     extern LaosFileSystem sd;
     int cnt=0;
@@ -350,6 +411,33 @@ void getfilename(char *name, int filenr) {
     }
 }
 
+int getfilenum(char *name) {
+    extern LaosFileSystem sd;
+    char shortname[SHORTFILESIZE];
+    getshortname(shortname, name);
+    int cnt=0;
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if(d != NULL) {
+        while((p = readdir(d)) != NULL) {
+            if (strncmp(p->d_name, "longname.sy",11)) {
+                if (!strcmp(shortname, name)) {
+                    closedir(d);
+                    return cnt;
+                }
+                cnt++;
+            }
+        } // while
+        closedir(d);
+        return 0;
+    } else {
+        printf("Getfilename: Could not open directory!\n\r");
+    }
+    return 0;
+}
+*/
+
 void writefile(char *myfile) {
     extern LaosFileSystem sd;
     printf("Writing file %s\n\r", myfile);
@@ -371,3 +459,44 @@ void removefile(char *name) {
         sd.cleanlist();           
     } 
 }
+
+// Read an integer from file
+int readint(FILE *fp)
+{
+  unsigned short int i=0;
+  int sign=1;
+  char c, str[16];
+  
+  while( !feof(fp)  )
+  {
+    fread(&c, sizeof(c),1,fp);   
+    
+    switch(c)
+    {
+      case '0': case '1': case '2':  case '3':  case '4': 
+      case '5': case '6': case '7':  case '8':  case '9':  
+        if ( i < sizeof(str)) 
+          str[i++] = (char)c;
+        break;
+      case '-': sign = -1; break;
+      case ' ': case '\t': case '\r': case '\n':
+        if ( i )
+        {
+          int val=0, d=1;
+          while(i) 
+          {
+            if ( str[i-1] == '-' ) 
+              d *= -1;
+            else
+              val += (str[i-1]-'0') * d;
+            d *= 10;
+            i--;
+          }
+          val *= sign;
+          return val;
+        }
+        break;
+    } // Switch
+  } // while
+  return 0;
+} // read integer

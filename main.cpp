@@ -76,11 +76,13 @@ GlobalConfig *cfg;
 void GetFile(void);
 void Jog();
 int readint(FILE *fp);
+void main_nodisplay();
+void main_menu();
 
 // for debugging:
 extern void plan_get_current_position_xyz(float *x, float *y, float *z);
 extern PwmOut pwm;
-
+extern "C" void mbed_reset();
 
 /**
 *** Main function
@@ -112,6 +114,7 @@ int main()
   {
     mnu->SetScreen("SD NOT READY!"); 
     wait(2.0);
+    mbed_reset();
   }
   else
   {
@@ -119,7 +122,7 @@ int main()
     fclose(fp);
     removefile("test.txt");
   }
-
+    
   eth = EthConfig();
   eth_speed=1;
       
@@ -136,7 +139,7 @@ int main()
   
   if ( cfg->autohome )
   {
-    printf("WAIT FOR HOME KEY...\n");
+    printf("HOME...\n");
     wait(1);
   
     mnu->SetScreen("HOME....");
@@ -156,36 +159,81 @@ int main()
 
   mnu->SetScreen(NULL);  
 
+  if (cfg->nodisplay) {
+    printf("No display set\n\r");
+    main_nodisplay();
+  } else {
+    printf("Entering display\n\r");
+    main_menu();
+  }
+}
+
+void main_nodisplay() {
+  float x, y, z = 0;
+  
+  // main loop  
+   while(1) 
+  {  
+    led1=led2=led3=led4=0;
+
+    GetFile();
+    mot->reset();
+  
+    /* if ( !cfg->nodisplay ) 
+    {
+      Jog();  
+      mot->reset();
+    } */
+    
+     plan_get_current_position_xyz(&x, &y, &z);
+     printf("%f %f\n", x,y); 
+    mnu->SetScreen("Laser BUSY..."); 
+    
+    // Read from BIN file
+    //char name[16];
+    //sprintf(name, "%d.txt", filenum);
+    //printf("Name: '%s'\n", name);
+    char name[21];
+    srv->getFilename(name);
+    printf("Now processing file: %s\n\r", name);
+    FILE *in = sd.openfile(name, "r");
+    while (!feof(in))
+    { 
+      while (!mot->ready() );
+      mot->write(readint(in));
+      // if ( i++ & 128 ) 
+      {
+        //plan_get_current_position_xyz(&x, &y, &z);
+        //printf("%f %f\n", x,y);  
+        // printf("%f\n", (float)pwm);
+      }
+    }
+    fclose(in);
+    // done
+    printf("DONE!...\n");
+    mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+  }
+}
+
+void main_menu() {
   // main loop  
   while (1) {
         led1=led2=led3=led4=0;
-        int cnt = 0;
+        
         mnu->SetScreen(1);
         while (1) {
             mnu->Handle();
             Net::poll();
             if (srv->State() != listen) {
                 GetFile();
+                char myname[32];
+                srv->getFilename(myname);
+                mnu->SetFileName(myname);
                 mnu->SetScreen(6);
-            }
-            /*
-            if ( mnu->x != x0 || mnu->y != y0 || mnu->z != z0 ) {
-                x1 = mnu->x;
-                y1 = mnu->y;
-                z1 = mnu->z;
-            }
-            mot->jog();
-            */
-            if (cnt++>100) {
-            //printf ("Serverstatus: %d", srv->state());
-            //printf ("Position (main loop): %d,%d,%d => %d,%d,%d => %d,%d,%d\n\r",
-            //         mnu->x, mnu->y, mnu->z, x1,y1,z1,x0,y0,z0);
-              cnt = 0;
-            }
+            }           
         }
     }
 }
-
 
 /**
 *** Allow the user to jog to the start position, and home the axis on this position
@@ -253,43 +301,3 @@ void GetFile(void) {
    mnu->SetScreen("Received file.");
 } // GetFile
 
-// Read an integer from file
-int readint(FILE *fp)
-{
-  unsigned short int i=0;
-  int sign=1;
-  char c, str[16];
-  
-  while( !feof(fp)  )
-  {
-    fread(&c, sizeof(c),1,fp);   
-    
-    switch(c)
-    {
-      case '0': case '1': case '2':  case '3':  case '4': 
-      case '5': case '6': case '7':  case '8':  case '9':  
-        if ( i < sizeof(str)) 
-          str[i++] = (char)c;
-        break;
-      case '-': sign = -1; break;
-      case ' ': case '\t': case '\r': case '\n':
-        if ( i )
-        {
-          int val=0, d=1;
-          while(i) 
-          {
-            if ( str[i-1] == '-' ) 
-              d *= -1;
-            else
-              val += (str[i-1]-'0') * d;
-            d *= 10;
-            i--;
-          }
-          val *= sign;
-          return val;
-        }
-        break;
-    } // Switch
-  } // while
-  return 0;
-} // read integer
