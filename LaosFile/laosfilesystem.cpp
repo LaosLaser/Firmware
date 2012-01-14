@@ -332,7 +332,6 @@ void getprevjob(char *name) {
     char shortname[SHORTFILESIZE], last[SHORTFILESIZE];
     strcpy(last, "");
     sd.getshortname(shortname, name);
-    //printf("getprevjob: in: %s, short: %s", name, shortname);
     DIR *d;
     struct dirent *p;
     d = opendir("/sd");
@@ -348,7 +347,7 @@ void getprevjob(char *name) {
                     closedir(d);
                     return;
                 }
-                strcpy(last, shortname);
+                strcpy(last, p->d_name);
             }
         } // while
         closedir(d);
@@ -375,7 +374,7 @@ void getnextjob(char *name) {
                     closedir(d);
                     return;
                 }
-                strcpy(last, shortname);
+                strcpy(last, p->d_name);
             }
         } // while
         closedir(d);

@@ -293,6 +293,8 @@ void LaosMenu::Handle()
         break;
       
       case 6: // START JOB select job to run
+        if (strlen(jobname) == 0)
+            getprevjob(jobname);
         switch ( c )
         {
             case K_OK: screen=HOMING; break;
