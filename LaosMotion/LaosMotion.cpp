@@ -28,7 +28,7 @@
 #include  "stepper.h"
 #include  "pins.h"
 
-
+// #define DO_MOTION_TEST 1
 
 // status leds
 extern DigitalOut led1,led2,led3,led4;
@@ -62,7 +62,7 @@ DigitalIn cover(p19);
 
   
 // globals
-int step, command;
+int step=0, command=0;
 int mark_speed = 100; // 100 [mm/sec] 
 
 // next planner action to enqueue
@@ -84,6 +84,7 @@ LaosMotion::LaosMotion()
 #if DO_MOTION_TEST
   tActionRequest act[2];
   int i=0;
+  Timer t;
 #endif
   pwm.period(1.0 / cfg->pwmfreq);
   pwm = cfg->pwmmin/100.0;
@@ -102,11 +103,10 @@ LaosMotion::LaosMotion()
   action.target.feed_rate = 60*mark_speed;
 
 #if DO_MOTION_TEST
+  t.start();
   act[0].ActionType = act[1].ActionType =  AT_MOVE;
-  act[0].wait_param = act[1].wait_param = 0;
-  act[0].target.feed_rate = 1000;
-  act[1].target.feed_rate = 10000;
-  act[0].target.invert_feed_rate = act[1].target.invert_feed_rate = 0;
+  act[0].target.feed_rate = 60 * 100;
+  act[1].target.feed_rate = 60 * 200;
   act[0].target.x = act[0].target.y = act[0].target.z = act[0].target.e = 0;
   act[1].target.x = act[1].target.y = act[1].target.z = act[1].target.e = 100;
   act[1].target.y = 200;
@@ -115,6 +115,10 @@ LaosMotion::LaosMotion()
     while( plan_queue_full() ) led3 = !led3;
     led1 = 1;
     i++;
+    if ( i )
+      printf("%d PING...\n", t.read_ms());
+    else
+      printf("%d PONG...\n", t.read_ms());
     if ( i > 1 || i<0) i = 0;
     plan_buffer_line (&act[i]);
     led1 = 0;
@@ -139,7 +143,7 @@ LaosMotion::~LaosMotion()
 **/
 void LaosMotion::reset()
 {
-  step = command =  xstep = xdir = ystep = ydir = zstep = zdir = 0;
+  step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
   laser = LASEROFF;
   enable = cfg->enable;
   cover.mode(PullUp);
@@ -178,8 +182,8 @@ void LaosMotion::moveTo(int x, int y, int z)
 void LaosMotion::write(int i)
 {
   static int x,y,z,power=10000;
-  if (  plan_queue_empty() ) 
-  printf("Empty\n");
+  //if (  plan_queue_empty() ) 
+  //printf("Empty\n");
   if ( step == 0 )
   {
     command = i;
@@ -203,7 +207,7 @@ void LaosMotion::write(int i)
                 action.ActionType =  (command ? AT_LASER : AT_MOVE);
                 action.target.feed_rate =  60.0 * (command ? mark_speed : cfg->speed );
                 plan_buffer_line(&action);
-                // printf("cmd: %d %f %f\n\r", command, action.target.x, action.target.y);
+				// printf("cmd: %d %f %f\n\r", command, action.target.x, action.target.y);
                 break;
             } 
             break;

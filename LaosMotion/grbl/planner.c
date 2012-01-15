@@ -39,7 +39,7 @@ config_t config;
 #define lround(x) ( (long)floor(x+0.5) )
 
 // The number of linear motions that can be in the plan at any give time
-#define BLOCK_BUFFER_SIZE 32
+#define BLOCK_BUFFER_SIZE 16
 tTarget startpoint;
 
 static block_t block_buffer[BLOCK_BUFFER_SIZE];  // A ring buffer for motion instructions
@@ -329,8 +329,6 @@ static void planner_recalculate() {
   planner_recalculate_trapezoids();
 }
 
-
-
 void plan_set_acceleration_manager_enabled(uint8_t enabled) {
   if ((!!acceleration_manager_enabled) != (!!enabled)) {
     st_synchronize();
@@ -362,14 +360,13 @@ void plan_buffer_line (tActionRequest *pAction)
   float z;
   float feed_rate;
   bool e_only = false;
-  float speed_x, speed_y, speed_z, speed_e; // Nominal mm/minute for each axis
-  
+  float speed_x, speed_y, speed_z, speed_e; // Nominal mm/minute for each axis  
   
   x = pAction->target.x;
   y = pAction->target.y;
   z = pAction->target.z;
   feed_rate = pAction->target.feed_rate;
-  // printf("f%f\n", (float)feed_rate); 
+  // printf("%f %f %f %f %f\n", x,y,z,(float)feed_rate); 
   // Calculate target position in absolute steps
   int32_t target[NUM_AXES];
   target[X_AXIS] = lround(x*(float)config.steps_per_mm_x);

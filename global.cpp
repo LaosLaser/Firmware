@@ -99,6 +99,12 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("z.homedir", &zhomedir, 0);
     cfg.Value("e.homedir", &ehomedir, 0);
 
+    cfg.Value("x.invert", &xinv, 0);
+    cfg.Value("y.invert", &yinv, 0);
+    cfg.Value("z.invert", &zinv, 0);
+    cfg.Value("e.invert", &einv, 0);
+
+
     // (homing)sensor polarity
     cfg.Value("x.pol", &xpol, 0);
     cfg.Value("y.pol", &ypol, 0);

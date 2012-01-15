@@ -40,6 +40,7 @@ public:
   int xmax, ymax, zmax, emax; // max values
   int xmin, ymin, zmin, emin; // min values
   int xpol, ypol, zpol, epol; // polarity for the home switches
+  int xinv, yinv, zinv, einv; // invert signal polarity for step/dir
   int xhome, yhome, zhome, ehome; // home position
   int xrest, yrest, zrest, erest; // rest positon (moveto after job)
   int xhomedir, yhomedir, zhomedir, ehomedir;
