@@ -191,6 +191,7 @@ void LaosMenu::SetScreen(char *msg)
 **/
 void LaosMenu::Handle()
 {
+  int cnt = 0;
   extern LaosFileSystem sd;
   extern LaosMotion *mot;
   static int count=0;
@@ -297,7 +298,7 @@ void LaosMenu::Handle()
             getprevjob(jobname);
         switch ( c )
         {
-            case K_OK: screen=HOMING; break;
+            case K_OK: screen=RUNNING; break;
             case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
             case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
             case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
@@ -391,43 +392,35 @@ void LaosMenu::Handle()
       case HOMING: // Homing screen
         //mot->home(cfg->xhome,cfg->yhome);
         x = cfg->xhome; y = cfg->yhome;
+        while ( !mot->isStart() );
+        mot->home(cfg->xhome,cfg->yhome);
         screen=lastscreen->prev();
         break;
       
       case RUNNING: // Screen while running
-        // if (no open file) open file
-        if (runfile == NULL) runfile = sd.openfile(jobname, "r");
-         // if (not eof) {
-        //      get X lines
-        //      send X lines of instructions to planner
-        if (mot->ready()) {
-            int cnt = 0;
-            while ((!feof(runfile)) && (cnt < 20)) { 
-                cnt++;
-                mot->write(readint(runfile));
-                // if ( i++ & 128 ) {
-                //      plan_get_current_position_xyz(&x, &y, &z);
-                //      printf("%f %f\n", x,y);  
-                //      printf("%f\n", (float)pwm);
-                // }
-            }
-        }
-        if (feof(runfile)) {
-            fclose(runfile);
+        switch ( c )
+        {
+          case K_CANCEL:
+            mot->reset();
+            if (runfile != NULL) fclose(runfile);
             screen=MAIN;
             break;
-        } else {
-            switch ( c )
-            {
-                case K_CANCEL: 
-                    // stop moving immediately
-                    // erase queue
-                    screen=MAIN;  
-                    break;
-            }
         }
-        break;    
+        if (runfile == NULL)
+            runfile = sd.openfile(jobname, "rb");
         
+        while (! feof(runfile) && (cnt++<30))
+            if (mot->ready())
+                mot->write(readint(runfile));
+            else
+                printf("Motion buffer full\n\r");
+        if (feof(runfile)) {
+            printf("Runfile done... \n\r"); 
+            fclose(runfile);
+            screen=MAIN;
+        }
+        break;
+               
       default: screen = MAIN; break;    
     }  
     dsp->ShowScreen(screens[screen], args, sarg);

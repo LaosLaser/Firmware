@@ -47,6 +47,7 @@
 #include "LaosMenu.h"
 #include "LaosMotion.h"
 #include "SDFileSystem.h"
+#include "laosfilesystem.h"
 
 // MBED blue status leds
 DigitalOut led1(LED1);
@@ -75,7 +76,6 @@ GlobalConfig *cfg;
 // Protos
 void GetFile(void);
 void Jog();
-int readint(FILE *fp);
 void main_nodisplay();
 void main_menu();
 
