@@ -207,7 +207,6 @@ void LaosMotion::write(int i)
                 action.ActionType =  (command ? AT_LASER : AT_MOVE);
                 action.target.feed_rate =  60.0 * (command ? mark_speed : cfg->speed );
                 plan_buffer_line(&action);
-				// printf("cmd: %d %f %f\n\r", command, action.target.x, action.target.y);
                 break;
             } 
             break;

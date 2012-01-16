@@ -69,6 +69,8 @@ static volatile int running = 0;  // stepper irq is running
 static uint32_t direction_inv;    // invert mask for direction bits
 static uint32_t direction_bits;   // all axes direction (different ports)    
 static uint32_t step_bits;        // all axis step bits
+static uint32_t step_inv;      // invert mask for the stepper bits
+
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y, 
                counter_z;       
@@ -115,6 +117,13 @@ void st_init(void)
    (cfg->yscale<0 ? (1<<Y_DIRECTION_BIT) : 0) |
    (cfg->zscale<0 ? (1<<Z_DIRECTION_BIT) : 0) |
    (cfg->escale<0 ? (1<<E_DIRECTION_BIT) : 0);
+  step_inv =  
+   (cfg->xinv ? (1<<X_STEP_BIT) : 0) |
+   (cfg->yinv ? (1<<Y_STEP_BIT) : 0) |
+   (cfg->zinv ? (1<<Z_STEP_BIT) : 0) |
+   (cfg->einv ? (1<<E_STEP_BIT) : 0);
+  
+  
   printf("Direction: %d\n", direction_inv);
   pwmofs = to_fixed(cfg->pwmmin) / 100; // offset (0 .. 1.0)
   if ( cfg->pwmmin == cfg->pwmmax )
@@ -137,29 +146,24 @@ static inline void  set_direction_pins (void)
 }
 
 // output the step bits on the appropriate output pins
-static inline void  set_step_pins (void) 
+static inline void  set_step_pins (uint32_t bits) 
 {
-  xstep = ( (step_bits & (1<<X_STEP_BIT))?1:0 );
-  ystep = ( (step_bits & (1<<Y_STEP_BIT))?1:0 );
- // zstep = ( (step_bits & (1<<Z_STEP_BIT))?1:0 );  
- // estep = ( (step_bits & (1<<E_STEP_BIT))?1:0 );        
+  xstep = ( (bits & (1<<X_STEP_BIT))?1:0 ); 
+  ystep = ( (bits & (1<<Y_STEP_BIT))?1:0 );
+ // zstep = ( (bits & (1<<Z_STEP_BIT))?1:0 );  
+ // estep = ( (bits & (1<<E_STEP_BIT))?1:0 );        
 }
 
 // unstep all stepper pins (output low)
 static inline void  clear_all_step_pins (void) 
 {
-  xstep = ystep = 0;
-  // zstep = estep = 0;
+  
+  xstep =( (step_inv & (1<<X_STEP_BIT)) ? 1 : 0 ); 
+  ystep =( (step_inv & (1<<Y_STEP_BIT)) ? 1 : 0 ); 
+  // zstep =( (step_inv & (1<<Z_STEP_BIT)) ? 0 : 1 ); 
+  // estep =( (step_inv & (1<<E_STEP_BIT)) ? 0 : 1 ); 
 }
 
-// unstep selected pins
-static inline void  clear_step_pins (void) 
-{
-  if ( step_bits & (1<<X_STEP_BIT) ) xstep = 0;
-  if ( step_bits & (1<<Y_STEP_BIT) ) ystep = 0;
-  // if ( step_bits & (1<<Z_STEP_BIT) ) zstep = 0;
-  // if ( step_bits & (1<<E_STEP_BIT) ) estep = 0;
-}
 
 // check home sensor
 int hit_home_stop_x(int axis)
@@ -184,7 +188,7 @@ void st_wake_up()
   {
     running = 1;
     set_step_timer(2000);
-    printf("wake_up()..\n");
+    //printf("wake_up()..\n");
   }
 }
 
@@ -197,7 +201,7 @@ static void st_go_idle()
   clear_all_step_pins();
   laser = LASEROFF;
   pwm = cfg->pwmmax / 100.0;  // set pwm to max;
-  printf("idle()..\n");
+  //printf("idle()..\n");
 }
 
 // return number of steps to perform:  n = (v^2) / (2*a)
@@ -208,7 +212,7 @@ static inline int32_t calc_n (float speed, float alpha, float accel)
 }
 
 // Initializes the trapezoid generator from the current block. Called whenever a new 
-// block begins. Calculates the length of the block (in events), step rate, slopes and trigger positions (when to accel, decel, etc.)
+// block begins. Calculates the length ofc the block (in events), step rate, slopes and trigger positions (when to accel, decel, etc.)
 static inline void trapezoid_generator_reset() 
 {  
   tFixedPt  c0;
@@ -276,7 +280,7 @@ static  void st_interrupt (void)
 {        
   // TODO: Check if the busy-flag can be eliminated by just disabeling this interrupt while we are in it
   
-  if(busy){ printf("busy!\n"); return; } // The busy-flag is used to avoid reentering this interrupt
+  if(busy){ /*printf("busy!\n"); */ return; } // The busy-flag is used to avoid reentering this interrupt
   busy = 1;
   
   // Set the direction pins a cuple of nanoseconds before we step the steppers
@@ -286,7 +290,7 @@ static  void st_interrupt (void)
   // Then pulse the stepping pins
   //STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
   // led2 = 1;
-  set_step_pins ();
+  set_step_pins (step_bits ^ step_inv);
     
   // If there is no current block, attempt to pop one from the buffer
   if (current_block == NULL) 
@@ -342,7 +346,7 @@ static  void st_interrupt (void)
         counter_e -= current_block->step_event_count;
       }
 
-      clear_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
+      //clear_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
       step_events_completed++; // Iterate step events
 
       // This is a homing block, keep moving until all end-stops are triggered
@@ -417,14 +421,13 @@ static  void st_interrupt (void)
   else 
   {
     // Still no block? Set the stepper pins to low before sleeping.
-    printf("block == NULL\n");
+    // printf("block == NULL\n");
     step_bits = 0;
   }          
   
-  //clear_all_step_pins ();
-//  led2 = 0;
-//  out_bits ^= settings.invert_mask;  // Apply stepper invert mask    
+  clear_all_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
   busy=0;
+  
 }
 
 
