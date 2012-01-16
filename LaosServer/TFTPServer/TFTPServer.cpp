@@ -30,7 +30,7 @@ TFTPServer::TFTPServer(char* dir) {
     state = listen;
     if (ListenSock->bind(Host(IpAddr(), TFTP_PORT)))
         state = error;
-    TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
+    //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
     sprintf(workdir, "%s", dir);
     filecnt = 0;
 }
@@ -47,13 +47,13 @@ void TFTPServer::reset() {
     ListenSock->resetOnEvent();
     delete(ListenSock);
     delete(remote);
-    TFTPServerTimer.detach();
+    //TFTPServerTimer.detach();
     ListenSock = new UDPSocket();
     ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
     if (ListenSock->bind(Host(IpAddr(), TFTP_PORT)))
         state = error;
-    TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
+    //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
     sprintf(filename, "");
     filecnt = 0;
 }
@@ -218,29 +218,34 @@ int TFTPServer::modeOctet(char* buff) {
 
 // timed routine to avoid hanging after interrupted transfers
 void TFTPServer::cleanUp() {
-    static int lastcnt;
+    extern Timer systime;
+    static int lastblock;
+    int now = systime.read();
     switch (state) {
         case reading:
-            if (lastcnt == blockcnt) {
+            if (lastblock+5 < now) {
                 fclose(fp);
                 state=listen;
                 delete(remote);
             }
+            lastblock = now;
             break;
         case writing:
-            if (lastcnt == blockcnt) {
+            if (lastblock+5 < now) {
                 fclose(fp);
                 state = listen;
                 remove(filename);
                 delete(remote);
             }
+            lastblock = now;
             break;
     } // state
-    lastcnt = blockcnt;
+    lastblock = now;
 }
 
 // event driven routines to handle incoming packets
 void TFTPServer::onListenUDPSocketEvent(UDPSocketEvent e) {
+    cleanUp();
     extern LaosFileSystem sd;
     Host* client = new Host();
     char buff[516];

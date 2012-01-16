@@ -69,6 +69,7 @@ LaosDisplay *dsp;
 LaosMenu *mnu;
 TFTPServer *srv;
 LaosMotion *mot;
+Timer systime;
 
 // Config
 GlobalConfig *cfg;
@@ -89,6 +90,7 @@ extern "C" void mbed_reset();
 **/
 int main() 
 {
+  systime.start();
   //float x, y, z;
   
   printf( VERSION_STRING "...\nBOOT...\n" );  

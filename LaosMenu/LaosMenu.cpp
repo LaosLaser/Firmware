@@ -408,14 +408,9 @@ void LaosMenu::Handle()
         }
         if (runfile == NULL)
             runfile = sd.openfile(jobname, "rb");
-        
-        while (! feof(runfile) && (cnt++<30))
-            if (mot->ready())
-                mot->write(readint(runfile));
-            else
-                printf("Motion buffer full\n\r");
-        if (feof(runfile)) {
-            printf("Runfile done... \n\r"); 
+		while ((! feof(runfile)) && (cnt++<30) && mot->ready())
+			mot->write(readint(runfile));
+		if (feof(runfile) && mot->ready()) {
             fclose(runfile);
             screen=MAIN;
         }

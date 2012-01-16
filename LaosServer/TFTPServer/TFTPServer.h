@@ -106,7 +106,7 @@ private:
     char sendbuff[516];         // current DATA block;
     int blocksize;              // last DATA block size while sending
     char filename[256];         // current (or most recent) filename
-    Ticker TFTPServerTimer;     // timeout timer
+    //Ticker TFTPServerTimer;     // timeout timer
     int filecnt;                // received file counter
 };
 
