@@ -26,13 +26,13 @@
 
 static const char *menus[] = {
     "STARTUP",     //0
-    "MAIN",        //1 
-    "MOVE",        //2
-    "FOCUS",       //3
+    "MAIN",        //1
+    "START JOB",   //2
+    "DELETE JOB",  //3
     "HOME",        //4
-    "ORIGIN",      //5
-    "START JOB",   //6
-    "DELETE JOB",  //7
+    "MOVE",        //5
+    "FOCUS",       //6
+    "ORIGIN",      //7
     "REMOVE ALL JOBS", //8 
     "IP",          //9
     "POWER / SPEED",//10
@@ -48,8 +48,20 @@ static const char *screens[] = {
 #define MAIN (STARTUP+1)
     "$$$$$$$$$$$$$$$$" 
     "<---10 ---> [ok]",
-  
-#define MOVE (MAIN+1)
+
+#define RUN (MAIN+1)
+    "RUN:     <c><ok>" 
+    "$$$$$$$$$$$$$$$$", 
+
+#define DELETE (RUN+1)
+    "DEL:     <c><ok>" 
+    "$$$$$$$$$$$$$$$$",
+
+#define HOME (DELETE+1)
+    "     HOME?      "
+    "[cancel]    [ok]", 
+              
+#define MOVE (HOME+1)
     "X: +6543210 MOVE" 
     "Y: +6543210 [ok]",
     
@@ -57,23 +69,11 @@ static const char *screens[] = {
     "Z: +543210 FOCUS" 
     "            [ok]",
 
-#define HOME (FOCUS+1)
-    "     HOME?      "
-    "[cancel]    [ok]",  
-
-#define ORIGIN (HOME+1)
+#define ORIGIN (FOCUS+1)
     "  SET ORIGIN?   "
     "[cancel]    [ok]",   
 
-#define RUN (ORIGIN+1)
-    "RUN:     <c><ok>" 
-    "$$$$$$$$$$$$$$$$",   
-
-#define DELETE (RUN+1)
-    "DEL:     <c><ok>" 
-    "$$$$$$$$$$$$$$$$",   
-
-#define DELETE_ALL (DELETE+1)
+#define DELETE_ALL (ORIGIN+1)
     "DELETE ALL      "
     "FILES?   <c><ok>",
 
@@ -95,14 +95,14 @@ static const char *screens[] = {
     "<cancel>    [ok]",   
 
 #define HOMING (DELETE_OK+1) 
-    "HOMING...6543210" 
-    "[cancel]        ",  
+    "HOMING...       " 
+    "                ",  
 
 #define RUNNING (HOMING+1)
     "RUNNING...   10%"
     "[cancel]        ",
     
-#define BUSY (HOMING+1)
+#define BUSY (RUNNING+1)
     "BUSY: $$$$$$$$$$" 
     "[cancel]    [ok]",
 
@@ -124,7 +124,8 @@ LaosMenu::LaosMenu(LaosDisplay *display)
 {
   waitup=timeout=iofield=ipfield=0;
   sarg = NULL;
-  x=y=z=0;
+  //x=y=z=0;
+  xoff=yoff=zoff=0;
   screen=prevscreen=speed=0;
   lastscreen = new LastScreen;
   menu=1;
@@ -141,12 +142,15 @@ LaosMenu::LaosMenu(LaosDisplay *display)
 /**
 *** Destroy menu object
 **/
-LaosMenu::~LaosMenu() 
-{
-
+LaosMenu::~LaosMenu() {
 }
 
-  
+void LaosMenu::SetPosition(int xi, int yi, int zi) {
+    x = xi;
+    y = yi; 
+    z = zi;
+}
+
 /**
 *** Goto specific screen
 **/
@@ -211,8 +215,8 @@ void LaosMenu::Handle()
     speed = 1;
   else
   {
-    speed += 1;
-    if ( speed >= 500 ) speed = 100;    
+    speed *= 2;
+    if ( speed >= 5000 ) speed = 5000;    
   }
 
   if ( c || screen != prevscreen || count >9 ) 
@@ -232,7 +236,7 @@ void LaosMenu::Handle()
           case K_LEFT: menu-=1; waitup=1; break;
           case K_UP: lastscreen->set(MAIN); screen=MOVE; menu=MAIN; break;
           case K_DOWN: lastscreen->set(MAIN); screen=MOVE; menu=MAIN; break;
-          case K_OK:  lastscreen->set(MAIN); screen=menu; menu=MAIN; break;
+          case K_OK:  screen=menu; waitup=1; lastscreen->set(MAIN); break;
           case K_CANCEL: menu=MAIN; break;
           case K_FUP:  lastscreen->set(MAIN); screen=FOCUS; menu=MAIN; break;
           case K_FDOWN: lastscreen->set(MAIN); screen=FOCUS; menu=MAIN; break;
@@ -251,22 +255,28 @@ void LaosMenu::Handle()
           case K_UP: y+=speed; if ((y+yoff)>cfg->ymax) y=cfg->ymax-yoff; break;
           case K_LEFT: x-=speed; if ((x+xoff)<0) x=0-xoff; break;
           case K_RIGHT: x+=speed; if ((x+xoff)>cfg->xmax) x=cfg->xmax-xoff; break;
-          case K_OK: case K_CANCEL: screen=lastscreen->prev(); waitup=1; break;
-          case K_FUP:  lastscreen->set(MOVE); screen=FOCUS; break;
-          case K_FDOWN:  lastscreen->set(MOVE); screen=FOCUS; break;
-          case K_ORIGIN:  lastscreen->set(MOVE); screen=ORIGIN; break;
+          case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
+          case K_FUP: screen=FOCUS; break;
+          case K_FDOWN: screen=FOCUS; break;
+          case K_ORIGIN: screen=ORIGIN; break;
         }
-       args[0]=x; args[1]=y; 
+        mot->write(7); mot->write(100); mot->write(10000);
+        mot->write(0); mot->write(x+xoff); mot->write(y+yoff);
+        while(!mot->ready());
+        args[0]=x; args[1]=y; 
         break;
         
       case FOCUS: // focus
         switch ( c )
         {
-          case K_FUP: case K_UP: z+=speed; break;
-          case K_FDOWN: case K_DOWN: z-=speed; break;
-          // case K_LEFT: screen=MAIN; menu -= 1; break;
-          // case K_RIGHT: screen=MAIN; menu += 1; break;
-          case K_ORIGIN:  lastscreen->set(FOCUS); screen=ORIGIN; break;
+          case K_FUP: z+=speed; if (z>cfg->zmax) z=cfg->zmax; break;
+          case K_FDOWN: z-=speed; if (z<0) z=0; break;
+          case K_LEFT: screen=MOVE; break;
+          case K_RIGHT: screen=MOVE; break;
+          case K_UP: screen=MOVE; break;
+          case K_DOWN: screen=MOVE; break;
+          case K_ORIGIN: screen=ORIGIN; break;
+          case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
           case 0: break;
           default: screen=lastscreen->prev(); waitup=1; break;
         } 
@@ -284,16 +294,18 @@ void LaosMenu::Handle()
       case ORIGIN: // origin
         switch ( c )
         {
-          case K_OK:
+          case K_OK: case K_ORIGIN:
                 //mot->setPosition(0,0,0);
-                x = y = z = 0;
-                screen = lastscreen->prev();
+                xoff += x; x = 0;
+                yoff += y; y = 0;
+                zoff += z; z = 0;
+                screen = MAIN;
                 waitup = 1;
                 break;
         }
         break;
       
-      case 6: // START JOB select job to run
+      case 2: // START JOB select job to run
         if (strlen(jobname) == 0)
             getprevjob(jobname);
         switch ( c )
@@ -309,11 +321,12 @@ void LaosMenu::Handle()
         sarg = (char *)&jobname;
         break;
       
-       case 7: // DELETE JOB select job to run
+       case 3: // DELETE JOB select job to run
         switch ( c )
         {
             case K_OK: 
                 removefile(jobname); 
+                screen=lastscreen->prev();
                 waitup = 1; 
                 break; // INSERT: delete current job
             case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
@@ -408,10 +421,11 @@ void LaosMenu::Handle()
         }
         if (runfile == NULL)
             runfile = sd.openfile(jobname, "rb");
-		while ((! feof(runfile)) && (cnt++<30) && mot->ready())
-			mot->write(readint(runfile));
-		if (feof(runfile) && mot->ready()) {
+        while ((! feof(runfile)) && (cnt++<30) && mot->ready())
+            mot->write(readint(runfile));
+        if (feof(runfile) && mot->ready()) {
             fclose(runfile);
+            runfile = NULL;
             screen=MAIN;
         }
         break;

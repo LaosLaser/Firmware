@@ -126,13 +126,13 @@ GlobalConfig::GlobalConfig(char *filename)
     // home positions [um]
     cfg.Value("x.home", &xhome, 0);
     cfg.Value("y.home", &yhome, 0);
-    cfg.Value("z.home", &zhome, 0);
+    cfg.Value("z.home", &zhome, 100000);
     cfg.Value("e.home", &ehome, 0);
      
     // min and max [um]
     cfg.Value("x.max", &xmax, 1E6);
     cfg.Value("y.max", &ymax, 1E6);
-    cfg.Value("z.max", &zmax, 1E6);
+    cfg.Value("z.max", &zmax, 200000);
     cfg.Value("e.max", &emax, 1E6); 
     cfg.Value("x.min", &xmin, 0); 
     cfg.Value("y.min", &ymin, 0); 

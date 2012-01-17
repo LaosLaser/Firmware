@@ -76,7 +76,6 @@ GlobalConfig *cfg;
 
 // Protos
 void GetFile(void);
-void Jog();
 void main_nodisplay();
 void main_menu();
 
@@ -106,7 +105,8 @@ int main()
   cfg =  new GlobalConfig("/local/config.txt");
   mnu->SetScreen("CONFIG OK...."); 
   printf("CONFIG OK...\n");
-
+  mnu->SetPosition(cfg->xhome, cfg->yhome, cfg->zhome);
+  
   printf("MOTION...\n"); 
   mot = new LaosMotion();
 
@@ -235,42 +235,6 @@ void main_menu() {
             }           
         }
     }
-}
-
-/**
-*** Allow the user to jog to the start position, and home the axis on this position
-**/
-void Jog()
-{
- static int x=0,y=0,z=0; // (jog positions);
-  mnu->SetScreen(2);
-    while( 1 )
-    {
-      mnu->x = x;
-      mnu->y = y;
-      mnu->z = z;
-      mnu->Handle();
-      // Handle home
-      if ( mnu->x == 0 && mnu->y == 0 )
-      {
-        mot->setPosition(0,0,0);
-        break;
-      }
-      else // jog
-      if ( mnu->x != x || mnu->y != y || mnu->z != z )
-      {
-        // mot->write(0); mot->write(mnu->x); mot->write(mnu->y);
-        // while(!mot->ready());
-        x = mnu->x;
-        y = mnu->y;
-        z = mnu->z;
-      }
-      
-//      if ( mnu->z != z0 )
-  //      mot->setz(mnu->z);
-      wait(0.001);
-    }
-    
 }
 
 /**

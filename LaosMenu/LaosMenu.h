@@ -56,8 +56,8 @@ public:
   void SetScreen(int screen);
   void SetScreen(char *s);
   void SetFileName(char * name);
-  int x,y,z;
-
+  void SetPosition(int xi, int yi, int zi);
+  
 private:
   // LaosDisplay *display;
   int args[5];
@@ -72,6 +72,7 @@ private:
   unsigned char menu, ipfield, iofield;
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
+  int x,y,z;
   int xoff, yoff, zoff;
   FILE *runfile;
   
