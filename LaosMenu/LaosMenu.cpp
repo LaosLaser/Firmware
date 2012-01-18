@@ -352,6 +352,7 @@ void LaosMenu::Handle()
             case K_OK:
                 cleandir(); 
                 screen=MAIN;
+				menu=MAIN;
                 waitup = 1; 
                 break; // INSERT: delete current job
             case K_CANCEL: screen=MAIN; waitup = 1; break;
