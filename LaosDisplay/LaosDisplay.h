@@ -25,6 +25,7 @@
 #ifndef _LAOS_DISPLAY_H_
 #define _LAOS_DISPLAY_H_
 
+extern "C" void mbed_reset();
     /** LaosDisplay
       * Connect to LCD terminal or PC
       * Example:
@@ -45,6 +46,7 @@ public:
   */ 
   void write(char *s);
   void ShowScreen(const char *l, int *arg, char *s);
+  void testI2C();
    
 
 /** Clear screen

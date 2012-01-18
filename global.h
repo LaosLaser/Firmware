@@ -27,7 +27,6 @@
 #include "LaosDisplay.h"
 #include "LaosMotion.h"
  
- 
 // Global configuration struct
 class GlobalConfig
 {
@@ -57,6 +56,6 @@ public:
 };
 extern GlobalConfig *cfg; 
 
-#define VERSION_STRING "\033LAOS v0.2" __DATE__ " " __TIME__
+#define VERSION_STRING "\033LAOS v0.3" __DATE__ " " __TIME__
 
 #endif

@@ -31,7 +31,7 @@
 #include "LaosDisplay.h"
 #include "LastScreen.h"
 #include "laosfilesystem.h"
-
+extern "C" void mbed_reset();
 
     /** Menu system
       * Create server based on config file. 

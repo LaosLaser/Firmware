@@ -91,12 +91,10 @@ int main()
 {
   systime.start();
   //float x, y, z;
-  
-  printf( VERSION_STRING "...\nBOOT...\n" );  
   eth_speed = 1;
   
-  printf("START...\n"); 
   dsp = new LaosDisplay();
+  printf( VERSION_STRING "...\nBOOT...\n" ); 
   mnu = new LaosMenu(dsp);
   eth_speed=0;
 
@@ -105,6 +103,8 @@ int main()
   cfg =  new GlobalConfig("/local/config.txt");
   mnu->SetScreen("CONFIG OK...."); 
   printf("CONFIG OK...\n");
+  if (!cfg->nodisplay)
+    dsp->testI2C();
   mnu->SetPosition(cfg->xhome, cfg->yhome, cfg->zhome);
   
   printf("MOTION...\n"); 
@@ -177,24 +177,15 @@ void main_nodisplay() {
    while(1) 
   {  
     led1=led2=led3=led4=0;
-
+    mnu->SetScreen("Wait for file ...");
+    while (srv->State() == listen)
+        Net::poll();
     GetFile();
-    mot->reset();
-  
-    /* if ( !cfg->nodisplay ) 
-    {
-      Jog();  
-      mot->reset();
-    } */
     
-     plan_get_current_position_xyz(&x, &y, &z);
+    plan_get_current_position_xyz(&x, &y, &z);
      printf("%f %f\n", x,y); 
     mnu->SetScreen("Laser BUSY..."); 
     
-    // Read from BIN file
-    //char name[16];
-    //sprintf(name, "%d.txt", filenum);
-    //printf("Name: '%s'\n", name);
     char name[21];
     srv->getFilename(name);
     printf("Now processing file: %s\n\r", name);
@@ -203,14 +194,9 @@ void main_nodisplay() {
     { 
       while (!mot->ready() );
       mot->write(readint(in));
-      // if ( i++ & 128 ) 
-      {
-        //plan_get_current_position_xyz(&x, &y, &z);
-        //printf("%f %f\n", x,y);  
-        // printf("%f\n", (float)pwm);
-      }
     }
     fclose(in);
+    removefile(name);
     // done
     printf("DONE!...\n");
     mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
@@ -221,6 +207,7 @@ void main_menu() {
   // main loop  
   while (1) {
         led1=led2=led3=led4=0;
+        //plan_get_current_position_xyz(&x, &y, &z);
         
         mnu->SetScreen(1);
         while (1) {
@@ -231,7 +218,7 @@ void main_menu() {
                 char myname[32];
                 srv->getFilename(myname);
                 mnu->SetFileName(myname);
-                mnu->SetScreen(6);
+                mnu->SetScreen(2);
             }           
         }
     }

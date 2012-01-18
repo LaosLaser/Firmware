@@ -110,6 +110,9 @@ static const char *screens[] = {
     "PAUSE: $$$$$$$$$" 
     "[cancel]    [ok]",
 
+#define RESET (PAUSE+1)
+    "RESET MACHINE?  " 
+    "[cancel]    [ok]",
 };
 
 static  const char *ipfields[] = { "IP", "NETMASK", "GATEWAY", "DNS" };
@@ -228,6 +231,10 @@ void LaosMenu::Handle()
     {
       case STARTUP:
         if ( sarg == NULL ) sarg = (char*) VERSION_STRING;
+        switch ( c )
+        {
+          case K_OK: screen=RESET; menu=MAIN; waitup=1; break;
+        }
         break;
       case MAIN:
         switch ( c )
@@ -260,7 +267,7 @@ void LaosMenu::Handle()
           case K_FDOWN: screen=FOCUS; break;
           case K_ORIGIN: screen=ORIGIN; break;
         }
-        mot->write(7); mot->write(100); mot->write(10000);
+        mot->write(7); mot->write(100); mot->write(5000);
         mot->write(0); mot->write(x+xoff); mot->write(y+yoff);
         while(!mot->ready());
         args[0]=x; args[1]=y; 
@@ -344,10 +351,10 @@ void LaosMenu::Handle()
         {
             case K_OK:
                 cleandir(); 
-                screen=lastscreen->prev();
+                screen=MAIN;
                 waitup = 1; 
                 break; // INSERT: delete current job
-            case K_CANCEL: screen=lastscreen->prev(); waitup = 1; break;
+            case K_CANCEL: screen=MAIN; waitup = 1; break;
         }
         break;
             
@@ -401,7 +408,14 @@ void LaosMenu::Handle()
         args[0] = power[powerfield];
         break;    
 
-
+      case RESET: // RESET MACHINE
+        switch ( c )
+        {
+          case K_OK: mbed_reset();
+          case K_CANCEL: screen=MAIN; menu=MAIN;  break;
+        }
+        break;   
+        
       case HOMING: // Homing screen
         //mot->home(cfg->xhome,cfg->yhome);
         x = cfg->xhome; y = cfg->yhome;

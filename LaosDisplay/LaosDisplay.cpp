@@ -25,6 +25,10 @@
 #include "LaosDisplay.h"
 #include "mbed.h"
 
+// Serial
+Serial serial(USBTX, USBRX);
+#define _SERIAL_BAUD 115200
+
 // I2C
 I2C i2c(p9, p10);        // sda, scl
 #define _I2C_ADDRESS 0x04
@@ -32,27 +36,30 @@ I2C i2c(p9, p10);        // sda, scl
 #define _I2C_CLS 0xFF
 #define _I2C_BAUD 9600
 
-// Serial
-Serial *serial;
-
 // Make new config file object
 LaosDisplay::LaosDisplay()
 {
-  i2cBaud = _I2C_BAUD;
-  char key;
+  int i2cBaud = _I2C_BAUD;
   i2c.frequency(i2cBaud );
-  write("I2C INIT...");
-  sim =true;
+  int serialBaud = _SERIAL_BAUD;
+  serial.baud(serialBaud);
+  
+  char key;
   // test I2C, if we cannot read, display is not attached, enable simulation
   // wait 1 second to make sure that I2C has time to power on!
   wait(3);
   sim = i2c.read(_I2C_ADDRESS ,&key, 1) != 0; 
   if (sim) {
-    serial = new Serial(USBTX, USBRX);
-    serial->baud(115200);
     printf("LaosDisplay()\n");
     printf("Display() Simulation=ON, I2C Baudrate=%d\n", i2cBaud  );
   }
+}
+
+// Test I2C again when config file is read
+void LaosDisplay::testI2C() {
+    char key;
+    sim = i2c.read(_I2C_ADDRESS ,&key, 1) != 0;
+    if (sim) mbed_reset();
 }
 
 // Write string
@@ -61,7 +68,7 @@ void LaosDisplay::write(char *s)
   if ( sim ) 
   {
     while (*s)
-      serial->putc(*s++);
+      serial.putc(*s++);
     return;
   } else {
     while (*s)
@@ -84,8 +91,8 @@ int LaosDisplay::read()
   char key = 0;
   if (sim)
   {
-    if ( serial->readable() )
-      key =  serial->getc();
+    if ( serial.readable() )
+      key =  serial.getc();
     else
       key = 0;
   }
