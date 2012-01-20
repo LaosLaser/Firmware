@@ -158,6 +158,8 @@ int main()
   // mnu->z = z0;
   // mot->reset();
 
+  // clean sd card?
+  if (cfg->cleandir) cleandir();
   mnu->SetScreen(NULL);  
 
   if (cfg->nodisplay) {

@@ -163,8 +163,8 @@ void LaosFileSystem::getshortname(char* shortname, char* name) {
 }
 
 void strtolower(char *name) {
-	for(int i = 0; i < strlen(name); i++)
-	    name[i] = tolower(name[i]);
+    for(int i = 0; i < strlen(name); i++)
+        name[i] = tolower(name[i]);
 }
 
 void LaosFileSystem::makeshortname(char* shortname, char* name) {

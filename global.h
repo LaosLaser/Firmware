@@ -35,6 +35,7 @@ public:
   int enable; // enable state (1 or 0)
   int autohome; // automatically home the axis at startup
   int nodisplay; // there is no display 
+  int cleandir; // remove files from SD at startup
   int i2cbaud; // i2cBaudrate
   int xmax, ymax, zmax, emax; // max values
   int xmin, ymin, zmin, emin; // min values

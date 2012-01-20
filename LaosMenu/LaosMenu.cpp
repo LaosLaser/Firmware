@@ -202,8 +202,6 @@ void LaosMenu::Handle() {
 
     if ( c || screen != prevscreen || count >9 ) {
 
-        prevscreen = screen;
-
         switch ( screen ) {
             case STARTUP:
                 if ( sarg == NULL ) sarg = (char*) VERSION_STRING;
@@ -231,6 +229,7 @@ void LaosMenu::Handle() {
                 switch ( c ) {
                     case K_OK: screen=RUNNING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+                    case K_RIGHT: screen=DELETE; waitup=1; break;
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=lastscreen; waitup = 1; break;
                 }
@@ -243,12 +242,14 @@ void LaosMenu::Handle() {
                         break; // INSERT: delete current job
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
+                    case K_LEFT: screen=RUN; waitup=1; break;
                     case K_CANCEL: screen=lastscreen; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
                 break;
                 
             case MOVE: // pos xy
+                if (screen!=prevscreen) plan_get_current_position_xyz(&x, &y, &z);
                 switch ( c ) {
                     case K_DOWN: y-=speed; if ((y+yoff)<0) y=0-yoff; break;
                     case K_UP: y+=speed; if ((y+yoff)>cfg->ymax) y=cfg->ymax-yoff; break;
@@ -267,6 +268,7 @@ void LaosMenu::Handle() {
                 break;
 
             case FOCUS: // focus
+                if (screen!=prevscreen) plan_get_current_position_xyz(&x, &y, &z);
                 switch ( c ) {
                     case K_FUP: z+=speed; if (z>cfg->zmax) z=cfg->zmax; break;
                     case K_FDOWN: z-=speed; if (z<0) z=0; break;
@@ -377,15 +379,17 @@ void LaosMenu::Handle() {
                         runfile=NULL; screen=MAIN; menu=MAIN;
                         break;
                     default:
-                        if (runfile == NULL)
+                        if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
-                        while ((! feof(runfile)) && (cnt++<30) && mot->ready())
-                            mot->write(readint(runfile));
-                        if (feof(runfile) && mot->ready()) {
-                            fclose(runfile);
-                            runfile = NULL;
-                            screen=MAIN;
-                            plan_get_current_position_xyz(&x, &y, &z);
+                            if (! runfile) screen=MAIN;
+                        } else {
+                            while ((! feof(runfile)) && (cnt++<30) && mot->ready())
+                                mot->write(readint(runfile));
+                            if (feof(runfile) && mot->ready()) {
+                                fclose(runfile);
+                                runfile = NULL;
+                                screen=MAIN;
+                            }
                         }
                 }
                 break;
@@ -395,6 +399,7 @@ void LaosMenu::Handle() {
                 break;
         }
         dsp->ShowScreen(screens[screen], args, sarg);
+        prevscreen = screen;
     }
 
 }

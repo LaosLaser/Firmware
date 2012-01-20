@@ -80,6 +80,7 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("sys.autohome", &autohome, 0);
     cfg.Value("sys.nodisplay", &nodisplay, 1);
     cfg.Value("sys.i2cbaud", &i2cbaud, 9600);
+    cfg.Value("sys.cleandir", &cleandir, 1);
     
     // Laser
     cfg.Value("laser.enable", &lenable, 1); // laser enable polarity [0/1]
