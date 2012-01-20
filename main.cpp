@@ -105,7 +105,6 @@ int main()
   printf("CONFIG OK...\n");
   if (!cfg->nodisplay)
     dsp->testI2C();
-  mnu->SetPosition(cfg->xhome, cfg->yhome, cfg->zhome);
   
   printf("MOTION...\n"); 
   mot = new LaosMotion();
@@ -207,8 +206,7 @@ void main_menu() {
   // main loop  
   while (1) {
         led1=led2=led3=led4=0;
-        //plan_get_current_position_xyz(&x, &y, &z);
-        
+                
         mnu->SetScreen(1);
         while (1) {
             mnu->Handle();

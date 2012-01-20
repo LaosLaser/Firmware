@@ -26,6 +26,7 @@
 #include "SDFileSystem.h"
 #include "FATFileSystem.h"
 #include <string>
+#include <ctype.h>
 
 #define _LAOSFILE_TRANSTABLE "longname.sys"
 #define MAXFILESIZE 21

@@ -162,6 +162,11 @@ void LaosFileSystem::getshortname(char* shortname, char* name) {
     }
 }
 
+void strtolower(char *name) {
+	for(int i = 0; i < strlen(name); i++)
+	    name[i] = tolower(name[i]);
+}
+
 void LaosFileSystem::makeshortname(char* shortname, char* name) {
     char *tmpname = new char[MAXFILESIZE];
     strcpy(tmpname, name);
@@ -169,7 +174,8 @@ void LaosFileSystem::makeshortname(char* shortname, char* name) {
     shorten(tmpname, SHORTFILESIZE);
     char *basename = strtok(tmpname, ".");
     char *ext_name = strtok(NULL, ".");
-    
+    strtolower(basename);
+    strtolower(ext_name);
     int cnt = 1;
     char fullname[MAXFILESIZE+SHORTFILESIZE+2];
     FILE *fp = NULL;
@@ -188,6 +194,7 @@ void LaosFileSystem::makeshortname(char* shortname, char* name) {
     
     FILE *tfp = fopen(tablename, "ab");
     dirwrite(name, shortname, tfp);
+    printf("Dirwrite %s\t%s\n", name, shortname);
     fclose(tfp);
 
     delete(tmpname);

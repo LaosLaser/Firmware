@@ -29,7 +29,6 @@
 
 #include "global.h"
 #include "LaosDisplay.h"
-#include "LastScreen.h"
 #include "laosfilesystem.h"
 extern "C" void mbed_reset();
 
@@ -42,6 +41,9 @@ extern "C" void mbed_reset();
       * menu.Handle();
       * @endcode
       */
+      
+extern void plan_get_current_position_xyz(float *x, float *y, float *z);
+
 class LaosMenu {
 public:
     /** Make new LaosMenu object. 
@@ -56,7 +58,6 @@ public:
   void SetScreen(int screen);
   void SetScreen(char *s);
   void SetFileName(char * name);
-  void SetPosition(int xi, int yi, int zi);
   
 private:
   // LaosDisplay *display;
@@ -67,13 +68,12 @@ private:
   char jobname[MAXFILESIZE];
   
   // menu states
-  int screen, prevscreen;
-  LastScreen *lastscreen;
+  int screen, prevscreen, lastscreen;
   unsigned char menu, ipfield, iofield;
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
-  int x,y,z;
-  int xoff, yoff, zoff;
+  float x,y,z;
+  float xoff, yoff, zoff;
   FILE *runfile;
   
 };
