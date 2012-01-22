@@ -506,13 +506,68 @@ void strtolower(char *name) {
         name[i] = tolower(name[i]);
 }
 
-int isfirmware(char *filename) {
+int isFirmware(char *filename) {
     char name[MAXFILESIZE];
     strcpy(name, filename);
     strtolower(name);
     int x = strlen(name);
-    if ((filename[--x]=='n') && (filename[--x]=='i') && (filename[--x]=='b') && (filename[--x]=='.'))
+    if ((tolower(filename[--x])=='n') && (tolower(filename[--x])=='i') && (tolower(filename[--x])=='b') && (filename[--x]=='.'))
         return 1;
     else
         return 0;
 } 
+
+void installFirmware(char *filename) {
+    removeFirmware();
+    char buff[512];
+    extern LaosFileSystem sd;
+    //printf("Copy firmware file %s\n\r", filename);
+    FILE *fp = sd.openfile(filename, "rb");
+    if (fp) {
+        FILE *fp2 = fopen("/local/firmware.bin", "wb");
+        while (!feof(fp)) {
+            int size = fread(buff, 1, 512, fp);
+            fwrite(buff, 1, size, fp2);
+        }
+        fclose(fp);
+        fclose(fp2);
+    }
+    removefile(filename);
+}
+
+void removeFirmware() { // remove old firmware from SD
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/local");
+    if(d != NULL) {
+        while((p = readdir(d)) != NULL) {
+            if (isFirmware(p->d_name)) {
+                char name[32];
+                sprintf(name, "/local/%s", p->d_name);
+                remove(name);
+            } 
+        }
+    } else {
+        printf("removeFirmware: Could not open directory!\n\r");
+    }
+}
+
+int SDcheckFirmware() {
+    extern LaosFileSystem sd;
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if(d != NULL) {
+        while((p = readdir(d)) != NULL) {
+            if (strncmp(p->d_name, "longname.sy",11)) {
+                if (isFirmware(p->d_name)) {
+                    installFirmware(p->d_name);
+                    return 1;
+                }
+            }
+        }
+    } else {
+        printf("SDcheckFirmware: Could not open directory!\n\r");
+    }
+    return 0;
+}

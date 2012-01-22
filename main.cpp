@@ -98,18 +98,7 @@ int main()
   mnu = new LaosMenu(dsp);
   eth_speed=0;
 
-  mnu->SetScreen(VERSION_STRING);
-  printf("START...\n");
-  cfg =  new GlobalConfig("/local/config.txt");
-  mnu->SetScreen("CONFIG OK...."); 
-  printf("CONFIG OK...\n");
-  if (!cfg->nodisplay)
-    dsp->testI2C();
-  
-  printf("MOTION...\n"); 
-  mot = new LaosMotion();
-
-  printf("TEST SD...\n"); 
+ printf("TEST SD...\n"); 
   FILE *fp = sd.openfile("test.txt", "wb");
   if ( fp == NULL )
   {
@@ -123,6 +112,21 @@ int main()
     fclose(fp);
     removefile("test.txt");
   }
+  
+  // See if there's a .bin file on the SD
+  // if so, put it on the MBED and reboot
+  if (SDcheckFirmware()) mbed_reset();
+  
+  mnu->SetScreen(VERSION_STRING);
+  printf("START...\n");
+  cfg =  new GlobalConfig("config.txt");
+  mnu->SetScreen("CONFIG OK...."); 
+  printf("CONFIG OK...\n");
+  if (!cfg->nodisplay)
+    dsp->testI2C();
+  
+  printf("MOTION...\n"); 
+  mot = new LaosMotion();
     
   eth = EthConfig();
   eth_speed=1;
@@ -213,11 +217,18 @@ void main_menu() {
                 GetFile();
                 char myname[32];
                 srv->getFilename(myname);
-                mnu->SetFileName(myname);
-                if (isfirmware(myname)) {
-                    printf("firmware name: %s\n", myname);
+                if (isFirmware(myname)) {
+                    installFirmware(myname);
+                    mnu->SetScreen(1);
+                } else {
+                    if (strcmp("config.txt", myname) == 0) {
+                        // it's a config file!
+                        mnu->SetScreen(1);
+                    } else {
+                        mnu->SetFileName(myname);
+                        mnu->SetScreen(2);
+                    }
                 }
-                mnu->SetScreen(2);
             }           
         }
     }

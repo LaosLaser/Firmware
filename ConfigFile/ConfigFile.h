@@ -42,6 +42,7 @@
 #define _CONFIG_FILE_H_
 
 #include "global.h"
+#include "laosfilesystem.h"
 
     /** Simple config file object
       * Only supports reading config files. Tries to limit memory usage.

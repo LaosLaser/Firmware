@@ -65,5 +65,8 @@ void writefile(char *name); // example code to open a file
 void removefile(char *name);    // example code to remove a file
 int readint(FILE *fp);      // read integers from open file
 void strtolower(char *name);    // change characters to lowercase
-int isfirmware(char *name);     // check if it's firmware
+int isFirmware(char *name);     // check if it's firmware
+void installFirmware(char *filename); // put firmware in place
+void removeFirmware(); // remove old firmware
+int SDcheckFirmware();  // check for firmware
 #endif

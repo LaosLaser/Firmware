@@ -181,7 +181,7 @@ void LaosMenu::SetScreen(char *msg) {
 *** something changed
 **/
 void LaosMenu::Handle() {
-    int cnt = 0;
+    int xt, yt, cnt = 0;
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
     static int count=0;
@@ -250,7 +250,7 @@ void LaosMenu::Handle() {
                 
             case MOVE: // pos xy
                 mot->getPosition(&x, &y, &z);
-                int xt = x; int yt= y;
+                xt = x; yt= y;
                 switch ( c ) {
                     case K_DOWN: y-=speed; if (y<0) y=0; break;
                     case K_UP: y+=speed; if (y>cfg->ymax) y=cfg->ymax; break;
