@@ -147,16 +147,12 @@ int main()
   
   // Start homing
     while ( !mot->isStart() );
-    mot->home(cfg->xhome,cfg->yhome);
+    mot->home(cfg->xhome,cfg->yhome, cfg->zhome);
     // if ( !mot->isHome ) exit(1);
     printf("HOME DONE. (%d,%d)\n",cfg->xhome,cfg->yhome);
   }
   else
     printf("Homing skipped: %d\n", cfg->autohome);
-  // mnu->x = x0;
-  // mnu->y = y0;
-  // mnu->z = z0;
-  // mot->reset();
 
   // clean sd card?
   if (cfg->cleandir) cleandir();
@@ -218,6 +214,9 @@ void main_menu() {
                 char myname[32];
                 srv->getFilename(myname);
                 mnu->SetFileName(myname);
+                if (isfirmware(myname)) {
+                    printf("firmware name: %s\n", myname);
+                }
                 mnu->SetScreen(2);
             }           
         }

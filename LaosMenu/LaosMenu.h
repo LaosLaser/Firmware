@@ -72,8 +72,8 @@ private:
   unsigned char menu, ipfield, iofield;
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
-  float x,y,z;
-  float xoff, yoff, zoff;
+  int x,y,z;
+  int xoff, yoff, zoff;
   FILE *runfile;
   
 };

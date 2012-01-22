@@ -162,11 +162,6 @@ void LaosFileSystem::getshortname(char* shortname, char* name) {
     }
 }
 
-void strtolower(char *name) {
-    for(int i = 0; i < strlen(name); i++)
-        name[i] = tolower(name[i]);
-}
-
 void LaosFileSystem::makeshortname(char* shortname, char* name) {
     char *tmpname = new char[MAXFILESIZE];
     strcpy(tmpname, name);
@@ -194,7 +189,6 @@ void LaosFileSystem::makeshortname(char* shortname, char* name) {
     
     FILE *tfp = fopen(tablename, "ab");
     dirwrite(name, shortname, tfp);
-    printf("Dirwrite %s\t%s\n", name, shortname);
     fclose(tfp);
 
     delete(tmpname);
@@ -506,3 +500,19 @@ int readint(FILE *fp)
   } // while
   return 0;
 } // read integer
+
+void strtolower(char *name) {
+    for(int i = 0; i < strlen(name); i++)
+        name[i] = tolower(name[i]);
+}
+
+int isfirmware(char *filename) {
+    char name[MAXFILESIZE];
+    strcpy(name, filename);
+    strtolower(name);
+    int x = strlen(name);
+    if ((filename[--x]=='n') && (filename[--x]=='i') && (filename[--x]=='b') && (filename[--x]=='.'))
+        return 1;
+    else
+        return 0;
+} 

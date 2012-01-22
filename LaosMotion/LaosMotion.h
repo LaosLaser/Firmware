@@ -47,12 +47,13 @@ public:
   void write(int i); // write command word to motion controller
   int ready(); // returns true if we are ready to accept a new instruction
   void reset(); // reset the instruction decoder and motion controller
-  void home(int xhome, int yhome); // home the system, move to the sensors and set the specified position
+  void home(int xhome, int yhome, int zhome); // home the system, move to the sensors and set the specified position
   bool isStart(); // start button is enabled
   bool isHome; // system is homed
-  void setPosition(int x, int y, int z); // in micron
-  void getPosition(int *x, int *y, int *z); // in micron
-  void moveTo(int x, int y, int z); // in microns
+  void setPosition(int x, int y, int z); // set the absolute position [micron]
+  void getPosition(int *x, int *y, int *z); // get actual absolute position [micron] (current position of the motors)
+  void setOrigin(int x, int y, int z); // set the origin to this absolute position [micron]
+  void moveTo(int x, int y, int z); // move (jog) to a specific position [microns]
 private:
   
 };

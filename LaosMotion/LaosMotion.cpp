@@ -68,7 +68,8 @@ int mark_speed = 100; // 100 [mm/sec]
 // next planner action to enqueue
 tActionRequest  action; 
 
-// axis invert flags
+// position offsets
+static int ofsx=0, ofsy=0, ofsz=0;
 
 // Command interpreter
 int param=0, val=0;
@@ -144,6 +145,7 @@ LaosMotion::~LaosMotion()
 void LaosMotion::reset()
 {
   step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
+  ofsx = ofsy = ofsz = 0;
   laser = LASEROFF;
   enable = cfg->enable;
   cover.mode(PullUp);
@@ -165,12 +167,13 @@ int LaosMotion::ready()
 **/
 void LaosMotion::moveTo(int x, int y, int z)
 {
-   action.target.x = x/1000.0;
-   action.target.y = y/1000.0;
-   action.target.z = z/1000.0;
+   action.target.x = ofsx + x/1000.0;
+   action.target.y = ofsy + y/1000.0;
+   action.target.z = ofsz + z/1000.0;
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  60.0 * cfg->speed;
    plan_buffer_line(&action);
+   printf("To buffer: %d, %d\n", x, y);
 }
 
 
@@ -284,6 +287,7 @@ bool LaosMotion::isStart()
 void LaosMotion::setPosition(int x, int y, int z)
 {
   plan_set_current_position_xyz(x/1000.0,y/1000.0,z/1000.0);
+  ofsx = ofsy = ofsz = 0;
 }
 
 /**
@@ -291,14 +295,34 @@ void LaosMotion::setPosition(int x, int y, int z)
 **/
 void LaosMotion::getPosition(int *x, int *y, int *z)
 {
-
+  float xx,yy,zz;
+  plan_get_current_position_xyz(&xx, &yy, &zz);
+  *x = xx * 1000;
+  *y = yy * 1000;
+  *z = xx * 1000;
 }
 
 
+
 /**
-*** Home the axis, stop when button is pressed
+*** set the origin to this absolute position
+*** set to (0,0,0) to reset the orgin back to its original position. 
+*** Note: Make sure you only call this at stand-still (motion queue is empty), otherwise strange things may happen
 **/
-void LaosMotion::home(int x, int y)
+void LaosMotion::setOrigin(int x, int y, int z)
+{
+  ofsx = x; 
+  ofsy = y;
+  ofsz = z;
+}
+
+
+
+
+/**
+*** Home the axis, stop when both home switches are pressed
+**/
+void LaosMotion::home(int x, int y, int z)
 {
   int i=0;
   printf("Homing %d,%d with speed %d\n", x, y, cfg->homespeed);
@@ -320,8 +344,7 @@ void LaosMotion::home(int x, int y)
     led4 = ((i++) & 0x10000);
     if ( !(xhome ^ cfg->xpol) && !(yhome ^ cfg->ypol) ) 
     {
-      // setPosition(x,y,0);
-      setPosition(x,y,0);
+      setPosition(x,y,z);
       isHome = true;
       return;
     }

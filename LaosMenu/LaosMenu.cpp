@@ -197,7 +197,7 @@ void LaosMenu::Handle() {
         speed = 1;
     else {
         speed *= 2;
-        if ( speed >= 5000 ) speed = 5000;
+        if ( speed >= 10000 ) speed = 10000;
     }
 
     if ( c || screen != prevscreen || count >9 ) {
@@ -249,26 +249,33 @@ void LaosMenu::Handle() {
                 break;
                 
             case MOVE: // pos xy
-                if (screen!=prevscreen) plan_get_current_position_xyz(&x, &y, &z);
+                mot->getPosition(&x, &y, &z);
+                int xt = x; int yt= y;
                 switch ( c ) {
-                    case K_DOWN: y-=speed; if ((y+yoff)<0) y=0-yoff; break;
-                    case K_UP: y+=speed; if ((y+yoff)>cfg->ymax) y=cfg->ymax-yoff; break;
-                    case K_LEFT: x-=speed; if ((x+xoff)<0) x=0-xoff; break;
-                    case K_RIGHT: x+=speed; if ((x+xoff)>cfg->xmax) x=cfg->xmax-xoff; break;
+                    case K_DOWN: y-=speed; if (y<0) y=0; break;
+                    case K_UP: y+=speed; if (y>cfg->ymax) y=cfg->ymax; break;
+                    case K_LEFT: x-=speed; if (x<0) x=0; break;
+                    case K_RIGHT: x+=speed; if (x>cfg->xmax) x=cfg->xmax; break;
                     case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
                     case K_FUP: screen=FOCUS; break; 
                     case K_FDOWN: screen=FOCUS; break;
                     case K_ORIGIN: screen=ORIGIN; break;
                 }
-                mot->write(7); mot->write(100); mot->write(5000);
-                mot->write(0); mot->write(x+xoff); mot->write(y+yoff);
-                while (!mot->ready());
-                args[0]=x;
-                args[1]=y;
+                if (mot->ready() && ((x!=xt) || (y != yt))) {
+                    //mot->write(7); mot->write(100); mot->write(5000);
+                    //mot->write(0); mot->write(x); mot->write(y);
+                    mot->moveTo(x, y, z);
+                } else {
+                    if (! mot->ready()) 
+                    printf("Buffer vol\n");
+                }
+                //while (!mot->ready());
+                args[0]=x-xoff;
+                args[1]=y-yoff;
                 break;
 
             case FOCUS: // focus
-                if (screen!=prevscreen) plan_get_current_position_xyz(&x, &y, &z);
+                mot->getPosition(&x, &y, &z);
                 switch ( c ) {
                     case K_FUP: z+=speed; if (z>cfg->zmax) z=cfg->zmax; break;
                     case K_FDOWN: z-=speed; if (z<0) z=0; break;
@@ -281,7 +288,7 @@ void LaosMenu::Handle() {
                     case 0: break;
                     default: screen=MAIN; waitup=1; break;
                 }
-                args[0]=z;
+                args[0]=z-zoff;
                 break;
 
             case HOME:// home
@@ -295,10 +302,10 @@ void LaosMenu::Handle() {
                 switch ( c ) {
                     case K_OK:
                     case K_ORIGIN:
-                        //mot->setPosition(0,0,0);
-                        xoff += x; x = 0;
-                        yoff += y; y = 0;
-                        zoff += z; z = 0;
+                        xoff = x;
+                        yoff = y; 
+                        zoff = z; 
+                        mot->setOrigin(x,y,z);
                         screen = lastscreen;
                         waitup = 1;
                         break;
@@ -367,7 +374,7 @@ void LaosMenu::Handle() {
                 x = cfg->xhome;
                 y = cfg->yhome;
                 while ( !mot->isStart() );
-                mot->home(cfg->xhome,cfg->yhome);
+                mot->home(cfg->xhome,cfg->yhome,cfg->zhome);
                 screen=lastscreen;
                 break;
 

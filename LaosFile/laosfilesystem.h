@@ -64,5 +64,6 @@ void getnextjob(char *name);     // next job
 void writefile(char *name); // example code to open a file
 void removefile(char *name);    // example code to remove a file
 int readint(FILE *fp);      // read integers from open file
-
+void strtolower(char *name);    // change characters to lowercase
+int isfirmware(char *name);     // check if it's firmware
 #endif
