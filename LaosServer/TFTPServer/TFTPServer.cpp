@@ -127,6 +127,7 @@ void TFTPServer::ConnectWrite(char* buff, Host* client) {
     dupcnt = 0;
 
     sprintf(filename, "%s", &buff[2]);
+    sd.shorten(filename, MAXFILESIZE);
     fp = sd.openfile(filename, "wb");
     if (fp == NULL) {
         Err("Could not open file to write", client);

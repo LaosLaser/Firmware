@@ -42,13 +42,13 @@ class LaosFileSystem : public SDFileSystem {
         void getshortname(char* shortname, char* name); //get a short name
         char pathname[MAXFILESIZE+2];
         void cleanlist();
+        void shorten(char* name, int max);
         
     private:
         int islegalname(char* name);
         int isshortname(char* name);
         void removespaces(char* name);
         void makeshortname(char* shortname, char* name);
-        void shorten(char* name, int max);
         size_t dirread(char* longname, char* shortname, FILE *fp);
         size_t dirwrite(char* longname, char* shortname, FILE* fp);
         char tablename[MAXFILESIZE + SHORTFILESIZE + 1];
