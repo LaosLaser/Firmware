@@ -162,6 +162,19 @@ int LaosMotion::ready()
   return !plan_queue_full();
 }
 
+
+/**
+*** queue()
+*** queue items 
+**/
+int LaosMotion::queue()
+{
+  return plan_queue_items();
+}
+
+
+
+
 /** 
 *** MoveTo()
 **/
@@ -176,7 +189,19 @@ void LaosMotion::moveTo(int x, int y, int z)
    printf("To buffer: %d, %d\n", x, y);
 }
 
-
+/** 
+*** MoveTo() width specific speed (%)
+**/
+void LaosMotion::moveTo(int x, int y, int z, int speed)
+{
+   action.target.x = ofsx + x/1000.0;
+   action.target.y = ofsy + y/1000.0;
+   action.target.z = ofsz + z/1000.0;
+   action.ActionType = AT_MOVE;
+   action.target.feed_rate =  (speed * 60.0 * cfg->speed) / 100;
+   plan_buffer_line(&action);
+   printf("To buffer: %d, %d\n", x, y);
+}
 
 /**
 *** write()

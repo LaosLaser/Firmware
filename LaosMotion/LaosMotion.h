@@ -54,6 +54,8 @@ public:
   void getPosition(int *x, int *y, int *z); // get actual absolute position [micron] (current position of the motors)
   void setOrigin(int x, int y, int z); // set the origin to this absolute position [micron]
   void moveTo(int x, int y, int z); // move (jog) to a specific position [microns]
+  void moveTo(int x, int y, int z, int speed); // move (jog) to a specific position [microns]
+  int queue(); // queued items
 private:
   
 };

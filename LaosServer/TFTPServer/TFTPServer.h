@@ -56,7 +56,7 @@ class TFTPServer {
 public:
     // create a new tftp server, with file directory dir and 
     // listening on port
-    TFTPServer(char* dir);
+    TFTPServer(char* dir, int myport = TFTP_PORT);
     // destroy this instance of the tftp server
     void reset();
     // reset socket
@@ -96,7 +96,7 @@ private:
     void cleanUp();
     // event driven routines to handle incoming packets
     void onListenUDPSocketEvent(UDPSocketEvent e);
-    
+    int port; // The TFTP port
     UDPSocket* ListenSock;      // main listening socket (dflt: UDP port 69)
     char workdir[256];          // file working directory
     TFTPServerState state;      // current TFTP server state

@@ -685,3 +685,13 @@ uint8_t plan_queue_empty(void)
     return 0;
 }
 
+// Return nr of items in the queue
+uint8_t plan_queue_items(void) 
+{
+ // BLOCK_BUFFER_SIZE;
+  int len =  block_buffer_head - block_buffer_tail;
+  if ( len < 0 ) len = -len;
+  return len;
+}
+
+

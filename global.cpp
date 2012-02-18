@@ -73,7 +73,7 @@ GlobalConfig::GlobalConfig(char *filename)
     IpParse(val, gw);
     cfg.Value("net.dns", val, sizeof(val), "192.168.0.1");
     IpParse(val, dns);
-    cfg.Value("net.port", &port, 2000);
+    cfg.Value("net.port", &port, 69);
     cfg.Value("net.dhcp", &dhcp, 0);
 
     // features

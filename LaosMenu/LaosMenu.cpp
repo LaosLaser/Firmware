@@ -181,7 +181,7 @@ void LaosMenu::SetScreen(char *msg) {
 *** something changed
 **/
 void LaosMenu::Handle() {
-    int xt, yt, cnt = 0;
+    int xt, yt, cnt=0, nodisplay = 0;
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
     static int count=0;
@@ -231,7 +231,7 @@ void LaosMenu::Handle() {
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_RIGHT: screen=DELETE; waitup=1; break;
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
-                    case K_CANCEL: screen=lastscreen; waitup = 1; break;
+                    case K_CANCEL: screen=1; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
                 break;
@@ -251,9 +251,10 @@ void LaosMenu::Handle() {
             case MOVE: // pos xy
                 mot->getPosition(&x, &y, &z);
                 xt = x; yt= y;
+                //if ( mot->queue() > 2 ) break; 
                 switch ( c ) {
-                    case K_DOWN: y-=speed; if (y<0) y=0; break;
-                    case K_UP: y+=speed; if (y>cfg->ymax) y=cfg->ymax; break;
+                    case K_DOWN: y+=speed; if (y<0) y=0; break;
+                    case K_UP: y-=speed; if (y>cfg->ymax) y=cfg->ymax; break;
                     case K_LEFT: x-=speed; if (x<0) x=0; break;
                     case K_RIGHT: x+=speed; if (x>cfg->xmax) x=cfg->xmax; break;
                     case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
@@ -262,9 +263,7 @@ void LaosMenu::Handle() {
                     case K_ORIGIN: screen=ORIGIN; break;
                 }
                 if (mot->ready() && ((x!=xt) || (y != yt))) {
-                    //mot->write(7); mot->write(100); mot->write(5000);
-                    //mot->write(0); mot->write(x); mot->write(y);
-                    mot->moveTo(x, y, z);
+                    mot->moveTo(x, y, z, 50);
                 } else {
                     if (! mot->ready()) 
                     printf("Buffer vol\n");
@@ -381,6 +380,7 @@ void LaosMenu::Handle() {
             case RUNNING: // Screen while running
                 switch ( c ) {
                     case K_CANCEL:
+                        while (mot->queue());
                         mot->reset();
                         if (runfile != NULL) fclose(runfile);
                         runfile=NULL; screen=MAIN; menu=MAIN;
@@ -388,14 +388,19 @@ void LaosMenu::Handle() {
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
-                            if (! runfile) screen=MAIN;
+                            if (! runfile) 
+                              screen=MAIN;
+                            else
+                               mot->reset();
                         } else {
-                            while ((! feof(runfile)) && (cnt++<30) && mot->ready())
+                            while ((!feof(runfile)) && mot->ready())
                                 mot->write(readint(runfile));
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
                                 screen=MAIN;
+                            } else {
+                                nodisplay = 1;
                             }
                         }
                 }
@@ -405,8 +410,10 @@ void LaosMenu::Handle() {
                 screen = MAIN;
                 break;
         }
-        dsp->ShowScreen(screens[screen], args, sarg);
-        prevscreen = screen;
+        //if (nodisplay == 0) {
+            dsp->ShowScreen(screens[screen], args, sarg);
+        //}
+         prevscreen = screen;
     }
 
 }

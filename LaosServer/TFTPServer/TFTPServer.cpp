@@ -24,11 +24,16 @@
 
 // create a new tftp server, with file directory dir and
 // listening on port
-TFTPServer::TFTPServer(char* dir) {
+
+
+
+TFTPServer::TFTPServer(char* dir, int myport) {
+    port = myport;
+    printf("TFTPServer(): port=%d\n", myport);
     ListenSock = new UDPSocket();
     ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
-    if (ListenSock->bind(Host(IpAddr(), TFTP_PORT)))
+    if (ListenSock->bind(Host(IpAddr(), port)))
         state = error;
     //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
     sprintf(workdir, "%s", dir);
@@ -51,7 +56,7 @@ void TFTPServer::reset() {
     ListenSock = new UDPSocket();
     ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
-    if (ListenSock->bind(Host(IpAddr(), TFTP_PORT)))
+    if (ListenSock->bind(Host(IpAddr(), port)))
         state = error;
     //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
     sprintf(filename, "");
