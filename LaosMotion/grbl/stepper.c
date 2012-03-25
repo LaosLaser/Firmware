@@ -58,6 +58,7 @@ static void st_go_idle();
 // Globals      
 // volatile uint16_t steptimeout = 0;
 volatile unsigned char busy = 0;
+volatile double p=0;
 
 // Locals
 static block_t *current_block;  // A pointer to the block currently being traced
@@ -129,7 +130,7 @@ void st_init(void)
   if ( cfg->pwmmin == cfg->pwmmax )
     pwmscale = 0;
   else
-    pwmscale = div_f(to_fixed(100), to_fixed((cfg->pwmmax - cfg->pwmmin)) );
+    pwmscale = div_f(to_fixed(cfg->pwmmax - cfg->pwmmin), to_fixed(100) );
   printf("ofs: %d, scale: %d\n", pwmofs, pwmscale);
   st_wake_up();
   trapezoid_tick_cycle_counter = 0;
@@ -269,8 +270,10 @@ static inline void trapezoid_generator_reset()
 static inline void set_step_timer (uint32_t cycles) 
 {
    timer.attach_us(&st_interrupt,cycles);
-   pwm =  to_double( pwmofs + mul_f(pwmscale, ( (power*c_min) / (10000*cycles) )) ); // set PWM output as fraction, 1.0 for max speed (minimal time)
-}
+   p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
+  // printf("%f\n\r", (float)p);
+   pwm = p;
+}  
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. It is  executed at the rate set with
 // set_step_timer. It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 

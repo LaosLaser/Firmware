@@ -47,56 +47,56 @@ static const char *screens[] = {
 
 #define MAIN (STARTUP+1)
     "$$$$$$$$$$$$$$$$"
-    "<---10 ---> [ok]",
+    "<----- 10 ----->",
 
 #define RUN (MAIN+1)
-    "RUN:     <c><ok>"
+    "RUN:            "
     "$$$$$$$$$$$$$$$$",
 
 #define DELETE (RUN+1)
-    "DEL:     <c><ok>"
+    "DELETE:         "
     "$$$$$$$$$$$$$$$$",
 
 #define HOME (DELETE+1)
-    "     HOME?      "
-    "[cancel]    [ok]",
+    "HOME?           "
+    "      [ok]      ",
 
 #define MOVE (HOME+1)
     "X: +6543210 MOVE"
-    "Y: +6543210 [ok]",
+    "Y: +6543210     ",
 
 #define FOCUS (MOVE+1)
     "Z: +543210 FOCUS"
-    "            [ok]",
+    "                ",
 
 #define ORIGIN (FOCUS+1)
     "  SET ORIGIN?   "
-    "[cancel]    [ok]",
+    "      [ok]      ",
 
 #define DELETE_ALL (ORIGIN+1)
-    "DELETE ALL      "
-    "FILES?   <c><ok>",
+    "DELETE ALL FILES"
+    "      [ok]      ",
 
 #define IP (DELETE_ALL+1)
     "210.210.210.210 "
-    "$$$$$$$$    [ok]",
+    "$$$$$$$$[ok]    ",
 
 #define REBOOT (IP+1)
-    "REBOOTING       "
-    "      ff wachten",
+    "REBOOTING...    "
+    "Please wait...  ",
 
 #define POWER (REBOOT+1)
     "$$$$$$$: 6543210"
-    "[cancel]    [ok]",
+    "      [ok]      ",
 
 #define IO (POWER+1)
     "$$$$$$$$$$$=0 IO"
-    "[cancel]    [ok]",
+    "      [ok]      ",
 
 // Intermediate screens
 #define DELETE_OK (IO+1)
-    "   DELETE 10?   "
-    "<cancel>    [ok]",
+    "DELETE 10?      "
+    "      [ok]      ",
 
 #define HOMING (DELETE_OK+1)
     "HOMING...       "
@@ -108,11 +108,11 @@ static const char *screens[] = {
 
 #define BUSY (RUNNING+1)
     "BUSY: $$$$$$$$$$"
-    "[cancel]    [ok]",
+    "[cancel][ok]    ",
 
 #define PAUSE (BUSY+1)
     "PAUSE: $$$$$$$$$"
-    "[cancel]    [ok]",
+    "[cancel][ok]    ",
 
 };
 
@@ -181,23 +181,27 @@ void LaosMenu::SetScreen(char *msg) {
 *** something changed
 **/
 void LaosMenu::Handle() {
-    int xt, yt, cnt=0, nodisplay = 0;
+    int xt, yt, zt, cnt=0, nodisplay = 0;
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
     static int count=0;
+    
     int c = dsp->read();
-    if ( count++ > 10) count = 0;
-    if ( c ) timeout = 10;
+    if ( count++ > 10) count = 0; // screen refresh counter (refresh once every 10 cycles(
+    
+    if ( c ) timeout = 10;  // keypress timeout counter
     else if ( timeout ) timeout--;
-    if ( screen != prevscreen ) waitup = 1;
+    
+    if ( screen != prevscreen ) waitup = 1; // after a screen change: wait for a key release, mask current keypress
     if ( waitup && timeout) // if we have to wait for key-up, 
         c = 0;                 // cancel the keypress
     if ( waitup && !timeout ) waitup=0;
+    
     if ( !timeout )  // increase speed if we keep button pressed longer
-        speed = 1;
+        speed = 5;
     else {
-        speed *= 2;
-        if ( speed >= 10000 ) speed = 10000;
+        speed *= 1.5;
+        if ( speed >= 100 ) speed = 100;
     }
 
     if ( c || screen != prevscreen || count >9 ) {
@@ -253,22 +257,21 @@ void LaosMenu::Handle() {
                 xt = x; yt= y;
                 //if ( mot->queue() > 2 ) break; 
                 switch ( c ) {
-                    case K_DOWN: y+=speed; if (y<0) y=0; break;
-                    case K_UP: y-=speed; if (y>cfg->ymax) y=cfg->ymax; break;
-                    case K_LEFT: x-=speed; if (x<0) x=0; break;
-                    case K_RIGHT: x+=speed; if (x>cfg->xmax) x=cfg->xmax; break;
+                    case K_DOWN: y+=1000*speed; break;
+                    case K_UP: y-=1000*speed;  break;
+                    case K_LEFT: x-=1000*speed; break;
+                    case K_RIGHT: x+=1000*speed;  break;
                     case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
                     case K_FUP: screen=FOCUS; break; 
                     case K_FDOWN: screen=FOCUS; break;
                     case K_ORIGIN: screen=ORIGIN; break;
                 }
-                if (mot->ready() && ((x!=xt) || (y != yt))) {
-                    mot->moveTo(x, y, z, 50);
+                if  ((mot->ready()) && ( (x!=xt) || (y != yt) )) {
+                    mot->moveTo(x, y, z, speed);
                 } else {
-                    if (! mot->ready()) 
-                    printf("Buffer vol\n");
+                    // if (! mot->ready()) 
+                    // printf("Buffer vol\n");
                 }
-                //while (!mot->ready());
                 args[0]=x-xoff;
                 args[1]=y-yoff;
                 break;
@@ -287,6 +290,9 @@ void LaosMenu::Handle() {
                     case 0: break;
                     default: screen=MAIN; waitup=1; break;
                 }
+                if ( mot->ready() && (z!=zt) ) 
+                    mot->moveTo(x, y, z, speed);
+ 
                 args[0]=z-zoff;
                 break;
 
@@ -299,6 +305,7 @@ void LaosMenu::Handle() {
 
             case ORIGIN: // origin
                 switch ( c ) {
+                    case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
                     case K_OK:
                     case K_ORIGIN:
                         xoff = x;
@@ -313,7 +320,12 @@ void LaosMenu::Handle() {
 
             case DELETE_ALL: // Delete all files
                 switch ( c ) {
-                    case K_OK: cleandir(); screen=MAIN; waitup = 1; break; // INSERT: delete current job
+                    case K_OK: // delete current job
+                        cleandir(); 
+                        screen=MAIN; 
+                        waitup = 1; 
+                        strcpy(jobname, "");
+                        break; 
                     case K_CANCEL: screen=MAIN; waitup = 1; break;
                 }
                 break;

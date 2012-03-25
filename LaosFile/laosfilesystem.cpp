@@ -571,3 +571,14 @@ int SDcheckFirmware() {
     }
     return 0;
 }
+
+int isLaosFile(char *filename) {
+    char name[MAXFILESIZE];
+    strcpy(name, filename);
+    strtolower(name);
+    int x = strlen(name);
+    if ((tolower(filename[--x])=='c') && (tolower(filename[--x])=='g') && (tolower(filename[--x])=='l') && (filename[--x]=='.'))
+        return 1;
+    else
+        return 0;
+}

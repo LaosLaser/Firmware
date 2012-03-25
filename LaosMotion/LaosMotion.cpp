@@ -5,7 +5,7 @@
  * Copyright (c) 2011 Peter Brier
  *
  *   This file is part of the LaOS project (see: http://laoslaser.org)
- *
+ *spe
  *   LaOS is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
@@ -186,7 +186,7 @@ void LaosMotion::moveTo(int x, int y, int z)
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  60.0 * cfg->speed;
    plan_buffer_line(&action);
-   printf("To buffer: %d, %d\n", x, y);
+  // printf("To buffer: %d, %d\n", x, y);
 }
 
 /** 
@@ -200,7 +200,7 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  (speed * 60.0 * cfg->speed) / 100;
    plan_buffer_line(&action);
-   printf("To buffer: %d, %d\n", x, y);
+   //printf("To buffer: %d, %d\n", x, y);
 }
 
 /**
@@ -324,7 +324,7 @@ void LaosMotion::getPosition(int *x, int *y, int *z)
   plan_get_current_position_xyz(&xx, &yy, &zz);
   *x = xx * 1000;
   *y = yy * 1000;
-  *z = xx * 1000;
+  *z = zz * 1000;
 }
 
 
@@ -350,12 +350,18 @@ void LaosMotion::setOrigin(int x, int y, int z)
 void LaosMotion::home(int x, int y, int z)
 {
   int i=0;
-  printf("Homing %d,%d with speed %d\n", x, y, cfg->homespeed);
+  printf("Homing %d,%d, %d with speed %d\n", x, y, z, cfg->homespeed);
   xdir = cfg->xhomedir;
   ydir = cfg->yhomedir;
   zdir = cfg->zhomedir;
   led1 = 0;
   isHome = false;
+  while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
+    zstep = 0;
+    wait(cfg->homespeed/1E6);
+    zstep = 1;
+    wait(cfg->homespeed/1E6);
+  }
   while ( 1 )
   {
     xstep = ystep = 0;
@@ -370,6 +376,7 @@ void LaosMotion::home(int x, int y, int z)
     if ( !(xhome ^ cfg->xpol) && !(yhome ^ cfg->ypol) ) 
     {
       setPosition(x,y,z);
+      moveTo(x,y,z);
       isHome = true;
       return;
     }

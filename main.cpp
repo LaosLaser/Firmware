@@ -153,7 +153,7 @@ int main()
     while ( !mot->isStart() );
     mot->home(cfg->xhome,cfg->yhome, cfg->zhome);
     // if ( !mot->isHome ) exit(1);
-    printf("HOME DONE. (%d,%d)\n",cfg->xhome,cfg->yhome);
+    printf("HOME DONE. (%d,%d, %d)\n",cfg->xhome,cfg->yhome,cfg->zhome);
   }
   else
     printf("Homing skipped: %d\n", cfg->autohome);
@@ -187,9 +187,9 @@ void main_nodisplay() {
      printf("%f %f\n", x,y); 
     mnu->SetScreen("Laser BUSY..."); 
     
-    char name[21];
+    char name[32];
     srv->getFilename(name);
-    printf("Now processing file: %s\n\r", name);
+    printf("Now processing file: '%s'\n\r", name);
     FILE *in = sd.openfile(name, "r");
     while (!feof(in))
     { 
@@ -204,13 +204,14 @@ void main_nodisplay() {
   }
 }
 
+
 void main_menu() {
   // main loop  
   while (1) {
         led1=led2=led3=led4=0;
                 
         mnu->SetScreen(1);
-        while (1) {
+        while (1) {;
             mnu->Handle();
             Net::poll();
             if (srv->State() != listen) {
@@ -225,8 +226,10 @@ void main_menu() {
                         // it's a config file!
                         mnu->SetScreen(1);
                     } else {
-                        mnu->SetFileName(myname);
-                        mnu->SetScreen(2);
+                        if (isLaosFile(myname)) {
+                            mnu->SetFileName(myname);
+                            mnu->SetScreen(2);
+                        }
                     }
                 }
             }           

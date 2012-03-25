@@ -361,11 +361,18 @@ void plan_buffer_line (tActionRequest *pAction)
   float feed_rate;
   bool e_only = false;
   float speed_x, speed_y, speed_z, speed_e; // Nominal mm/minute for each axis  
-  
+    
   x = pAction->target.x;
   y = pAction->target.y;
   z = pAction->target.z;
   feed_rate = pAction->target.feed_rate;
+  
+  // hard clipping. Might implement correct clipping some day...
+  if ( 1000*x < cfg->xmin || 1000*x > cfg->xmax ) return;
+  if ( 1000*y < cfg->ymin || 1000*y > cfg->ymax ) return;
+  if ( 1000*z < cfg->zmin || 1000*z > cfg->zmax ) return;
+  
+  
   // printf("%f %f %f %f %f\n", x,y,z,(float)feed_rate); 
   // Calculate target position in absolute steps
   int32_t target[NUM_AXES];

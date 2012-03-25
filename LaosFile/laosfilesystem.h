@@ -69,4 +69,5 @@ int isFirmware(char *name);     // check if it's firmware
 void installFirmware(char *filename); // put firmware in place
 void removeFirmware(); // remove old firmware
 int SDcheckFirmware();  // check for firmware
+int isLaosFile(char *filename);   // check extension for LaOS compatibility
 #endif
