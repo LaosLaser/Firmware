@@ -356,11 +356,13 @@ void LaosMotion::home(int x, int y, int z)
   zdir = cfg->zhomedir;
   led1 = 0;
   isHome = false;
-  while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
-    zstep = 0;
-    wait(cfg->homespeed/1E6);
-    zstep = 1;
-    wait(cfg->homespeed/1E6);
+  if (cfg->autozhome) {
+    while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
+        zstep = 0;
+        wait(cfg->homespeed/1E6);
+        zstep = 1;
+        wait(cfg->homespeed/1E6);
+    }
   }
   while ( 1 )
   {
