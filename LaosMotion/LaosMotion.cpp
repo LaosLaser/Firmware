@@ -356,6 +356,7 @@ void LaosMotion::home(int x, int y, int z)
   zdir = cfg->zhomedir;
   led1 = 0;
   isHome = false;
+  printf("Home Z...\n\r");
   if (cfg->autozhome) {
     while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
         zstep = 0;
@@ -364,6 +365,7 @@ void LaosMotion::home(int x, int y, int z)
         wait(cfg->homespeed/1E6);
     }
   }
+  printf("Home XY...\n\r");
   while ( 1 )
   {
     xstep = ystep = 0;
@@ -380,6 +382,7 @@ void LaosMotion::home(int x, int y, int z)
       setPosition(x,y,z);
       moveTo(x,y,z);
       isHome = true;
+      printf("Home done.\n\r");
       return;
     }
   }

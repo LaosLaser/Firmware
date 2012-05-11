@@ -368,9 +368,12 @@ void plan_buffer_line (tActionRequest *pAction)
   feed_rate = pAction->target.feed_rate;
   
   // hard clipping. Might implement correct clipping some day...
-  if ( 1000*x < cfg->xmin || 1000*x > cfg->xmax ) return;
-  if ( 1000*y < cfg->ymin || 1000*y > cfg->ymax ) return;
-  if ( 1000*z < cfg->zmin || 1000*z > cfg->zmax ) return;
+  // JAAP: temporary disabled clipping because it caused parts of the print 
+  // to "disappear" outside the working area, even though they were still 
+  // with x/y limits!  This needs fixing!
+  //if ( 1000*x < cfg->xmin || 1000*x > cfg->xmax ) return;
+  //if ( 1000*y < cfg->ymin || 1000*y > cfg->ymax ) return;
+  //if ( 1000*z < cfg->zmin || 1000*z > cfg->zmax ) return;
   
   
   // printf("%f %f %f %f %f\n", x,y,z,(float)feed_rate); 

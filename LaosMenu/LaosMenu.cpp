@@ -255,7 +255,6 @@ void LaosMenu::Handle() {
             case MOVE: // pos xy
                 mot->getPosition(&x, &y, &z);
                 xt = x; yt= y;
-                //if ( mot->queue() > 2 ) break; 
                 switch ( c ) {
                     case K_DOWN: y+=1000*speed; break;
                     case K_UP: y-=1000*speed;  break;
@@ -405,8 +404,13 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            while ((!feof(runfile)) && mot->ready())
+                            while (!feof(runfile) )
+                            {
+                                while ( !mot->ready() );
                                 mot->write(readint(runfile));
+                            }
+                            while ( !mot->ready() );
+
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
