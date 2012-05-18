@@ -479,6 +479,10 @@ int readint(FILE *fp)
           str[i++] = (char)c;
         break;
       case '-': sign = -1; break;
+      case ';': while ((!feof(fp)) && (c != '\n')) {
+            fread(&c, sizeof(c),1,fp);
+        }
+        break; 
       case ' ': case '\t': case '\r': case '\n':
         if ( i )
         {
