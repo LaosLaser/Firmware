@@ -404,13 +404,8 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            while (!feof(runfile) )
-                            {
-                                while ( !mot->ready() );
+                            while ((!feof(runfile)) && mot->ready())
                                 mot->write(readint(runfile));
-                            }
-                            while ( !mot->ready() );
-
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
