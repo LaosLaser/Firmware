@@ -54,7 +54,6 @@ static void st_interrupt ();
 static void set_step_timer (uint32_t cycles);
 static void st_go_idle();
 
-
 // Globals      
 // volatile uint16_t steptimeout = 0;
 volatile unsigned char busy = 0;
@@ -75,7 +74,7 @@ static uint32_t step_inv;      // invert mask for the stepper bits
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y, 
                counter_z;       
-static int32_t counter_e;       
+static int32_t counter_e, counter_l, pos_l; // extruder and laser       
 static uint32_t step_events_completed; // The number of step events executed in the current block
 
 // Variables used by the trapezoid generation
@@ -90,6 +89,10 @@ static int32_t   n;
 static int32_t   decel_n;
 static tRamp     ramp;        // state of state machine for ramping up/down
 static int32_t   power; // power [0..10000]
+
+extern unsigned char bitmap_bpp;
+extern unsigned long bitmap[], bitmap_width, bitmap_size;
+
 
 //         __________________________
 //        /|                        |\     _________________         ^
@@ -306,6 +309,8 @@ static  void st_interrupt (void)
       counter_y = counter_x;
       counter_z = counter_x;
       counter_e = counter_x;
+      counter_l = counter_x;
+      pos_l = 0;
       step_events_completed = 0;     
       direction_bits = current_block->direction_bits ^ direction_inv;
       set_direction_pins ();
@@ -321,8 +326,23 @@ static  void st_interrupt (void)
   // process the current block
   if (current_block != NULL) 
   {
-    laser = ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);      
-
+   if ( current_block->options & OPT_BITMAP )
+   {
+      laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
+      counter_l += bitmap_width;
+      // printf("%d %d %d: %d\n\r", bitmap_len, pos_l, counter_l,  (bitmap[pos_l / 32] & (pos_l % 32) ?  1 : 0 ) );
+      if (counter_l > 0) 
+      {
+        counter_l -= current_block->step_event_count;
+       // putchar ( (laser ?  '1' : '0' ) );
+        pos_l++;
+      }
+   }
+   else
+   {
+     laser = ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);      
+   }
+   
     if (current_block->action_type == AT_MOVE)
     {
       // Execute step displacement profile by bresenham line algorithm
@@ -348,6 +368,9 @@ static  void st_interrupt (void)
         step_bits |= (1<<E_STEP_BIT);
         counter_e -= current_block->step_event_count;
       }
+      
+
+
 
       //clear_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
       step_events_completed++; // Iterate step events

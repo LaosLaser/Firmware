@@ -563,6 +563,8 @@ void plan_buffer_line (tActionRequest *pAction)
   block->check_endstops = (pAction->ActionType == AT_MOVE_ENDSTOP);
   if (  pAction->ActionType == AT_LASER ) 
     block->options = OPT_LASER_ON;
+  else if (  pAction->ActionType == AT_BITMAP ) 
+    block->options = OPT_BITMAP;
   else
     block->options = 0;
   
@@ -628,6 +630,7 @@ void plan_buffer_action(tActionRequest *pAction)
   {
   case AT_MOVE:
   case AT_LASER:
+  case AT_BITMAP:
   case AT_MOVE_ENDSTOP:
     plan_buffer_line (pAction);
     break;    

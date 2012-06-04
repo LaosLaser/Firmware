@@ -74,7 +74,13 @@ static int ofsx=0, ofsy=0, ofsz=0;
 // Command interpreter
 int param=0, val=0;
 
-
+// Bitmap buffer
+#define BITMAP_PIXELS  (8192)
+#define BITMAP_SIZE (BITMAP_PIXELS/32)
+unsigned long bitmap[BITMAP_SIZE];
+unsigned long bitmap_width=0; // nr of pixels
+unsigned long bitmap_size=0; // nr of bytes 
+unsigned char bitmap_bpp=1, bitmap_enable=0;
 
 /**
 *** LaosMotion() Constructor
@@ -165,7 +171,7 @@ int LaosMotion::ready()
 
 /**
 *** queue()
-*** queue items 
+*** return nr of items in the queue (0 is empty)
 **/
 int LaosMotion::queue()
 {
@@ -233,6 +239,11 @@ void LaosMotion::write(int i)
                 step=0;
                 action.param = power;
                 action.ActionType =  (command ? AT_LASER : AT_MOVE);
+                if ( bitmap_enable && action.ActionType == AT_LASER) 
+                { 
+                  action.ActionType = AT_BITMAP;                 
+                  bitmap_enable = 0;
+                }
                 action.target.feed_rate =  60.0 * (command ? mark_speed : cfg->speed );
                 plan_buffer_line(&action);
                 break;
@@ -285,6 +296,32 @@ void LaosMotion::write(int i)
                   break;                  
               }
               break;
+            }
+         case 9: // Store bitmap mark data format: 9 <bpp> <width> <data-0> <data-1> ... <data-n>
+            if ( step == 1 ) 
+            {
+              bitmap_bpp = i;
+            }        
+            else if ( step == 2 )
+            {
+              if ( queue() ) printf("Queue not empty... wait...\n\r");
+              while ( queue() );// printf("+"); // wait for queue to empty 
+              bitmap_width = i;
+              bitmap_enable = 1;
+              bitmap_size = (bitmap_bpp * bitmap_width) / 32;
+              if  ( (bitmap_bpp * bitmap_width) % 32 )  // padd to next 32-bit 
+                bitmap_size++; 
+              printf("\n\rBitmap: read %d dwords\n\r", bitmap_size);
+
+            }
+            else // copy data
+            {
+              if ( step-2 == bitmap_size )
+              {
+                step = 0;
+                printf("Bitmap: received %d dwords\n\r", bitmap_size);
+              }
+              bitmap[ (step-3) % BITMAP_SIZE ] = i;
             }
            break; 
          default: // I do not understand: stop motion
