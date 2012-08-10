@@ -55,7 +55,7 @@ DigitalOut edir(p30);  // NOK: CAN, (TODO)
 PwmOut pwm(p22);                // O1: PWM (Yellow)
 DigitalOut laser_enable(p21);   // O2: enable laser
 DigitalOut o3(p6);              // 03: NC
-DigitalOut laser(p5);           // O4: (p5) LaserON (White)
+DigitalOut *laser = NULL;           // O4: (p5) LaserON (White)
 
 // Analog in/out (cover sensor) + NC
 DigitalIn cover(p19);
@@ -95,6 +95,8 @@ LaosMotion::LaosMotion()
 #endif
   pwm.period(1.0 / cfg->pwmfreq);
   pwm = cfg->pwmmin/100.0;
+  if ( laser == NULL ) laser = new DigitalOut(LASER_PIN);
+  *laser = LASEROFF;
 
   mark_speed = cfg->speed;
   //start.mode(PullUp);
@@ -152,7 +154,7 @@ void LaosMotion::reset()
 {
   step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
   ofsx = ofsy = ofsz = 0;
-  laser = LASEROFF;
+  *laser = LASEROFF;
   enable = cfg->enable;
   cover.mode(PullUp);
 }
@@ -316,7 +318,7 @@ void LaosMotion::write(int i)
             }
             else // copy data
             {
-              if ( step-2 == bitmap_size )
+              if ( step-2 == bitmap_size ) // last dword received
               {
                 step = 0;
                 printf("Bitmap: received %d dwords\n\r", bitmap_size);
@@ -425,7 +427,6 @@ void LaosMotion::home(int x, int y, int z)
   }
  
 }
-
 
 
 

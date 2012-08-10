@@ -203,7 +203,7 @@ static void st_go_idle()
   timer.detach();
   running = 0;
   clear_all_step_pins();
-  laser = LASEROFF;
+  *laser = LASEROFF;
   pwm = cfg->pwmmax / 100.0;  // set pwm to max;
   //printf("idle()..\n");
 }
@@ -328,7 +328,7 @@ static  void st_interrupt (void)
   {
    if ( current_block->options & OPT_BITMAP )
    {
-      laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
+      *laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
       counter_l += bitmap_width;
       // printf("%d %d %d: %d\n\r", bitmap_len, pos_l, counter_l,  (bitmap[pos_l / 32] & (pos_l % 32) ?  1 : 0 ) );
       if (counter_l > 0) 
@@ -340,7 +340,7 @@ static  void st_interrupt (void)
    }
    else
    {
-     laser = ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);      
+     *laser = ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);      
    }
    
     if (current_block->action_type == AT_MOVE)
@@ -462,5 +462,4 @@ void st_synchronize()
 {
   while(plan_get_current_block()) { sleep_mode(); }    
 }
-
 
