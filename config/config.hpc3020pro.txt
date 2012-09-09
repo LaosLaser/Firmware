@@ -1,0 +1,70 @@
+;
+; Config file for HPC laser LS-3020 Pro
+; ==> 400 steps/rotation
+; 
+; for the version with flatcable and 26x32 honeycomb
+; as distributed in may 2012
+;
+; configuration made by Jaap Vermaas <jaap@tuxic.nl>
+;
+; Save on MBED in the root, as "config.txt"
+;
+net.ip 192.168.123.111		; IP address [xxx.xxx.xxx.xxx] 
+net.netmask 255.255.255.0	; netmask [xxx.xxx.xxx.xxx] 
+net.gateway 192.168.123.254	; gateway
+net.dns 192.168.123.194		; DNS server
+net.dhcp 0			; Enable DHCP for IP address [0/1]
+net.port 69			; Communication socket port number []
+
+sys.debug  1			; debug flags bit0=verbose, 
+				; bit1=log to serial, bit2=log to file
+sys.autohome 1			; Enable automatic homing at startup [1/0] 
+				;(or wait for cover to close)
+sys.nodisplay 0			; Disable the display [1/0]
+sys.i2cbaud 0			; I2C display baudrate [Hz]
+
+laser.enable 0			; Laser enable signal polarity [0/1]
+laser.on 0			; Laser on signal polarity [0/1]
+laser.pwm.min  90		; minimum pwm value [%]
+laser.pwm.max  0		; maximum pwm value [%]
+laser.pwm.freq 1000		; pwm frequency [Hz]
+
+motion.enable  0		; Enable signal state to enable motors [0/1] 
+motion.homespeed  100		; Homing speed [mm/sec]
+motion.speed  100		; max linear speed [mm/sec]
+motion.accel  500		; linear acceleration [mm/sec2]
+motion.tolerance  50		; tolerance [1/1000 units]
+
+; old firmware: set speed in [usec]
+motion.highspeed 100	; speed in [usec]
+
+; Next values are valid for axis x,y,z and e
+x.pol 1				; home/limit sensor polarity [1/0]
+x.scale 158516			; axis scaling [steps/meter]
+;x.scale 79258  
+				; use negative number to invert direction [1/0]
+x.homedir 1			; state of the direction signal when homing
+x.home 400000			; home positions [um] 
+x.min 0				; minimal position [um]
+x.max 300000			; maximum position [um]
+x.rest 300000			; rest position [um]
+x.speed 1000			; maximum speed [mm/sec]
+x.invert 0			; Invert signal polarity for step signal [1/0]
+
+; Now for the Y-axis:
+y.pol 1				; home/limit sensor polarity [1/0]
+y.scale 158516   		; axis scaling [steps/meter]
+;y.scale -79258
+				; use negative number to invert direction [1/0]
+y.homedir 1			; state of the direction signal when homing
+y.home 205000			; home positions [um]
+y.min 0				; minimal position [um]
+y.max 200000			; maximum position [um]
+y.rest 200000			; rest position [um] 
+y.speed 500			; maximum speed [mm/sec]
+y.invert 0			; Invert signal polarity for step signal [1/0]
+
+; Z-axis not in use for HPC
+; z.min 0
+; z.max 200000
+; z.home 100000
