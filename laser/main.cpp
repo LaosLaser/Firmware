@@ -1,3 +1,4 @@
+
 /*
  * main.cpp
  * Laos Controller, main function
@@ -144,17 +145,13 @@ int main()
   
   if ( cfg->autohome )
   {
-    printf("WAIT FOR COVER...\n");
+    printf("HOME...\n");
     wait(1);
   
+    mnu->SetScreen("HOME....");
   
   // Start homing
-    mnu->SetScreen("WAIT FOR COVER....");
-    //if ( cfg->waitforstart ) 
-      while ( !mot->isStart() );
-    mnu->SetScreen("HOME....");
-    printf("HOME...\n");
-
+    while ( !mot->isStart() );
     mot->home(cfg->xhome,cfg->yhome, cfg->zhome);
     // if ( !mot->isHome ) exit(1);
     printf("HOME DONE. (%d,%d, %d)\n",cfg->xhome,cfg->yhome,cfg->zhome);

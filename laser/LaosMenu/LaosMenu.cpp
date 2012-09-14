@@ -103,7 +103,7 @@ static const char *screens[] = {
     "                ",
 
 #define RUNNING (HOMING+1)
-    "RUNNING...      "
+    "RUNNING...   10%"
     "[cancel]        ",
 
 #define BUSY (RUNNING+1)
@@ -409,7 +409,6 @@ void LaosMenu::Handle() {
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
-                                mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
                                 screen=MAIN;
                             } else {
                                 nodisplay = 1;
@@ -422,9 +421,9 @@ void LaosMenu::Handle() {
                 screen = MAIN;
                 break;
         }
-        if (nodisplay == 0) {
+        //if (nodisplay == 0) {
             dsp->ShowScreen(screens[screen], args, sarg);
-        }
+        //}
          prevscreen = screen;
     }
 
