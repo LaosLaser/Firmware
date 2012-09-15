@@ -145,7 +145,7 @@ static inline void  set_direction_pins (void)
 {
   xdir = ( (direction_bits & (1<<X_DIRECTION_BIT))? 0 : 1 );
   ydir = ( (direction_bits & (1<<Y_DIRECTION_BIT))? 0 : 1 );   
-  // zdir = ( (direction_bits & (1<<Z_DIRECTION_BIT))?0:1);
+  zdir = ( (direction_bits & (1<<Z_DIRECTION_BIT))? 0 : 1 );
   // edir = ( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);   
 }
 
@@ -154,7 +154,7 @@ static inline void  set_step_pins (uint32_t bits)
 {
   xstep = ( (bits & (1<<X_STEP_BIT))?1:0 ); 
   ystep = ( (bits & (1<<Y_STEP_BIT))?1:0 );
- // zstep = ( (bits & (1<<Z_STEP_BIT))?1:0 );  
+  zstep = ( (bits & (1<<Z_STEP_BIT))?1:0 );  
  // estep = ( (bits & (1<<E_STEP_BIT))?1:0 );        
 }
 
@@ -164,7 +164,7 @@ static inline void  clear_all_step_pins (void)
   
   xstep =( (step_inv & (1<<X_STEP_BIT)) ? 1 : 0 ); 
   ystep =( (step_inv & (1<<Y_STEP_BIT)) ? 1 : 0 ); 
-  // zstep =( (step_inv & (1<<Z_STEP_BIT)) ? 0 : 1 ); 
+  zstep =( (step_inv & (1<<Z_STEP_BIT)) ? 0 : 1 ); 
   // estep =( (step_inv & (1<<E_STEP_BIT)) ? 0 : 1 ); 
 }
 

@@ -217,7 +217,7 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
 **/
 void LaosMotion::write(int i)
 {
-  static int x,y,z,power=10000;
+  static int x=0,y=0,z=0,power=10000;
   //if (  plan_queue_empty() ) 
   //printf("Empty\n");
   if ( step == 0 )
@@ -239,6 +239,7 @@ void LaosMotion::write(int i)
               case 2: 
                 action.target.y = i/1000.0;;
                 step=0;
+                action.target.z = 0;
                 action.param = power;
                 action.ActionType =  (command ? AT_LASER : AT_MOVE);
                 if ( bitmap_enable && action.ActionType == AT_LASER) 
@@ -255,8 +256,12 @@ void LaosMotion::write(int i)
             switch(step)
             {
               case 1: 
-                z = i; 
-                step = 0; 
+                step = 0;
+                z = action.target.z = i/1000.0;;                
+                action.param = power;
+                action.ActionType =  AT_MOVE;
+                action.target.feed_rate =  60.0 * cfg->speed;
+                plan_buffer_line(&action);                 
                 break;
             }
          case 4: // set x,y,z (absolute)

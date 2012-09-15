@@ -390,12 +390,12 @@ void LaosMenu::Handle() {
 
             case RUNNING: // Screen while running
                 switch ( c ) {
-                    case K_CANCEL:
+                    /* case K_CANCEL:
                         while (mot->queue());
                         mot->reset();
                         if (runfile != NULL) fclose(runfile);
                         runfile=NULL; screen=MAIN; menu=MAIN;
-                        break;
+                        break; */
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
