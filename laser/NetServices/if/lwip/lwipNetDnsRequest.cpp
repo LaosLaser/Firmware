@@ -22,9 +22,11 @@ THE SOFTWARE.
 */
 
 #include "lwipNetDnsRequest.h"
-#include "lwip/err.h" //err_t, ERR_xxx
-#include "lwip/dns.h"
-
+extern "C"
+{
+    #include "lwip/err.h" //err_t, ERR_xxx
+    #include "lwip/dns.h"
+}
 #include "netCfg.h"
 #if NET_LWIP_STACK
 

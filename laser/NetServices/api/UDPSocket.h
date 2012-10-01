@@ -30,6 +30,7 @@ UDP Socket header file
 
 #include "core/net.h"
 #include "core/host.h"
+#include "netudpsocket.h"
 //Essentially it is a safe interface to NetUdpSocket
 
 ///UDP Socket error codes
@@ -49,9 +50,6 @@ enum UDPSocketEvent //Only one event here for now, but keeps that model in case 
 {
   UDPSOCKET_READABLE, ///<Data in buf
 };
-
-class NetUdpSocket;
-enum NetUdpSocketEvent;
 
 ///This is a simple UDP Socket class
 /**

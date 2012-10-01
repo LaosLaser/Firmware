@@ -33,6 +33,7 @@ NTP Client header file
 #include "api/UDPSocket.h"
 #include "api/DNSRequest.h"
 #include "mbed.h"
+#include "arch/cc.h"
 
 ///NTP Client results
 enum NTPResult
@@ -128,7 +129,11 @@ private:
   void init();
   void open();
   
-  __packed struct NTPPacket //See RFC 4330 for Simple NTP
+  #ifdef PACK_STRUCT_USE_INCLUDES
+  #  include "arch/bpstruct.h"
+  #endif
+  PACK_STRUCT_BEGIN
+  struct NTPPacket //See RFC 4330 for Simple NTP
   {
     //WARN: We are in LE! Network is BE!
     //LSb first
@@ -153,7 +158,11 @@ private:
     uint32_t rxTm_f;
     uint32_t txTm_s;
     uint32_t txTm_f;
-  };
+  } PACK_STRUCT_STRUCT;
+  PACK_STRUCT_END
+  #ifdef PACK_STRUCT_USE_INCLUDES
+  #  include "arch/epstruct.h"
+  #endif
 
   void process(); //Main state-machine
 

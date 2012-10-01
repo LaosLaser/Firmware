@@ -24,10 +24,13 @@ THE SOFTWARE.
 #include "EthernetNetIf.h"
 
 #include "netif/etharp.h"
-#include "lwip/dhcp.h"
-#include "lwip/dns.h"
-#include "lwip/igmp.h"
 
+extern "C"
+{
+    #include "lwip/dhcp.h"
+    #include "lwip/dns.h"
+    #include "lwip/igmp.h"
+}
 #include "drv/eth/eth_drv.h"
 #include "mbed.h"
 
@@ -54,7 +57,8 @@ EthernetNetIf::EthernetNetIf(IpAddr ip, IpAddr netmask, IpAddr gateway, IpAddr d
   m_gateway = gateway;
   m_ip = ip;
   m_pNetIf = new netif;
-  dns_setserver(0, &dns.getStruct());
+  ip_addr_t dnsaddr = dns.getStruct();
+  dns_setserver(0, &dnsaddr);
   m_useDhcp = false;
   m_setup = false;
 }
@@ -103,7 +107,10 @@ EthernetErr EthernetNetIf::setup(int timeout_ms /*= 15000*/)
   m_pNetIf->hwaddr[0], m_pNetIf->hwaddr[1], m_pNetIf->hwaddr[2],
   m_pNetIf->hwaddr[3], m_pNetIf->hwaddr[4], m_pNetIf->hwaddr[5]);
 
-  m_pNetIf = netif_add(m_pNetIf, &(m_ip.getStruct()), &(m_netmask.getStruct()), &(m_gateway.getStruct()), NULL, eth_init, ip_input);//ethernet_input);// ip_input);
+  ip_addr_t ipaddr = m_ip.getStruct();
+  ip_addr_t netmaskaddr = m_netmask.getStruct();
+  ip_addr_t gatewayaddr = m_gateway.getStruct();
+  m_pNetIf = netif_add(m_pNetIf, &ipaddr, &netmaskaddr, &gatewayaddr, NULL, eth_init, ip_input);//ethernet_input);// ip_input);
   m_pNetIf->hostname = (char *)m_hostname;
   netif_set_default(m_pNetIf);
   

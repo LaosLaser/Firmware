@@ -22,10 +22,12 @@ THE SOFTWARE.
 */
 
 #include "LwipNetIf.h"
-#include "lwip/init.h"
-#include "lwip/tcp_impl.h"
-#include "lwip/dns.h"
-
+extern "C"
+{
+    #include "lwip/init.h"
+    #include "lwip/tcp_impl.h"
+    #include "lwip/dns.h"
+}
 #include "lwipNetTcpSocket.h"
 #include "lwipNetUdpSocket.h"
 #include "lwipNetDnsRequest.h"

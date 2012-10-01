@@ -52,9 +52,17 @@ lwIP uses packed structures, so packing the field is not really a good idea ;) *
 #define PACK_STRUCT_FIELD(x)    x
 #endif
 
-#define PACK_STRUCT_STRUCT
-#define PACK_STRUCT_BEGIN __packed
-#define PACK_STRUCT_END
+#ifdef __GNUC__
+    /* Packing for structs in GCC. */
+    #define PACK_STRUCT_STRUCT __attribute__((packed))
+    #define PACK_STRUCT_BEGIN
+    #define PACK_STRUCT_END
+#else /* !__GNUC__ */
+    /* Packing for structs in ARM compiler. */
+    #define PACK_STRUCT_STRUCT
+    #define PACK_STRUCT_BEGIN __packed
+    #define PACK_STRUCT_END
+#endif /* __GNUC__ */
 
 #define LWIP_CHKSUM_ALGORITHM 3
 

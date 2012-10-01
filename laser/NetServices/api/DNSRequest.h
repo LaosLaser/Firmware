@@ -31,6 +31,7 @@ DNS Request header file
 #include "core/net.h"
 #include "core/ipaddr.h"
 #include "core/host.h"
+#include "netdnsrequest.h"
 //Essentially it is a safe interface to NetDnsRequest
 
 ///DNS Request error codes
@@ -55,9 +56,6 @@ enum DNSReply
   //...
   DNS_FOUND,
 };
-
-class NetDnsRequest;
-enum NetDnsReply;
 
 ///This is a simple DNS Request class
 /**

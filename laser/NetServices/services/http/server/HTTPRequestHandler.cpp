@@ -77,7 +77,7 @@ string& HTTPRequestHandler::path() //const
 
 int HTTPRequestHandler::dataLen() const
 {
-  map<string,string>::iterator it;
+  map<string,string>::const_iterator it;
   it = m_reqHeaders.find("Content-Length");
   if( it == m_reqHeaders.end() )
   {

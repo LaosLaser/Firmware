@@ -62,7 +62,8 @@ NetUdpSocketErr LwipNetUdpSocket::bind(const Host& me)
   {
     DBG("This is a multicast addr, joining multicast group\n");
     m_multicastGroup = me.getIp();
-    err = igmp_joingroup(IP_ADDR_ANY, &(m_multicastGroup.getStruct()));
+    ip_addr_t multicastGroupAddr = m_multicastGroup.getStruct();
+    err = igmp_joingroup(IP_ADDR_ANY, &multicastGroupAddr);
     if(err)
       return NETUDPSOCKET_IF; //Could not find or create group
   }
@@ -97,7 +98,8 @@ int /*if < 0 : NetUdpSocketErr*/ LwipNetUdpSocket::sendto(const char* buf, int l
     q = q->next;
   } while(q != NULL);
 
-  err_t err = udp_sendto( (udp_pcb*) m_pPcb, p, &(pHost->getIp().getStruct()), pHost->getPort() );
+  ip_addr_t ipaddr = pHost->getIp().getStruct();
+  err_t err = udp_sendto( (udp_pcb*) m_pPcb, p, &ipaddr, pHost->getPort() );
   pbuf_free( p );
   if(err)
     return NETUDPSOCKET_SETUP; //Connection problem
@@ -240,7 +242,8 @@ void LwipNetUdpSocket::cleanUp() //Flush input buffer
   #if LWIP_IGMP //Multicast support enabled
   if(m_multicastGroup.isMulticast())
   {
-    igmp_leavegroup(IP_ADDR_ANY, &(m_multicastGroup.getStruct()));
+    ip_addr_t multicastGroupAddr = m_multicastGroup.getStruct();
+    igmp_leavegroup(IP_ADDR_ANY, &multicastGroupAddr);
     m_multicastGroup = IpAddr();
   }
   #endif

@@ -1,6 +1,4 @@
-/* mbed Microcontroller Library - FATDirHandle
- * Copyright (c) 2008, sford
- */
+/* Copyright 2008 ARM Limited. All rights reserved. */
 
 #ifndef MBED_FATDIRHANDLE_H
 #define MBED_FATDIRHANDLE_H

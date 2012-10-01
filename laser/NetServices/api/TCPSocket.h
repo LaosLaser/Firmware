@@ -30,6 +30,7 @@ TCP Socket header file
 
 #include "core/net.h"
 #include "core/host.h"
+#include "nettcpsocket.h"
 //Essentially it is a safe interface to NetTcpSocket
 
 ///TCP Socket error codes
@@ -60,9 +61,6 @@ enum TCPSocketEvent
   TCPSOCKET_ERROR, ///<Unknown error
   TCPSOCKET_DISCONNECTED ///<Disconnected
 };
-
-class NetTcpSocket;
-enum NetTcpSocketEvent;
 
 ///This is a simple TCP Socket class
 /**

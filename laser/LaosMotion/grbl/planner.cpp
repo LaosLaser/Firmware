@@ -28,10 +28,10 @@
 #include <string.h>
 
 
+#include "global.h"
 #include "planner.h"
 #include "stepper.h"
 #include "config.h"
-#include "global.h"
 
 // The GRBL configuration (scaling etc)
 config_t config;
