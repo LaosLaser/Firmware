@@ -28,13 +28,13 @@ ConfigFile::ConfigFile(char *file)
   printf("ConfigFile:ConfigFile (%s)\n\r", file);
   extern LaosFileSystem sd;
   printf("ConfigFile(%s)\n\r", file);
-  fp =sd.openfile(file, "rb");
+  fp =sd.openfile(file, "r");
   if (fp==NULL) {
     printf("Local configfile\n\r");
     char tmpname[32];
     sprintf(tmpname, "/local/%s", file);
     printf("name: %s\n\r", tmpname); 
-    fp = fopen(tmpname,"rb");
+    fp = fopen(tmpname,"r");
   }
 }
 

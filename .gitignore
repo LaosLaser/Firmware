@@ -1,0 +1,8 @@
+.DS_Store
+*.bin
+*.disasm
+*.elf
+*.hex
+*.map
+mri.log
+LPC176x/

@@ -26,8 +26,10 @@
 #include "mbed.h"
 
 // Serial
+#if !MRI_ENABLE
 Serial serial(USBTX, USBRX);
 #define _SERIAL_BAUD 115200
+#endif
 
 // I2C
 I2C i2c(p9, p10);        // sda, scl
@@ -41,9 +43,11 @@ LaosDisplay::LaosDisplay()
 {
   int i2cBaud = _I2C_BAUD;
   i2c.frequency(i2cBaud );
+#if !MRI_ENABLE
   int serialBaud = _SERIAL_BAUD;
   serial.baud(serialBaud);
-  
+#endif
+
   char key;
   // test I2C, if we cannot read, display is not attached, enable simulation
   // wait 1 second to make sure that I2C has time to power on!
@@ -68,7 +72,11 @@ void LaosDisplay::write(char *s)
   if ( sim ) 
   {
     while (*s)
+#if !MRI_ENABLE
       serial.putc(*s++);
+#else
+      putc(*s++, stdout);
+#endif
     return;
   } else {
     while (*s)
@@ -91,9 +99,11 @@ int LaosDisplay::read()
   char key = 0;
   if (sim)
   {
+#if !MRI_ENABLE
     if ( serial.readable() )
       key =  serial.getc();
     else
+#endif
       key = 0;
   }
   else
