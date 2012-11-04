@@ -16,4 +16,5 @@ GCC4MBED_DIR=../../gcc4mbed
 LIBS_PREFIX=
 LIBS_SUFFIX=
 
-include ../../gcc4mbed/build/gcc4mbed.mk
+#include ../../gcc4mbed/build/gcc4mbed.mk
+include gcc4mbed.mk
