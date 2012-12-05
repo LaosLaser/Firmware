@@ -44,7 +44,7 @@ public:
         virtual int mkdir(const char *name, mode_t mode);
 	
     FATFS _fs;            					// Work area (file system object) for logical drive	
-    static FATFileSystem *_ffs[_DRIVES];	// FATFileSystem objects, as parallel to FatFs drives array
+    static FATFileSystem *_ffs[_VOLUMES];	// FATFileSystem objects, as parallel to FatFs drives array
 	int _fsid;
 	
 	virtual int disk_initialize() { return 0; }
