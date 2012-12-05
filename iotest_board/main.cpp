@@ -108,6 +108,7 @@ void home()
 **/
 int main() 
 {
+  FILE *test1=NULL, *test2=NULL;
   led1 = led2 = led3 = led4 = 1;
   Timer t;
   DigitalOut *io = NULL;
@@ -193,7 +194,7 @@ int main()
       case 's':
         memset(buf,0,sizeof(buf));
         printf("Testing IO board SD card: Write...\n\r");
-        FILE *test1 = fopen("/sd/text.txt", "wb");
+        test1 = fopen("/sd/text.txt", "wb");
         fwrite("bla bla\n",8, 1, test1); 
         fclose(test1);
         printf("Testing IO board SD card: Read...\n\r");
@@ -205,7 +206,7 @@ int main()
       case 'S':
         printf("SD card speed test (writing and reading 1MByte file\n");
         memset(buf,23,sizeof(buf));
-        FILE *test2 = fopen("/sd/test.bin", "wb");
+        test2 = fopen("/sd/test.bin", "wb");
         t.reset();
         t.start();
         for(i=0;i<sizeof(buf);i++)
