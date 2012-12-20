@@ -57,7 +57,6 @@ static void st_go_idle();
 // Globals      
 // volatile uint16_t steptimeout = 0;
 volatile unsigned char busy = 0;
-volatile double p=0;
 
 // Locals
 static block_t *current_block;  // A pointer to the block currently being traced
@@ -70,7 +69,7 @@ static uint32_t direction_inv;    // invert mask for direction bits
 static uint32_t direction_bits;   // all axes direction (different ports)    
 static uint32_t step_bits;        // all axis step bits
 static uint32_t step_inv;      // invert mask for the stepper bits
-
+static uint32_t nominal_rate; // [steps/min]
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y, 
                counter_z;       
@@ -78,7 +77,7 @@ static int32_t counter_e, counter_l, pos_l; // extruder and laser
 static uint32_t step_events_completed; // The number of step events executed in the current block
 
 // Variables used by the trapezoid generation
-static uint32_t cycles_per_step_event;        // The number of machine cycles between each step event
+//static uint32_t cycles_per_step_event;        // The number of machine cycles between each step event
 static uint32_t trapezoid_tick_cycle_counter; // The cycles since last trapezoid_tick. Used to generate ticks at a steady
                                               // pace without allocating a separate timer
 static uint32_t trapezoid_adjusted_rate;      // The current rate of step_events according to the trapezoid generator
@@ -88,7 +87,6 @@ static int32_t   c_min;      // minimal clock cycle count [at vnominal for this 
 static int32_t   n;
 static int32_t   decel_n;
 static tRamp     ramp;        // state of state machine for ramping up/down
-static int32_t   power; // power [0..10000]
 
 extern unsigned char bitmap_bpp;
 extern unsigned long bitmap[], bitmap_width, bitmap_size;
@@ -192,7 +190,7 @@ void st_wake_up()
   {
     running = 1;
     set_step_timer(2000);
-    //printf("wake_up()..\n");
+  //  printf("wake_up()..\n");
   }
 }
 
@@ -205,7 +203,7 @@ static void st_go_idle()
   clear_all_step_pins();
   *laser = LASEROFF;
   pwm = cfg->pwmmax / 100.0;  // set pwm to max;
-  //printf("idle()..\n");
+//  printf("idle()..\n");
 }
 
 // return number of steps to perform:  n = (v^2) / (2*a)
@@ -272,9 +270,14 @@ static inline void trapezoid_generator_reset()
 // Set the step timer. Note: this starts the ticker at an interval of "cycles" 
 static inline void set_step_timer (uint32_t cycles) 
 {
+   volatile static double p;
    timer.attach_us(&st_interrupt,cycles);
-   p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
-  // printf("%f\n\r", (float)p);
+   // p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
+   // p = ( to_double(c_min) * current_block->power) / ( 10000.0 * (double)cycles);
+  // p = (60E6/nominal_rate) / cycles; // nom_rate is steps/minute,  
+   //printf("%f,%f,%f\n\r", (float)(60E6/nominal_rate), (float)cycles, (float)p);
+  // printf("%d: %f %f\n\r", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
+   p = (double)current_block->power/10000.0;
    pwm = p;
 }  
 
@@ -310,12 +313,12 @@ static  void st_interrupt (void)
       counter_z = counter_x;
       counter_e = counter_x;
       counter_l = counter_x;
+	    
       pos_l = 0;
       step_events_completed = 0;     
       direction_bits = current_block->direction_bits ^ direction_inv;
       set_direction_pins ();
       step_bits = 0;
-      power = current_block->power;
     } 
     else 
     {
@@ -326,6 +329,8 @@ static  void st_interrupt (void)
   // process the current block
   if (current_block != NULL) 
   {
+  
+
    if ( current_block->options & OPT_BITMAP )
    {
       *laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));

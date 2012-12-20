@@ -288,21 +288,22 @@ void LaosMotion::write(int i)
               case 1: 
                 param = i; 
                 break;
-              case 2: val = i; step = 0; 
-              switch( param )
-              {
-                case 100: 
-                  if ( val < 1 ) val = 1;
-                  if ( val > 9999 ) val = 10000; 
-                  mark_speed = val * cfg->speed / 10000; 
+              case 2: 
+			    val = i; 
+				step = 0; 
+                switch( param )
+                {
+                  case 100: 
+                    if ( val < 1 ) val = 1;
+                    if ( val > 9999 ) val = 10000; 
+                    mark_speed = val * cfg->speed / 10000; 
                   break;  
-                case 101: 
-                  power = val;
-                  printf("power: %d\n", power); 
-                  step=0; 
+                    case 101: 
+                    power = val;
+                    printf("power: %d\n", power); 
                   break;                  
-              }
-              break;
+                }
+                break;
             }
          case 9: // Store bitmap mark data format: 9 <bpp> <width> <data-0> <data-1> ... <data-n>
             if ( step == 1 ) 
@@ -335,7 +336,8 @@ void LaosMotion::write(int i)
             step = 0;
           break;
     }
-    if ( step ) step++;
+    if ( step ) 
+	  step++;
   } 
 }
 
