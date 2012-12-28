@@ -3,11 +3,11 @@
   Part of Grbl
   Taken from R2C2 project and modified for Laos by Peter Brier
   stripped, included some Marlin changes from Erik van de Zalm
-  
+
   Copyright (c) 2009-2011 Simen Svale Skogsrud
   Modifications Copyright (c) 2011 Sungeun K. Jeon
   Modifications Copyright (c) 2011 Peter Brier
-  
+
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, orc
@@ -54,26 +54,26 @@ static void st_interrupt ();
 static void set_step_timer (uint32_t cycles);
 static void st_go_idle();
 
-// Globals      
+// Globals
 // volatile uint16_t steptimeout = 0;
 volatile unsigned char busy = 0;
 
 // Locals
 static block_t *current_block;  // A pointer to the block currently being traced
-static Ticker timer; // the periodic timer used to step 
+static Ticker timer; // the periodic timer used to step
 static tFixedPt pwmofs; // the offset of the PWM value
 static tFixedPt pwmscale; // the scaling of the PWM value
 static volatile int running = 0;  // stepper irq is running
 
 static uint32_t direction_inv;    // invert mask for direction bits
-static uint32_t direction_bits;   // all axes direction (different ports)    
+static uint32_t direction_bits;   // all axes direction (different ports)
 static uint32_t step_bits;        // all axis step bits
 static uint32_t step_inv;      // invert mask for the stepper bits
 static uint32_t nominal_rate; // [steps/min]
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
-               counter_y, 
-               counter_z;       
-static int32_t counter_e, counter_l, pos_l; // extruder and laser       
+               counter_y,
+               counter_z;
+static int32_t counter_e, counter_l, pos_l; // extruder and laser
 static uint32_t step_events_completed; // The number of step events executed in the current block
 
 // Variables used by the trapezoid generation
@@ -102,9 +102,9 @@ extern unsigned long bitmap[], bitmap_width, bitmap_size;
 //   |               BLOCK 1            |      BLOCK 2          |    d
 //
 //                           time ----->
-// 
+//
 //  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates by block->rate_delta
-//  during the first block->accelerate_until step_events_completed, then keeps going at constant speed until 
+//  during the first block->accelerate_until step_events_completed, then keeps going at constant speed until
 //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
 //  The slope of acceleration is always +/- block->rate_delta and is applied at a constant rate following the midpoint rule
 //  by the trapezoid generator, which is called ACCELERATION_TICKS_PER_SECOND times per second.
@@ -114,18 +114,18 @@ extern unsigned long bitmap[], bitmap_width, bitmap_size;
 // Initialize and start the stepper motor subsystem
 void st_init(void)
 {
-  direction_inv = 
+  direction_inv =
    (cfg->xscale<0 ? (1<<X_DIRECTION_BIT) : 0) |
    (cfg->yscale<0 ? (1<<Y_DIRECTION_BIT) : 0) |
    (cfg->zscale<0 ? (1<<Z_DIRECTION_BIT) : 0) |
    (cfg->escale<0 ? (1<<E_DIRECTION_BIT) : 0);
-  step_inv =  
+  step_inv =
    (cfg->xinv ? (1<<X_STEP_BIT) : 0) |
    (cfg->yinv ? (1<<Y_STEP_BIT) : 0) |
    (cfg->zinv ? (1<<Z_STEP_BIT) : 0) |
    (cfg->einv ? (1<<E_STEP_BIT) : 0);
-  
-  
+
+
   printf("Direction: %d\n", direction_inv);
   pwmofs = to_fixed(cfg->pwmmin) / 100; // offset (0 .. 1.0)
   if ( cfg->pwmmin == cfg->pwmmax )
@@ -139,31 +139,31 @@ void st_init(void)
 }
 
 // output the direction bits to the appropriate output pins
-static inline void  set_direction_pins (void) 
+static inline void  set_direction_pins (void)
 {
   xdir = ( (direction_bits & (1<<X_DIRECTION_BIT))? 0 : 1 );
-  ydir = ( (direction_bits & (1<<Y_DIRECTION_BIT))? 0 : 1 );   
+  ydir = ( (direction_bits & (1<<Y_DIRECTION_BIT))? 0 : 1 );
   zdir = ( (direction_bits & (1<<Z_DIRECTION_BIT))? 0 : 1 );
-  // edir = ( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);   
+  // edir = ( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);
 }
 
 // output the step bits on the appropriate output pins
-static inline void  set_step_pins (uint32_t bits) 
+static inline void  set_step_pins (uint32_t bits)
 {
-  xstep = ( (bits & (1<<X_STEP_BIT))?1:0 ); 
+  xstep = ( (bits & (1<<X_STEP_BIT))?1:0 );
   ystep = ( (bits & (1<<Y_STEP_BIT))?1:0 );
-  zstep = ( (bits & (1<<Z_STEP_BIT))?1:0 );  
- // estep = ( (bits & (1<<E_STEP_BIT))?1:0 );        
+  zstep = ( (bits & (1<<Z_STEP_BIT))?1:0 );
+ // estep = ( (bits & (1<<E_STEP_BIT))?1:0 );
 }
 
 // unstep all stepper pins (output low)
-static inline void  clear_all_step_pins (void) 
+static inline void  clear_all_step_pins (void)
 {
-  
-  xstep =( (step_inv & (1<<X_STEP_BIT)) ? 1 : 0 ); 
-  ystep =( (step_inv & (1<<Y_STEP_BIT)) ? 1 : 0 ); 
-  zstep =( (step_inv & (1<<Z_STEP_BIT)) ? 0 : 1 ); 
-  // estep =( (step_inv & (1<<E_STEP_BIT)) ? 0 : 1 ); 
+
+  xstep =( (step_inv & (1<<X_STEP_BIT)) ? 1 : 0 );
+  ystep =( (step_inv & (1<<Y_STEP_BIT)) ? 1 : 0 );
+  zstep =( (step_inv & (1<<Z_STEP_BIT)) ? 0 : 1 );
+  // estep =( (step_inv & (1<<E_STEP_BIT)) ? 0 : 1 );
 }
 
 
@@ -184,7 +184,7 @@ int hit_home_stop_z(int axis)
 }
 
 // Start stepper again from idle state, starts the step timer at a default rate
-void st_wake_up() 
+void st_wake_up()
 {
   if ( ! running )
   {
@@ -194,9 +194,9 @@ void st_wake_up()
   }
 }
 
-// When not stepping, go to idle mode. Steppers can be switched off, or set to reduced current 
+// When not stepping, go to idle mode. Steppers can be switched off, or set to reduced current
 // (some delay might have to be implemented). Currently no motor switchoff is done.
-static void st_go_idle() 
+static void st_go_idle()
 {
   timer.detach();
   running = 0;
@@ -213,17 +213,17 @@ static inline int32_t calc_n (float speed, float alpha, float accel)
   return speed * speed / (2.0 * alpha * accel);
 }
 
-// Initializes the trapezoid generator from the current block. Called whenever a new 
+// Initializes the trapezoid generator from the current block. Called whenever a new
 // block begins. Calculates the length ofc the block (in events), step rate, slopes and trigger positions (when to accel, decel, etc.)
-static inline void trapezoid_generator_reset() 
-{  
+static inline void trapezoid_generator_reset()
+{
   tFixedPt  c0;
 #define alpha (1.0)
 
 //  float    alpha = 1.0;
   float    accel;
   int32_t   accel_until;
-  int32_t   decel_after;  
+  int32_t   decel_after;
 
   accel = current_block->rate_delta*ACCELERATION_TICKS_PER_SECOND / 60.0;
 
@@ -252,7 +252,7 @@ static inline void trapezoid_generator_reset()
   {
     decel_after = (decel_after + accel_until) / 2;
     decel_n  = decel_after - current_block->step_event_count - calc_n (current_block->final_rate/60.0, alpha, accel);
-  }  
+  }
   current_block->decelerate_after = decel_after;
 
   c = to_fixed(c);
@@ -267,42 +267,42 @@ static inline void trapezoid_generator_reset()
 //  return (TICKS_PER_MICROSECOND*1000000*6) / cycles * 10;
 //}
 
-// Set the step timer. Note: this starts the ticker at an interval of "cycles" 
-static inline void set_step_timer (uint32_t cycles) 
+// Set the step timer. Note: this starts the ticker at an interval of "cycles"
+static inline void set_step_timer (uint32_t cycles)
 {
    volatile static double p;
    timer.attach_us(&st_interrupt,cycles);
    // p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
    // p = ( to_double(c_min) * current_block->power) / ( 10000.0 * (double)cycles);
-  // p = (60E6/nominal_rate) / cycles; // nom_rate is steps/minute,  
+  // p = (60E6/nominal_rate) / cycles; // nom_rate is steps/minute,
    //printf("%f,%f,%f\n\r", (float)(60E6/nominal_rate), (float)cycles, (float)p);
   // printf("%d: %f %f\n\r", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
-   p = (double)current_block->power/10000.0;
+   p = (double)(cfg->pwmmin/100.0 + ((current_block->power/10000.0)*((cfg->pwmmax - cfg->pwmmin)/100.0)));
    pwm = p;
-}  
+}
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. It is  executed at the rate set with
-// set_step_timer. It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
-// It is supported by The Stepper Port Reset Interrupt which it uses to reset the stepper port after each pulse. 
+// set_step_timer. It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
+// It is supported by The Stepper Port Reset Interrupt which it uses to reset the stepper port after each pulse.
 // The bresenham line tracer algorithm controls all three stepper outputs simultaneously with these two interrupts.
 static  void st_interrupt (void)
-{        
+{
   // TODO: Check if the busy-flag can be eliminated by just disabeling this interrupt while we are in it
-  
+
   if(busy){ /*printf("busy!\n"); */ return; } // The busy-flag is used to avoid reentering this interrupt
   busy = 1;
-  
+
   // Set the direction pins a cuple of nanoseconds before we step the steppers
   //STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
    // set_direction_pins (out_bits);
-  
+
   // Then pulse the stepping pins
   //STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
   // led2 = 1;
   set_step_pins (step_bits ^ step_inv);
-    
+
   // If there is no current block, attempt to pop one from the buffer
-  if (current_block == NULL) 
+  if (current_block == NULL)
   {
     // Anything in the buffer?
     current_block = plan_get_current_block();
@@ -313,30 +313,30 @@ static  void st_interrupt (void)
       counter_z = counter_x;
       counter_e = counter_x;
       counter_l = counter_x;
-	    
+
       pos_l = 0;
-      step_events_completed = 0;     
+      step_events_completed = 0;
       direction_bits = current_block->direction_bits ^ direction_inv;
       set_direction_pins ();
       step_bits = 0;
-    } 
-    else 
+    }
+    else
     {
       st_go_idle();
-    }    
-  } 
+    }
+  }
 
   // process the current block
-  if (current_block != NULL) 
+  if (current_block != NULL)
   {
-  
+
 
    if ( current_block->options & OPT_BITMAP )
    {
       *laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
       counter_l += bitmap_width;
       // printf("%d %d %d: %d\n\r", bitmap_len, pos_l, counter_l,  (bitmap[pos_l / 32] & (pos_l % 32) ?  1 : 0 ) );
-      if (counter_l > 0) 
+      if (counter_l > 0)
       {
         counter_l -= current_block->step_event_count;
        // putchar ( (laser ?  '1' : '0' ) );
@@ -345,9 +345,9 @@ static  void st_interrupt (void)
    }
    else
    {
-     *laser = ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);      
+     *laser = ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);
    }
-   
+
     if (current_block->action_type == AT_MOVE)
     {
       // Execute step displacement profile by bresenham line algorithm
@@ -367,13 +367,13 @@ static  void st_interrupt (void)
         step_bits |= (1<<Z_STEP_BIT);
         counter_z -= current_block->step_event_count;
       }
-      
+
       counter_e += current_block->steps_e;
       if (counter_e > 0) {
         step_bits |= (1<<E_STEP_BIT);
         counter_e -= current_block->step_event_count;
       }
-      
+
 
 
 
@@ -392,8 +392,8 @@ static  void st_interrupt (void)
           step_bits = 0;
         }
       }
-      
-     
+
+
       // While in block steps, update acceleration profile
       if (step_events_completed < current_block->step_event_count)
       {
@@ -414,7 +414,7 @@ static  void st_interrupt (void)
               new_c = c_min;
               ramp = RAMP_MAX;
             }
-            
+
             if (to_int(new_c) != to_int(c))
             {
               set_step_timer (to_int(new_c));
@@ -439,32 +439,32 @@ static  void st_interrupt (void)
             }
             c = new_c;
           break;
-        } 
+        }
 
         n++;
-      } else {   
-        // If current block is finished, reset pointer 
+      } else {
+        // If current block is finished, reset pointer
         current_block = NULL;
         plan_discard_current_block();
       }
-    }  
-  } 
-  else 
+    }
+  }
+  else
   {
     // Still no block? Set the stepper pins to low before sleeping.
     // printf("block == NULL\n");
     step_bits = 0;
-  }          
-  
+  }
+
   clear_all_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
   busy=0;
-  
+
 }
 
 
 // Block until all buffered steps are executed
 void st_synchronize()
 {
-  while(plan_get_current_block()) { sleep_mode(); }    
+  while(plan_get_current_block()) { sleep_mode(); }
 }
 
