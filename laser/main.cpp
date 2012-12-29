@@ -186,7 +186,7 @@ void main_nodisplay() {
     while (srv->State() == listen)
         Net::poll();
     GetFile();
-    
+    mot->reset();
     plan_get_current_position_xyz(&x, &y, &z);
      printf("%f %f\n", x,y); 
     mnu->SetScreen("Laser BUSY..."); 
@@ -204,6 +204,7 @@ void main_nodisplay() {
     removefile(name);
     // done
     printf("DONE!...\n");
+	while (!mot->ready() );
     mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
   }
 }
