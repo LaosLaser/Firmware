@@ -198,9 +198,9 @@ void LaosMenu::Handle() {
     if ( waitup && !timeout ) waitup=0;
     
     if ( !timeout )  // increase speed if we keep button pressed longer
-        speed = 5;
+        speed = 3;
     else {
-        speed *= 1.5;
+        speed = speed * 2;
         if ( speed >= 100 ) speed = 100;
     }
 
@@ -256,17 +256,18 @@ void LaosMenu::Handle() {
                 mot->getPosition(&x, &y, &z);
                 xt = x; yt= y;
                 switch ( c ) {
-                    case K_DOWN: y+=1000*speed; break;
-                    case K_UP: y-=1000*speed;  break;
-                    case K_LEFT: x-=1000*speed; break;
-                    case K_RIGHT: x+=1000*speed;  break;
+                    case K_DOWN: y+=100*speed; break;
+                    case K_UP: y-=100*speed;  break;
+                    case K_LEFT: x-=100*speed; break;
+                    case K_RIGHT: x+=100*speed;  break;
                     case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
                     case K_FUP: screen=FOCUS; break; 
                     case K_FDOWN: screen=FOCUS; break;
                     case K_ORIGIN: screen=ORIGIN; break;
                 }
-                if  ((mot->ready()) && ( (x!=xt) || (y != yt) )) {
-                    mot->moveTo(x, y, z, speed);
+                if  ((mot->queue() < 5) && ( (x!=xt) || (y != yt) )) {
+                    mot->moveTo(x, y, z, speed/2);
+					printf("Move: %d %d %d %d\n", x,y,z, speed);
                 } else {
                     // if (! mot->ready()) 
                     // printf("Buffer vol\n");
@@ -290,8 +291,10 @@ void LaosMenu::Handle() {
                     default: screen=MAIN; waitup=1; break;
                 }
                 if ( mot->ready() && (z!=zt) ) 
-                    mot->moveTo(x, y, z, speed);
- 
+				{
+                  mot->moveTo(x, y, z, speed);
+				  printf("Move: %d %d %d %d\n", x,y,z, speed);
+				}
                 args[0]=z-zoff;
                 break;
 

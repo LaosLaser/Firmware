@@ -643,9 +643,9 @@ void plan_buffer_action(tActionRequest *pAction)
 // Reset the planner position vector and planner speed
 void plan_get_current_position_xyz(float *x, float *y, float *z)
 {
-  *x = position[X_AXIS] / config.steps_per_mm_x;
-  *y = position[Y_AXIS] / config.steps_per_mm_y;
-  *z = position[Z_AXIS] / config.steps_per_mm_z;
+  *x = actpos_x / config.steps_per_mm_x;
+  *y = actpos_y / config.steps_per_mm_y;
+  *z = actpos_z / config.steps_per_mm_z;
 }
 
 
@@ -670,6 +670,12 @@ void plan_set_current_position(tTarget *new_position)
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   clear_vector_double(previous_unit_vec);
   printf("Set Position: %d,%d,%d,%d", position[X_AXIS],  position[Y_AXIS],  position[Z_AXIS],  position[E_AXIS]);
+  // Wait for all motion to stop and THEN set the actual stepper axis positions;
+  // while( !mot->ready() );
+  actpos_x =  position[X_AXIS];
+  actpos_y =  position[Y_AXIS];
+  actpos_z =  position[Z_AXIS];
+  actpos_e =  position[E_AXIS];
 }
 
 // Force the feedrate
