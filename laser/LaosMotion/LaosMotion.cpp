@@ -315,24 +315,25 @@ void LaosMotion::write(int i)
             }
             else if ( step == 2 )
             {
-              if ( queue() ) printf("Queue not empty... wait...\n\r");
+           //   if ( queue() ) printf("Queue not empty... wait...\n\r");
               while ( queue() );// printf("+"); // wait for queue to empty
               bitmap_width = i;
               bitmap_enable = 1;
               bitmap_size = (bitmap_bpp * bitmap_width) / 32;
               if  ( (bitmap_bpp * bitmap_width) % 32 )  // padd to next 32-bit
                 bitmap_size++;
-              printf("\n\rBitmap: read %d dwords\n\r", bitmap_size);
+              // printf("\n\rBitmap: read %d dwords\n\r", bitmap_size);
 
             }
-            else // copy data
+            else if ( step > 2 )// copy data
             {
-              if ( step-2 == bitmap_size ) // last dword received
+              bitmap[ (step-3) % BITMAP_SIZE ] = i;
+			  // printf("[%ld] = %ld\n", (step-3) % BITMAP_SIZE, i);
+			  if ( step-2 == bitmap_size ) // last dword received
               {
                 step = 0;
-                printf("Bitmap: received %d dwords\n\r", bitmap_size);
+                // printf("Bitmap: received %d dwords\n\r", bitmap_size);
               }
-              bitmap[ (step-3) % BITMAP_SIZE ] = i;
             }
             break;
          default: // I do not understand: stop motion

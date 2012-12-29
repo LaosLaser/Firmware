@@ -21,6 +21,9 @@
 #ifndef stepper_h
 #define stepper_h 
 
+// Globals: The actual position
+extern volatile int32_t actpos_x, actpos_y, actpos_z, actpos_e;
+
 // from nuts_bolts.h:
 #define square(x) ((x)*(x))
 #define sleep_mode(x) do {} while (0)

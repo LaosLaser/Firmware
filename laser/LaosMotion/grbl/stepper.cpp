@@ -55,8 +55,8 @@ static void set_step_timer (uint32_t cycles);
 static void st_go_idle();
 
 // Globals
-// volatile uint16_t steptimeout = 0;
 volatile unsigned char busy = 0;
+volatile int32_t actpos_x, actpos_y, actpos_z, actpos_e; // actual position
 
 // Locals
 static block_t *current_block;  // A pointer to the block currently being traced
@@ -124,8 +124,7 @@ void st_init(void)
    (cfg->yinv ? (1<<Y_STEP_BIT) : 0) |
    (cfg->zinv ? (1<<Z_STEP_BIT) : 0) |
    (cfg->einv ? (1<<E_STEP_BIT) : 0);
-
-
+ 
   printf("Direction: %d\n", direction_inv);
   pwmofs = to_fixed(cfg->pwmmin) / 100; // offset (0 .. 1.0)
   if ( cfg->pwmmin == cfg->pwmmax )
@@ -133,6 +132,7 @@ void st_init(void)
   else
     pwmscale = div_f(to_fixed(cfg->pwmmax - cfg->pwmmin), to_fixed(100) );
   printf("ofs: %d, scale: %d\n", pwmofs, pwmscale);
+  actpos_x = actpos_y = actpos_z = actpos_e = 0;
   st_wake_up();
   trapezoid_tick_cycle_counter = 0;
   st_go_idle();  // Start in the idle state
@@ -313,8 +313,7 @@ static  void st_interrupt (void)
       counter_z = counter_x;
       counter_e = counter_x;
       counter_l = counter_x;
-
-      pos_l = 0;
+      pos_l = 0; // reset laser bitmap counter
       step_events_completed = 0;
       direction_bits = current_block->direction_bits ^ direction_inv;
       set_direction_pins ();
@@ -330,16 +329,16 @@ static  void st_interrupt (void)
   if (current_block != NULL)
   {
 
-
+   // this block is a bitmap engraving line, read laser on/off status from buffer
    if ( current_block->options & OPT_BITMAP )
    {
       *laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
       counter_l += bitmap_width;
-      // printf("%d %d %d: %d\n\r", bitmap_len, pos_l, counter_l,  (bitmap[pos_l / 32] & (pos_l % 32) ?  1 : 0 ) );
+     //  printf("%d %d %d: %d %d %c\n\r", bitmap_width, pos_l, counter_l,  pos_l / 32, pos_l % 32, (*laser ?  '1' : '0' ));
       if (counter_l > 0)
       {
         counter_l -= current_block->step_event_count;
-       // putchar ( (laser ?  '1' : '0' ) );
+     //   putchar ( (*laser ?  '1' : '0' ) );
         pos_l++;
       }
    }
@@ -354,28 +353,29 @@ static  void st_interrupt (void)
       step_bits = 0;
       counter_x += current_block->steps_x;
       if (counter_x > 0) {
+        actpos_x +=  ( (current_block->direction_bits & (1<<X_DIRECTION_BIT))? -1 : 1 );
         step_bits |= (1<<X_STEP_BIT);
         counter_x -= current_block->step_event_count;
       }
       counter_y += current_block->steps_y;
       if (counter_y > 0) {
+        actpos_y +=  ( (current_block->direction_bits & (1<<Y_DIRECTION_BIT))? -1 : 1 );
         step_bits |= (1<<Y_STEP_BIT);
         counter_y -= current_block->step_event_count;
       }
       counter_z += current_block->steps_z;
       if (counter_z > 0) {
-        step_bits |= (1<<Z_STEP_BIT);
+        actpos_z +=  ( (current_block->direction_bits & (1<<Z_DIRECTION_BIT))? -1 : 1 );
+          step_bits |= (1<<Z_STEP_BIT);
         counter_z -= current_block->step_event_count;
       }
 
       counter_e += current_block->steps_e;
       if (counter_e > 0) {
+        actpos_e +=  ( (current_block->direction_bits & (1<<E_DIRECTION_BIT))? -1 : 1 );
         step_bits |= (1<<E_STEP_BIT);
         counter_e -= current_block->step_event_count;
       }
-
-
-
 
       //clear_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
       step_events_completed++; // Iterate step events
