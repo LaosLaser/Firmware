@@ -4,5 +4,6 @@
 *.elf
 *.hex
 *.map
+*~
 mri.log
 LPC176x/

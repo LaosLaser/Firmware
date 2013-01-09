@@ -89,6 +89,7 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("laser.pwm.min", &pwmmin, 0); // pwm at minimum power [0..100]
     cfg.Value("laser.pwm.max", &pwmmax, 0); // pwm at maximum power [0..100]
     cfg.Value("laser.pwm.freq", &pwmfreq, 20000); // pwm frequency [Hz]  
+    cfg.Value("laser.pwm.invert", &pwminvert, 0); // pwm invert duty cycle [0/1]  
     
     // rest position (after homing)
     cfg.Value("x.rest", &xrest, 0);

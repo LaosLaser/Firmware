@@ -438,6 +438,3 @@ void LaosMotion::home(int x, int y, int z)
   }
 
 }
-
-
-

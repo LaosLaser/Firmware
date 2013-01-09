@@ -53,7 +53,7 @@ public:
   int yscale; // steps per meter
   int zscale; // steps per meter
   int escale; // steps per meter
-  int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
+  int lenable, lon, pwmmin, pwmmax, pwmfreq, pwminvert; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
   GlobalConfig(char *filename);
 };
 extern GlobalConfig *cfg; 
