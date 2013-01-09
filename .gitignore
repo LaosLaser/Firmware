@@ -3,6 +3,7 @@
 *.disasm
 *.elf
 *.hex
-*.map
+*.mapi
+*~
 mri.log
 LPC176x/
