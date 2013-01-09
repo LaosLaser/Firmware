@@ -198,6 +198,8 @@ void st_wake_up()
 // (some delay might have to be implemented). Currently no motor switchoff is done.
 static void st_go_idle()
 {
+   volatile static double p;
+
   timer.detach();
   running = 0;
   clear_all_step_pins();
