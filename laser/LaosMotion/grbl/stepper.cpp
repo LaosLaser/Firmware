@@ -202,7 +202,10 @@ static void st_go_idle()
   running = 0;
   clear_all_step_pins();
   *laser = LASEROFF;
-  pwm = cfg->pwmmax / 100.0;  // set pwm to max;
+  
+  p = cfg->pwmmax / 100.0;  // set pwm to max;
+  if ( cfg->pwminvert ) p = 1.0 - p;  // invert pwm if needed
+  pwm = p;
 //  printf("idle()..\n");
 }
 
@@ -278,6 +281,7 @@ static inline void set_step_timer (uint32_t cycles)
    //printf("%f,%f,%f\n\r", (float)(60E6/nominal_rate), (float)cycles, (float)p);
   // printf("%d: %f %f\n\r", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
    p = (double)(cfg->pwmmin/100.0 + ((current_block->power/10000.0)*((cfg->pwmmax - cfg->pwmmin)/100.0)));
+   if ( cfg->pwminvert ) p = 1.0 - p;  // invert pwm if needed
    pwm = p;
 }
 

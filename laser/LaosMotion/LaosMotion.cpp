@@ -301,7 +301,7 @@ void LaosMotion::write(int i)
                     mark_speed = val * cfg->speed / 10000;
                     break;
                   case 101:
-                    power = cfg->pwminvert ? 10000 - val : val;
+                    power = val;
                     printf("power: %d\n", power);
                     break;
                 }
@@ -438,6 +438,3 @@ void LaosMotion::home(int x, int y, int z)
   }
 
 }
-
-
-
