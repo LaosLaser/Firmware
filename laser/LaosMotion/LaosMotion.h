@@ -28,8 +28,8 @@
 
 
 // the state of the laser OUTPUT
-#define LASEROFF 1
-#define LASERON 0
+#define LASEROFF (!cfg->lon)
+#define LASERON (cfg->lon)
 
     /** Motion Controll system
       *

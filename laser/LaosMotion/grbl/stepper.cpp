@@ -270,14 +270,22 @@ static inline void trapezoid_generator_reset()
 // Set the step timer. Note: this starts the ticker at an interval of "cycles"
 static inline void set_step_timer (uint32_t cycles)
 {
-   volatile static double p;
+   volatile static double p,q;
+   volatile static uint32_t pnom=1, pcyc=1;
    timer.attach_us(&st_interrupt,cycles);
    // p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
    // p = ( to_double(c_min) * current_block->power) / ( 10000.0 * (double)cycles);
-  // p = (60E6/nominal_rate) / cycles; // nom_rate is steps/minute,
+   // 
    //printf("%f,%f,%f\n\r", (float)(60E6/nominal_rate), (float)cycles, (float)p);
-  // printf("%d: %f %f\n\r", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
-   p = (double)(cfg->pwmmin/100.0 + ((current_block->power/10000.0)*((cfg->pwmmax - cfg->pwmmin)/100.0)));
+   if ( cfg->pwmmod ) // Use speed modulation?
+    q = (60E6/current_block->nominal_rate) / cycles; // nom_rate is steps/minute,
+   else
+    q = 1;
+
+   //printf("%d,%d(%c): %d %f %f\n\r", (int)current_block->power, (int) current_block->nominal_speed, (*laser? '1' : '0'),
+   //cycles, (float)p, (float)c_min/(float(c) ));
+   
+   p = (double)(cfg->pwmmin/100.0 + ((q*current_block->power/10000.0)*((cfg->pwmmax - cfg->pwmmin)/100.0)));
    pwm = p;
 }
 

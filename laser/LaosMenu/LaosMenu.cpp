@@ -402,7 +402,7 @@ void LaosMenu::Handle() {
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
-                            if (! runfile) 
+                            if (!runfile) 
                               screen=MAIN;
                             else
                                mot->reset();

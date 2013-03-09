@@ -32,7 +32,7 @@ class GlobalConfig
 {
 public:
   int ip[4], gw[4], nm[4], dns[4], port, dhcp;  // network settings
-  int enable; // enable state (1 or 0)
+  int enable; // motor enable state (1 or 0)
   int autohome; // automatically home the axis at startup
   int autozhome; // automatically home the zaxis as well
   int nodisplay; // there is no display 
@@ -53,7 +53,8 @@ public:
   int yscale; // steps per meter
   int zscale; // steps per meter
   int escale; // steps per meter
-  int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
+  int lenable, lon; //laser enable polarity, laser on polarity
+  int pwmmin, pwmmax, pwmfreq, pwmmod; // pwm min/max [%] and frequency [Hz], pwm modulation;
   GlobalConfig(char *filename);
 };
 extern GlobalConfig *cfg; 

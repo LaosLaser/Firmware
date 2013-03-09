@@ -197,8 +197,10 @@ void main_nodisplay() {
     FILE *in = sd.openfile(name, "r");
     while (!feof(in))
     { 
+	  int t;
       while (!mot->ready() );
-      mot->write(readint(in));
+	  t = readint(in);
+      mot->write(t);
     }
     fclose(in);
     removefile(name);

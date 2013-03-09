@@ -152,11 +152,14 @@ LaosMotion::~LaosMotion()
 **/
 void LaosMotion::reset()
 {
-  step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
+  step = 0;
+  command = 0;
+  xstep = xdir = ystep = ydir = zstep = zdir = 0;
   ofsx = ofsy = ofsz = 0;
   *laser = LASEROFF;
   enable = cfg->enable;
   cover.mode(PullUp);
+  printf("\n..Reset..\n");
 }
 
 
@@ -220,6 +223,7 @@ void LaosMotion::write(int i)
   static int x=0,y=0,z=0,power=10000;
   //if (  plan_queue_empty() )
   //printf("Empty\n");
+  // printf(" s=%d ", step);
   if ( step == 0 )
   {
     command = i;
@@ -304,6 +308,8 @@ void LaosMotion::write(int i)
                     power = val;
                     printf("power: %d\n", power);
                     break;
+				  default:
+				    printf("Unknown parameter: %d, value=%d\n", param, val);
                 }
                 break;
             }
@@ -337,6 +343,7 @@ void LaosMotion::write(int i)
             }
             break;
          default: // I do not understand: stop motion
+		    printf("Unknown command: %d\n", command);
             step = 0;
             break;
     }

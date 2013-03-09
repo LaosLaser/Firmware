@@ -85,11 +85,13 @@ GlobalConfig::GlobalConfig(char *filename)
     
     // Laser
     cfg.Value("laser.enable", &lenable, 1); // laser enable polarity [0/1]
-    cfg.Value("laser.on", &lon, 1);         // laser on polarity [0/1]
+    cfg.Value("laser.on", &lon, 0);         // laser on polarity [0/1]
     cfg.Value("laser.pwm.min", &pwmmin, 0); // pwm at minimum power [0..100]
     cfg.Value("laser.pwm.max", &pwmmax, 0); // pwm at maximum power [0..100]
     cfg.Value("laser.pwm.freq", &pwmfreq, 20000); // pwm frequency [Hz]  
+    cfg.Value("laser.pwm.modulate", &pwmmod, 0); // Modulate PWM as a function of speed
     
+	
     // rest position (after homing)
     cfg.Value("x.rest", &xrest, 0);
     cfg.Value("y.rest", &yrest, 0);
