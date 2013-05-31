@@ -407,8 +407,15 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
+                        		
+                        		#ifdef READ_FILE_DEBUG
+                        			printf("Parsing file: \n");
+                        		#endif
                             while ((!feof(runfile)) && mot->ready())
                                 mot->write(readint(runfile));
+                            #ifdef READ_FILE_DEBUG
+                        			printf("File parsed \n");
+                        		#endif
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;

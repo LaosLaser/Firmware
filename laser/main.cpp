@@ -49,6 +49,9 @@
 #include "SDFileSystem.h"
 #include "laosfilesystem.h"
 
+#define READ_FILE_DEBUG
+#define READ_FILE_DEBUG_VERBOSE
+
 // MBED blue status leds
 DigitalOut led1(LED1);
 DigitalOut led2(LED2);
