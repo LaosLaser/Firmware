@@ -407,7 +407,6 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                        		
                         		#ifdef READ_FILE_DEBUG
                         			printf("Parsing file: \n");
                         		#endif

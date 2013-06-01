@@ -152,7 +152,10 @@ LaosMotion::~LaosMotion()
 **/
 void LaosMotion::reset()
 {
-  step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
+  #ifdef READ_FILE_DEBUG
+    printf("LaosMotion::reset()\n");
+  #endif
+  xstep = xdir = ystep = ydir = zstep = zdir = step = command = 0;
   ofsx = ofsy = ofsz = 0;
   *laser = LASEROFF;
   enable = cfg->enable;
@@ -224,7 +227,7 @@ void LaosMotion::write(int i)
   
   
   #ifdef READ_FILE_DEBUG_VERBOSE
-  	printf(">%i\n",i);
+  	printf(">%i (command: %i, step: %i)\n",i,command,step);
   #endif	
   
   if ( step == 0 )
