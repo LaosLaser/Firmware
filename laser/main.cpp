@@ -40,6 +40,10 @@
  * 7) Set and read IO, check status (e.g. interlocks)
  *
  */
+
+#define READ_FILE_DEBUG
+#define READ_FILE_DEBUG_VERBOSE
+ 
 #include "global.h"
 #include "ConfigFile.h"
 #include "EthConfig.h"

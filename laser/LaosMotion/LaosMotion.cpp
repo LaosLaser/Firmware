@@ -152,7 +152,10 @@ LaosMotion::~LaosMotion()
 **/
 void LaosMotion::reset()
 {
-  step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
+  #ifdef READ_FILE_DEBUG
+    printf("LaosMotion::reset()\n");
+  #endif
+  xstep = xdir = ystep = ydir = zstep = zdir = step = command = 0;
   ofsx = ofsy = ofsz = 0;
   *laser = LASEROFF;
   enable = cfg->enable;
@@ -214,12 +217,19 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
 /**
 *** write()
 *** Write command and parameters to motion controller
+*** Parse all the integers found in the simplecode file per integer
 **/
 void LaosMotion::write(int i)
 {
   static int x=0,y=0,z=0,power=10000;
   //if (  plan_queue_empty() )
   //printf("Empty\n");
+  
+  
+  #ifdef READ_FILE_DEBUG_VERBOSE
+  	printf(">%i (command: %i, step: %i)\n",i,command,step);
+  #endif	
+  
   if ( step == 0 )
   {
     command = i;
@@ -299,10 +309,15 @@ void LaosMotion::write(int i)
                     if ( val < 1 ) val = 1;
                     if ( val > 9999 ) val = 10000;
                     mark_speed = val * cfg->speed / 10000;
+                    #ifdef READ_FILE_DEBUG
+                      printf("> speed: %i\n",mark_speed);
+                    #endif	
                     break;
                   case 101:
                     power = val;
-                    printf("power: %d\n", power);
+                    #ifdef READ_FILE_DEBUG
+                      printf("> power: %i\n",power);
+                    #endif	
                     break;
                 }
                 break;
