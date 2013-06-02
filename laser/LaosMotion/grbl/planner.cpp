@@ -367,6 +367,10 @@ void plan_buffer_line (tActionRequest *pAction)
   z = pAction->target.z;
   feed_rate = pAction->target.feed_rate;
   
+  #ifdef READ_FILE_DEBUG
+		printf("> ACTION type: %i target: (x:%f y:%f f:%f) power: %" SCNd16 "\n",pAction->ActionType,x,y,(float)feed_rate,pAction->param);
+	#endif
+	
   // hard clipping. Might implement correct clipping some day...
   // JAAP: temporary disabled clipping because it caused parts of the print 
   // to "disappear" outside the working area, even though they were still 
