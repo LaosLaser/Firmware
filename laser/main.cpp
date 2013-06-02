@@ -41,8 +41,9 @@
  *
  */
 
-#define READ_FILE_DEBUG
-#define READ_FILE_DEBUG_VERBOSE
+// uncomment this to get debugging output in file parser
+// #define READ_FILE_DEBUG
+// #define READ_FILE_DEBUG_VERBOSE
  
 #include "global.h"
 #include "ConfigFile.h"
