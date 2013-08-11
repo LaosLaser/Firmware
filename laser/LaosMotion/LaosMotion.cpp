@@ -190,8 +190,15 @@ int LaosMotion::queue()
   return plan_queue_items();
 }
 
-
-
+/**
+*** clearBuffer()
+*** clears the grbl buffer
+**/
+void LaosMotion::clearBuffer()
+{
+  plan_clear_buffer();
+  clear_current_block();
+}
 
 /**
 *** MoveTo()

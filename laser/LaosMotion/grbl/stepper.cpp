@@ -52,7 +52,6 @@ typedef enum {RAMP_UP, RAMP_MAX, RAMP_DOWN} tRamp;
 // Prototypes
 static void st_interrupt ();
 static void set_step_timer (uint32_t cycles);
-static void st_go_idle();
 
 // Globals
 volatile unsigned char busy = 0;
@@ -194,9 +193,14 @@ void st_wake_up()
   }
 }
 
+// Remove current buffer-block
+void clear_current_block(){
+  current_block = NULL;
+}
+
 // When not stepping, go to idle mode. Steppers can be switched off, or set to reduced current
 // (some delay might have to be implemented). Currently no motor switchoff is done.
-static void st_go_idle()
+void st_go_idle()
 {
   timer.detach();
   running = 0;

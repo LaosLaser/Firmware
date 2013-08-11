@@ -336,6 +336,10 @@ void plan_set_acceleration_manager_enabled(uint8_t enabled) {
   }
 }
 
+void plan_clear_buffer(){
+  while(plan_get_current_block()!=NULL) plan_discard_current_block();
+}
+
 int plan_is_acceleration_manager_enabled() {
   return(acceleration_manager_enabled);
 }
