@@ -16,5 +16,8 @@ GCC4MBED_DIR=../../gcc4mbed
 LIBS_PREFIX=
 LIBS_SUFFIX=
 
+GIT_HASH = $(shell sh -c 'git describe --abbrev=7 --dirty --always')
+DEFINES += -D__GIT_HASH=\"$(GIT_HASH)\"
+
 include ../../gcc4mbed/build/gcc4mbed.mk
 #include gcc4mbed.mk
