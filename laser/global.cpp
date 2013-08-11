@@ -147,5 +147,7 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2] 
     cfg.Value("motion.enable", &enable, 0); // enable output polarity [0/1]
     cfg.Value("motion.tolerance", &tolerance, 50); // cornering tolerance [1/1000 units]     
+
+    cfg.Value("motion.manualspeed", &manualspeed, 10); // speed during manual movement [usec/step / 2]
 }
 
