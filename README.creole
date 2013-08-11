@@ -1,6 +1,7 @@
 Embedded software (firmware) for the laser system and components, including configuration files.
 
 ==Build Setup
+As copied from gcc4mbed: 
 These steps install the laos firmware source code and GCC4MBED project on your machine so that you can perform an offline build using the GNU for ARM Embedded toolchain:
 * git clone https://github.com/LaosLaser/Firmware.git
 * git clone https://github.com/adamgreen/gcc4mbed.git
