@@ -16,5 +16,7 @@ GCC4MBED_DIR=../../gcc4mbed
 LIBS_PREFIX=
 LIBS_SUFFIX=
 
+OPTIMIZATION=1
+
 include ../../gcc4mbed/build/gcc4mbed.mk
 #include gcc4mbed.mk
