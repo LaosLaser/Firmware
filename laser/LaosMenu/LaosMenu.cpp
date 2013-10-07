@@ -278,6 +278,7 @@ void LaosMenu::Handle() {
 
             case FOCUS: // focus
                 mot->getPosition(&x, &y, &z);
+		zt = z;
                 switch ( c ) {
                     case K_FUP: z+=speed; if (z>cfg->zmax) z=cfg->zmax; break;
                     case K_FDOWN: z-=speed; if (z<0) z=0; break;
