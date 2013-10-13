@@ -280,8 +280,8 @@ void LaosMenu::Handle() {
                 mot->getPosition(&x, &y, &z);
 		zt = z;
                 switch ( c ) {
-                    case K_FUP: z+=speed; if (z>cfg->zmax) z=cfg->zmax; break;
-                    case K_FDOWN: z-=speed; if (z<0) z=0; break;
+                    case K_FUP: z+=100*speed; if (z>cfg->zmax) z=cfg->zmax; break;
+                    case K_FDOWN: z-=100*speed; if (z<0) z=0; break;
                     case K_LEFT: screen=MOVE; break;
                     case K_RIGHT: screen=MOVE; break;
                     case K_UP: screen=MOVE; break;
