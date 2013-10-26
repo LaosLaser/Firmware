@@ -14,6 +14,11 @@ These steps install the laos firmware source code and GCC4MBED project on your m
 * cd ../Firmware/laser
 * make clean all
 
+==Build setup, using MBED library sources (No GCC4MBED requried):
+* Get your compiler here: https://launchpad.net/gcc-arm-embedded
+* And see: http://mbed.org/handbook/mbed-tools
+
+
 ===Important Notes:
 * Files will fail to install to a FAT based file system.  Extract to a more appropriate file system (ie. NTFS on Windows) first and then copy to a FAT drive after installation.
 * If the installation should fail, please refer to win_install.log, linux_install.log, or mac_install.log.  It will contain the details of the installation process and any errors that were encountered.
