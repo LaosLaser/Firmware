@@ -58,6 +58,10 @@ public:
 };
 extern GlobalConfig *cfg; 
 
-#define VERSION_STRING "\033LAOS v0.3-" __GIT_HASH "\n" __DATE__
+#ifndef __GIT_HASH
+#define __GIT_HASH ""
+#endif
+
+#define VERSION_STRING "\033LAOS v0.3-" __GIT_HASH "\n" __DATE__ " " __TIME__
 
 #endif
