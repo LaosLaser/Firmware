@@ -264,11 +264,17 @@ void LaosMotion::write(int i)
 		  case AT_BITMAP: action.target.feed_rate = 60 * cfg->xspeed; break;
 		}
 
-                while ( queue() );// printf("+"); // wait for queue to empty
-                plan_set_accel(cfg->xaccel);
-                plan_buffer_line(&action);
-                while ( queue() );// printf("+"); // wait for queue to empty
-		plan_set_accel(cfg->accel);
+		if ( action.ActionType == AT_BITMAP )
+		{
+                  while ( queue() );// printf("-"); // wait for queue to empty
+                  plan_set_accel(cfg->xaccel);
+                  plan_buffer_line(&action);
+                  while ( queue() ); // printf("*"); // wait for queue to empty
+		  plan_set_accel(cfg->accel);
+		}
+		else
+                  plan_buffer_line(&action);
+
                 break;
             }
             break;
