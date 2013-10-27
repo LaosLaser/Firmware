@@ -48,6 +48,7 @@ public:
   int homespeed; // speed used for homing [usec]
   int speed, xspeed, yspeed, zspeed, espeed; // Maximum linear speed and max speed per axis [mm/sec]
   int accel; // defaul accelletaion [mm/sec2]
+  int xaccel, yaccel, zaccel, eaccel; // axis max acceleration [mm/sec2]
   int tolerance; // corner tolerance [micrometer]
   int xscale; // steps per meter
   int yscale; // steps per meter

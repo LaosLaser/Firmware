@@ -257,8 +257,18 @@ void LaosMotion::write(int i)
                   action.ActionType = AT_BITMAP;
                   bitmap_enable = 0;
                 }
-                action.target.feed_rate =  60.0 * (command ? mark_speed : cfg->speed );
+		switch ( action.ActionType )
+		{
+		  case AT_MOVE: action.target.feed_rate = 60 * cfg->speed; break;
+		  case AT_LASER: action.target.feed_rate = 60 * mark_speed; break;
+		  case AT_BITMAP: action.target.feed_rate = 60 * cfg->xspeed; break;
+		}
+
+                while ( queue() );// printf("+"); // wait for queue to empty
+                plan_set_accel(cfg->xaccel);
                 plan_buffer_line(&action);
+                while ( queue() );// printf("+"); // wait for queue to empty
+		plan_set_accel(cfg->accel);
                 break;
             }
             break;

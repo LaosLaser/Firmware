@@ -125,6 +125,13 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("z.speed", &zspeed, 100);
     cfg.Value("e.speed", &espeed, 100);
    
+    // max axis acceleration [mm/sec2]
+    cfg.Value("x.accel", &xaccel, 2000);
+    cfg.Value("y.accel", &yaccel, 2000);
+    cfg.Value("z.accel", &zaccel, 2000);
+    cfg.Value("e.accel", &eaccel, 2000);
+   
+    // max axis speed [mm/sec]
     // home positions [um]
     cfg.Value("x.home", &xhome, 0);
     cfg.Value("y.home", &yhome, 0);

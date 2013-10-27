@@ -97,6 +97,7 @@ extern tTarget startpoint;
       
 // Initialize the motion plan subsystem      
 void plan_init();
+void plan_set_accel(float a);
 
 // Add a new linear movement to the buffer. x, y and z is the signed, absolute target position in 
 // millimeters. Feed rate specifies the speed of the motion. (in mm/min) 

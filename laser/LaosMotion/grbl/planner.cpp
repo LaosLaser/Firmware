@@ -90,6 +90,12 @@ void plan_init() {
 
 }
 
+void plan_set_accel(float a)
+{
+  printf("accel=%d\n", (int) a);
+  config.acceleration = a;
+}
+
 
 // Returns the index of the next block in the ring buffer
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.
