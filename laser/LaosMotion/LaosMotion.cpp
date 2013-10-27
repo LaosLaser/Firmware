@@ -33,6 +33,10 @@
 // status leds
 extern DigitalOut led1,led2,led3,led4;
 
+// bool endstopreached=false;
+
+static Ticker timer; // the periodic timer used to step
+
 // Inputs;
 DigitalIn xhome(p8);
 DigitalIn yhome(p17);
@@ -64,6 +68,9 @@ DigitalIn cover(p19);
 // globals
 int step=0, command=0;
 int mark_speed = 100; // 100 [mm/sec]
+int counter;
+int steps;
+int interrupt_busy=0;
 
 // next planner action to enqueue
 tActionRequest  action;
@@ -183,8 +190,15 @@ int LaosMotion::queue()
   return plan_queue_items();
 }
 
-
-
+/**
+*** clearBuffer()
+*** clears the grbl buffer
+**/
+void LaosMotion::clearBuffer()
+{
+  plan_clear_buffer();
+  clear_current_block();
+}
 
 /**
 *** MoveTo()
@@ -406,6 +420,177 @@ void LaosMotion::setOrigin(int x, int y, int z)
   ofsz = z;
 }
 
+/**
+*** Timers for manual movement
+**/
+
+void timerMoveY()
+{
+  if(!interrupt_busy){
+    interrupt_busy=1;
+    ystep = !ystep;
+//    if(endstopReachedTest()) endstopreached=true;
+    if(ystep){
+      steps++;
+    }
+    counter++;
+    interrupt_busy=0;
+  }
+}
+
+void timerMoveX()
+{
+  if(!interrupt_busy){
+    interrupt_busy=1;
+    xstep = !xstep;
+//    if(endstopReachedTest()) endstopreached=true;
+    if(xstep){
+      steps++;
+    }
+    counter++;
+    interrupt_busy=0;
+  }
+}
+
+/**
+*** Manual movement code
+**/
+
+void LaosMotion::manualMove()
+{
+  LaosDisplay *dsp;
+  int c;
+//  endstopreached=false;
+  int countupto = 50;
+  int speed;
+  int x,y,z;
+  int args[5];
+  getPosition(&x,&y,&z);
+  args[0]=x/1000.0;
+  args[1]=y/1000.0;
+  dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
+  while(1){
+//    if(cover==0 || endstopReached()) return;
+    c=dsp->read();
+    counter=0;
+    switch(c){
+      case K_CANCEL:
+        return;
+      case K_UP:
+      case K_DOWN:
+        speed=cfg->manualspeed*4;
+        if(cfg->yscale>0){
+          (c==K_UP) ? ydir = 1 : ydir = 0;
+        }else{
+          (c==K_UP) ? ydir = 0 : ydir = 1;
+        }
+        timer.attach_us(&timerMoveY,speed);
+        while(1){
+/*          if(endstopreached){
+            timer.detach();
+            return;
+          }*/
+          c = dsp->read();
+          if((c!=K_UP && c!=K_DOWN) || cover==0){
+            counter=0;
+            while(speed<cfg->manualspeed*2){
+              wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
+              if(counter>=countupto){
+                speed=speed*1.05;
+                counter=0;
+                timer.attach_us(&timerMoveY,speed);
+              }
+            }
+            timer.detach();
+            ystep=0;
+            if(ydir){
+              y=y+(steps/(cfg->yscale/1000000.0));
+            }else{
+              y=y-(steps/(cfg->yscale/1000000.0));
+            }
+            args[0]=x/1000.0;
+            args[1]=y/1000.0;
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
+            steps=0;
+            setPosition(x,y,z);
+            break;
+          }
+          if(counter>=countupto){
+            if(cfg->manualspeed<speed){
+              speed=speed/1.1;
+              if(speed<cfg->manualspeed) speed=cfg->manualspeed;
+              timer.attach_us(&timerMoveY,speed);
+            }
+            args[0]=x/1000.0;
+            if(ydir){
+              args[1]=y/1000.0+(steps/(cfg->yscale/1000));
+            }else{
+              args[1]=y/1000.0-(steps/(cfg->yscale/1000));
+            }
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
+            counter=0;
+          }
+        }
+        break;
+      case K_LEFT:
+      case K_RIGHT:
+        speed=cfg->manualspeed*4;
+        if(cfg->xscale>0){
+          (c==K_RIGHT) ? xdir = 1 : xdir = 0;
+        }else{
+          (c==K_RIGHT) ? xdir = 0 : xdir = 1;
+        }
+        timer.attach_us(&timerMoveX,speed);
+        while(1){
+/*          if(endstopreached){
+            timer.detach();
+            return;
+          }*/
+          c = dsp->read();
+          if((c!=K_LEFT && c!=K_RIGHT) || cover==0){
+            counter=0;
+            while(speed<cfg->manualspeed*2){
+              wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
+              if(counter>=countupto){
+                speed=speed*1.05;
+                counter=0;
+                timer.attach_us(&timerMoveX,speed);
+              }
+            }
+            timer.detach();
+            xstep=0;
+            if(xdir){
+              x=x+(steps/(cfg->xscale/1000000.0));
+            }else{
+              x=x-(steps/(cfg->xscale/1000000.0));
+            }
+            args[0]=x/1000.0;
+            args[1]=y/1000.0;
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
+            steps=0;
+            setPosition(x,y,z);
+            break;
+          }
+          if(counter>=countupto){
+            if(cfg->manualspeed<speed){
+              speed=speed/1.1;
+              if(speed<cfg->manualspeed) speed=cfg->manualspeed;
+              timer.attach_us(&timerMoveX,speed);
+            }
+            args[1]=y/1000.0;
+            if(ydir){
+              args[0]=x/1000.0+(steps/(cfg->xscale/1000));
+            }else{
+              args[0]=x/1000.0-(steps/(cfg->xscale/1000));
+            }
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
+            counter=0;
+          }
+        }
+        break;
+    }
+  }
+}
 
 
 
@@ -414,7 +599,12 @@ void LaosMotion::setOrigin(int x, int y, int z)
 **/
 void LaosMotion::home(int x, int y, int z)
 {
+  LaosDisplay *dsp;
   int i=0;
+  int canceled = 0;
+  int c = 0;
+  int counter = 0;
+  int countupto = (cfg->xscale/1000)*5; // check cancel button state every 5mm (maybe)
   printf("Homing %d,%d, %d with speed %d\n", x, y, z, cfg->homespeed);
   xdir = cfg->xhomedir;
   ydir = cfg->yhomedir;
@@ -423,16 +613,36 @@ void LaosMotion::home(int x, int y, int z)
   isHome = false;
   printf("Home Z...\n\r");
   if (cfg->autozhome) {
-    while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
-        zstep = 0;
+    while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol) && !canceled) {
+      if(counter==countupto){
+        c = dsp->read();
+        if(c==K_CANCEL || cover==0){
+          isHome = false;
+          return;
+        }
+        counter=0;
+      }else{
+        counter++;
+      }
+      zstep = 0;
         wait(cfg->homespeed/1E6);
         zstep = 1;
         wait(cfg->homespeed/1E6);
     }
   }
-  printf("Home XY...\n\r");
-  while ( 1 )
+  printf("Home XY...\r\n");
+  while ( 1 && !canceled )
   {
+    if(counter==countupto){
+      c = dsp->read();
+      if(c==K_CANCEL || cover==0){
+        isHome = false;
+        return;
+      }
+      counter=0;
+    }else{
+      counter++;
+    }
     xstep = ystep = 0;
     wait(cfg->homespeed/1E6);
     xstep = xhome ^ cfg->xpol;
@@ -447,11 +657,10 @@ void LaosMotion::home(int x, int y, int z)
       setPosition(x,y,z);
       moveTo(x,y,z);
       isHome = true;
-      printf("Home done.\n\r");
+      printf("Home done.\r\n");
       return;
     }
   }
-
 }
 
 

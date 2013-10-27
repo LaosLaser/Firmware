@@ -176,6 +176,27 @@ void LaosMenu::SetScreen(char *msg) {
 }
 
 /**
+*** Check if cancel button is pressed (should only be used while running jobs!)
+**/
+void LaosMenu::checkCancel() {
+    c = dsp->read();
+    if(c==K_CANCEL || !mot->isStart()/* || mot->endstopReached()*/){
+        fclose(runfile);
+        runfile = NULL;
+        screen = MAIN;
+        canceled=1;
+        mot->clearBuffer();
+        mot->reset();
+        mot->isHome=false;
+        printf("cancel pressed!\r\n");
+    }
+    if(c==K_FUP){
+        skipped=1;
+    }
+}
+
+
+/**
 *** Handle menu system
 *** Read keys, and plan next action on the screen, output screen if 
 *** something changed
@@ -253,27 +274,8 @@ void LaosMenu::Handle() {
                 break;
                 
             case MOVE: // pos xy
-                mot->getPosition(&x, &y, &z);
-                xt = x; yt= y;
-                switch ( c ) {
-                    case K_DOWN: y+=100*speed; break;
-                    case K_UP: y-=100*speed;  break;
-                    case K_LEFT: x-=100*speed; break;
-                    case K_RIGHT: x+=100*speed;  break;
-                    case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
-                    case K_FUP: screen=FOCUS; break; 
-                    case K_FDOWN: screen=FOCUS; break;
-                    case K_ORIGIN: screen=ORIGIN; break;
-                }
-                if  ((mot->queue() < 5) && ( (x!=xt) || (y != yt) )) {
-                    mot->moveTo(x, y, z, speed/2);
-					printf("Move: %d %d %d %d\n", x,y,z, speed);
-                } else {
-                    // if (! mot->ready()) 
-                    // printf("Buffer vol\n");
-                }
-                args[0]=x-xoff;
-                args[1]=y-yoff;
+                mot->manualMove();
+                screen=MAIN;
                 break;
 
             case FOCUS: // focus
@@ -394,12 +396,6 @@ void LaosMenu::Handle() {
 
             case RUNNING: // Screen while running
                 switch ( c ) {
-                    /* case K_CANCEL:
-                        while (mot->queue());
-                        mot->reset();
-                        if (runfile != NULL) fclose(runfile);
-                        runfile=NULL; screen=MAIN; menu=MAIN;
-                        break; */
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
@@ -408,15 +404,21 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
+                            canceled=0;
                         		#ifdef READ_FILE_DEBUG
                         			printf("Parsing file: \n");
                         		#endif
-                            while ((!feof(runfile)) && mot->ready())
+                            while (!canceled && ((!feof(runfile)) && mot->ready())){
+                                checkCancel();
                                 mot->write(readint(runfile));
+                            }
+                            while(!canceled && mot->queue()>0){
+                                checkCancel();
+                            }
                             #ifdef READ_FILE_DEBUG
                         			printf("File parsed \n");
                         		#endif
-                            if (feof(runfile) && mot->ready()) {
+                            if (!canceled && feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
                                 mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);

@@ -16,6 +16,7 @@ GCC4MBED_DIR=../../gcc4mbed
 LIBS_PREFIX=
 LIBS_SUFFIX=
 
+OPTIMIZATION=1
 GIT_HASH = $(shell sh -c 'git describe --abbrev=7 --dirty --always')
 DEFINES += -D__GIT_HASH=\"$(GIT_HASH)\"
 

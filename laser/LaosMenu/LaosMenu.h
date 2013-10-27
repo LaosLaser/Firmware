@@ -44,6 +44,8 @@ extern "C" void mbed_reset();
       
 extern void plan_get_current_position_xyz(float *x, float *y, float *z);
 
+extern LaosMotion *mot;
+
 class LaosMenu {
 public:
     /** Make new LaosMenu object. 
@@ -58,7 +60,8 @@ public:
   void SetScreen(int screen);
   void SetScreen(char *s);
   void SetFileName(char * name);
-  
+  void checkCancel();
+
 private:
   // LaosDisplay *display;
   int args[5];
@@ -67,6 +70,14 @@ private:
   int speed;
   char jobname[MAXFILESIZE];
   
+  // button input character
+  int c;
+
+  // cancel/skip markers
+  int canceled=0;
+  int skipped=0;
+
+
   // menu states
   int screen, prevscreen, lastscreen;
   unsigned char menu, ipfield, iofield;

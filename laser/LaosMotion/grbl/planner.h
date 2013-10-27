@@ -114,6 +114,9 @@ block_t *plan_get_current_block();
 // Enables or disables acceleration-management for upcoming blocks
 void plan_set_acceleration_manager_enabled(uint8_t enabled);
 
+// Clear Buffers
+void plan_clear_buffer();
+
 // Is acceleration-management currently enabled?
 int plan_is_acceleration_manager_enabled();
 

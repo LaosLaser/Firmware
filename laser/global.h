@@ -54,6 +54,7 @@ public:
   int zscale; // steps per meter
   int escale; // steps per meter
   int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
+  int manualspeed; // speed used for homing [usec/step / 2]
   GlobalConfig(char *filename);
 };
 extern GlobalConfig *cfg; 

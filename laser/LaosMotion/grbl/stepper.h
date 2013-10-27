@@ -104,6 +104,10 @@ void st_init();
 // Block until all buffered steps are executed
 void st_synchronize();
 
+// Execute to kill everything that moves
+void st_go_idle();
+void clear_current_block();
+
 // Execute the homing cycle
 void st_go_home();
              
