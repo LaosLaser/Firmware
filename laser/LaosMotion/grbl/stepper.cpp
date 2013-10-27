@@ -162,7 +162,7 @@ static inline void  clear_all_step_pins (void)
 
   xstep =( (step_inv & (1<<X_STEP_BIT)) ? 1 : 0 );
   ystep =( (step_inv & (1<<Y_STEP_BIT)) ? 1 : 0 );
-  zstep =( (step_inv & (1<<Z_STEP_BIT)) ? 0 : 1 );
+  zstep =( (step_inv & (1<<Z_STEP_BIT)) ? 1 : 0 );
   // estep =( (step_inv & (1<<E_STEP_BIT)) ? 0 : 1 );
 }
 
