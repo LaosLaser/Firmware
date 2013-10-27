@@ -197,7 +197,7 @@ void LaosMotion::moveTo(int x, int y, int z)
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  60.0 * cfg->speed;
    plan_buffer_line(&action);
-  // printf("To buffer: %d, %d\n", x, y);
+   //printf("To buffer: %d, %d, %d\n", x, y, z);
 }
 
 /**
@@ -211,7 +211,7 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  (speed * 60.0 * cfg->speed) / 100;
    plan_buffer_line(&action);
-   //printf("To buffer: %d, %d\n", x, y);
+   //printf("To buffer: %d, %d, %d, %d\n", x, y,z,speed);
 }
 
 /**
@@ -267,7 +267,7 @@ void LaosMotion::write(int i)
             {
               case 1:
                 step = 0;
-                z = action.target.z = i/1000.0;;
+                z = action.target.z;
                 action.param = power;
                 action.ActionType =  AT_MOVE;
                 action.target.feed_rate =  60.0 * cfg->speed;
