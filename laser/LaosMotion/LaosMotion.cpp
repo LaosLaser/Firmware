@@ -431,7 +431,7 @@ void LaosMotion::setOrigin(int x, int y, int z)
 void LaosMotion::home(int x, int y, int z)
 {
   int i=0;
-  printf("Homing %d,%d, %d with speed %d\n", x, y, z, cfg->homespeed);
+  printf("Homing %d,%d, with speed %d\n", x, y, cfg->homespeed);
   xdir = cfg->xhomedir;
   ydir = cfg->yhomedir;
   zdir = cfg->zhomedir;
@@ -439,11 +439,12 @@ void LaosMotion::home(int x, int y, int z)
   isHome = false;
   printf("Home Z...\n\r");
   if (cfg->autozhome) {
+    printf("Homing %d with speed %d\n", z, cfg->zhomespeed);
     while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
         zstep = 0;
-        wait(cfg->homespeed/1E6);
+        wait(cfg->zhomespeed/1E6);
         zstep = 1;
-        wait(cfg->homespeed/1E6);
+        wait(cfg->zhomespeed/1E6);
     }
   }
   printf("Home XY...\n\r");
