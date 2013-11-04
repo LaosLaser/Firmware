@@ -82,6 +82,7 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("sys.nodisplay", &nodisplay, 1);
     cfg.Value("sys.i2cbaud", &i2cbaud, 9600);
     cfg.Value("sys.cleandir", &cleandir, 1);
+    cfg.Value("sys.exhaustoffdelay", &exhaust_offdelay, 30); // how long to continue air assist/extract after job completion (secs)
     
     // Laser
     cfg.Value("laser.enable", &lenable, 1); // laser enable polarity [0/1]
@@ -155,5 +156,7 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2]
     cfg.Value("motion.enable", &enable, 0); // enable output polarity [0/1]
     cfg.Value("motion.tolerance", &tolerance, 50); // cornering tolerance [1/1000 units]
+
+
 }
 

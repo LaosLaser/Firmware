@@ -33,3 +33,6 @@ extern DigitalOut *laser;           // O4: LaserON (White), do not statically al
 
 // Analog in/out (cover sensor) + NC
 extern DigitalIn cover;
+
+// exhaust
+extern DigitalOut exhaust;

@@ -61,6 +61,7 @@ volatile int32_t actpos_x, actpos_y, actpos_z, actpos_e; // actual position
 // Locals
 static block_t *current_block;  // A pointer to the block currently being traced
 static Ticker timer; // the periodic timer used to step
+static Timeout exhaust_timer; // air assist/exhaust turn off delay
 static tFixedPt pwmofs; // the offset of the PWM value
 static tFixedPt pwmscale; // the scaling of the PWM value
 static volatile int running = 0;  // stepper irq is running
@@ -190,6 +191,8 @@ void st_wake_up()
   {
     running = 1;
     set_step_timer(2000);
+    exhaust = 1;	// turn air assist/exhaust on
+    exhaust_timer.detach(); // cancel any pending timer
   //  printf("wake_up()..\n");
   }
 }
@@ -203,7 +206,8 @@ static void st_go_idle()
   clear_all_step_pins();
   *laser = LASEROFF;
   pwm = cfg->pwmmax / 100.0;  // set pwm to max;
-//  printf("idle()..\n");
+  exhaust_timer.attach(&exhaust_off, cfg->exhaust_offdelay); // when job completes turn off air assist/exhaust after a delay 
+  // printf("idle()..\n");
 }
 
 // return number of steps to perform:  n = (v^2) / (2*a)
@@ -468,3 +472,9 @@ void st_synchronize()
   while(plan_get_current_block()) { sleep_mode(); }
 }
 
+void exhaust_off()
+{
+    exhaust = 0;
+    exhaust_timer.detach();
+
+}
