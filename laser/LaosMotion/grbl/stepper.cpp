@@ -125,14 +125,14 @@ void st_init(void)
    (cfg->yinv ? (1<<Y_STEP_BIT) : 0) |
    (cfg->zinv ? (1<<Z_STEP_BIT) : 0) |
    (cfg->einv ? (1<<E_STEP_BIT) : 0);
- 
-  printf("Direction: %d\n", direction_inv);
+
+  //printf("Direction: %d\n", direction_inv);
   pwmofs = to_fixed(cfg->pwmmin) / 100; // offset (0 .. 1.0)
   if ( cfg->pwmmin == cfg->pwmmax )
     pwmscale = 0;
   else
     pwmscale = div_f(to_fixed(cfg->pwmmax - cfg->pwmmin), to_fixed(100) );
-  printf("ofs: %d, scale: %d\n", pwmofs, pwmscale);
+  //printf("ofs: %d, scale: %d\n", pwmofs, pwmscale);
   actpos_x = actpos_y = actpos_z = actpos_e = 0;
   st_wake_up();
   trapezoid_tick_cycle_counter = 0;
@@ -191,7 +191,7 @@ void st_wake_up()
   {
     running = 1;
     set_step_timer(2000);
-    exhaust = 1;	// turn air assist/exhaust on
+    exhaust = 1;	    // turn air assist/exhaust on
     exhaust_timer.detach(); // cancel any pending timer
   //  printf("wake_up()..\n");
   }

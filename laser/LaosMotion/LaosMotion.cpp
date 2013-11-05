@@ -54,7 +54,7 @@ DigitalOut edir(p30);  // NOK: CAN, (TODO)
 // laser
 PwmOut pwm(p22);                // O1: PWM (Yellow)
 DigitalOut laser_enable(p21);   // O2: enable laser
-DigitalOut o3(p6);              // 03: NC
+DigitalOut exhaust(p6);              // 03: NC
 DigitalOut *laser = NULL;           // O4: (p5) LaserON (White)
 
 // Analog in/out (cover sensor) + NC
