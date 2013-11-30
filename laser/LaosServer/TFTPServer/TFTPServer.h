@@ -44,7 +44,9 @@
 #include <ctype.h>
 #include "mbed.h"
 #include "laosfilesystem.h"
-#include "UDPSocket.h"      // http://mbed.org/users/donatien/programs/EthernetNetIf
+#include "EthernetInterface.h"
+//#include "Watchdog.h"
+//#include "UDPSocket.h"      // http://mbed.org/users/donatien/programs/EthernetNetIf
 
 #define TFTP_PORT 69
 //#define TFTP_DEBUG(x) printf("%s\n\r", x);
@@ -67,6 +69,8 @@ public:
     void suspend();
     // Resume after suspension
     void resume();
+    // Poll for data or new connection
+    void poll();
     // During read and write, this gives you the filename
     void getFilename(char* name);
     // Return number of received files
@@ -74,9 +78,9 @@ public:
 
 private:
     // create a new connection reading a file from server
-    void ConnectRead(char* infile, Host* client);
+    void ConnectRead(char* buff);
     // create a new connection writing a file to the server
-    void ConnectWrite(char* infile, Host* client);
+    void ConnectWrite(char* buff);
     // get DATA block from file on disk into memory
     void getBlock();
     // send DATA block to the client
@@ -85,22 +89,23 @@ private:
     // anything called *.bin is written to /local/FIRMWARE.BIN
     // anything called config.txt is written to /local/config.txt
     // even if workdir is not /local
-    int cmpHost(Host* client);
+    int cmpHost();
     // send ACK to remote
     void Ack(int val);
     // send ERR message to named client
-    void Err(char* msg, Host* client);
+    void Err(char* msg);
     // check if connection mode of client is octet/binary
     int modeOctet(char* buff);
     // timed routine to avoid hanging after interrupted transfers
     void cleanUp();
     // event driven routines to handle incoming packets
-    void onListenUDPSocketEvent(UDPSocketEvent e);
+    // void onListenUDPSocketEvent(UDPSocketEvent e);
     int port; // The TFTP port
     UDPSocket* ListenSock;      // main listening socket (dflt: UDP port 69)
     char workdir[256];          // file working directory
     TFTPServerState state;      // current TFTP server state
-    Host* remote;               // connected remote Host IP and Port
+    char* remote_ip;         // connected remote Host IP
+    int remote_port;            // connected remote Host Port
     int blockcnt, dupcnt;       // block counter, and DUP counter
     FILE* fp;                   // current file to read or write
     char sendbuff[516];         // current DATA block;

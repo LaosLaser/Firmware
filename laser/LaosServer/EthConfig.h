@@ -25,10 +25,9 @@
 #ifndef _ETHCONFIG_H_
 #define _ETHCONFIG_H_
 #include "global.h"
-#include "EthernetNetIf.h"
-#include "TCPSocket.h"
+#include "EthernetInterface.h"
 
-EthernetNetIf * EthConfig();
+EthernetInterface * EthConfig();
 bool EthSpeed(void);
 bool EthLink(void);
 

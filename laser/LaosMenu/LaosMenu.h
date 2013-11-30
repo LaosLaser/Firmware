@@ -30,6 +30,7 @@
 #include "global.h"
 #include "LaosDisplay.h"
 #include "laosfilesystem.h"
+#include "global.h"
 extern "C" void mbed_reset();
 
     /** Menu system

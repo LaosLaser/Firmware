@@ -27,11 +27,15 @@
 #include "LaosDisplay.h"
 #include "LaosMotion.h"
  
+typedef char IPAddress[16];
+void IpParse(char *a, int i[]);
+
 // Global configuration struct
 class GlobalConfig
 {
 public:
-  int ip[4], gw[4], nm[4], dns[4], port, dhcp;  // network settings
+  IPAddress ip, gw, nm, dns;
+  int port, dhcp;  // network settings
   int enable; // enable state (1 or 0)
   int autohome; // automatically home the axis at startup
   int autozhome; // automatically home the zaxis as well
