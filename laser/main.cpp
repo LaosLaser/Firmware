@@ -182,11 +182,11 @@ int main()
 void main_nodisplay() {
   float x, y, z = 0;
   led1=led2=led3=led4=0;
-  int filecnt = srv->fileCnt();
   
   // main loop  
    while(1) 
   {  
+    int filecnt = srv->fileCnt();
     mnu->SetScreen("Wait for file ...");
     while (srv->State() == listen)
         srv->poll();
@@ -222,10 +222,10 @@ void main_nodisplay() {
 void main_menu() {
   // main loop  
   led1=led2=led3=led4=0;
-  int filecnt = srv->fileCnt();
                 
   mnu->SetScreen(1);
   while (1) {
+    int filecnt = srv->fileCnt();
     mnu->Handle();
     srv->poll();
     if (srv->State() != listen) {
