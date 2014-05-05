@@ -1,5 +1,5 @@
 diff --git a/workspace_tools/make.py b/workspace_tools/make.py
-index ad7bc1a..07fefbc 100644
+index ad7bc1a..4a86b3b 100644
 --- a/workspace_tools/make.py
 +++ b/workspace_tools/make.py
 @@ -31,7 +31,7 @@ sys.path.insert(0, ROOT)
@@ -17,7 +17,7 @@ index ad7bc1a..07fefbc 100644
                        default=False, help="Link to the rtos")
 +    parser.add_option("--net", action="store_true", dest="net",
 +                      default=False, help="Link to the Network libraries")
-+   parser.add_option("--usb", action="store_true", dest="usb",
++    parser.add_option("--usb", action="store_true", dest="usb",
 +                     default=False, help="Link to the USB libraries")
 +
  

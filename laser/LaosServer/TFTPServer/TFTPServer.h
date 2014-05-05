@@ -51,7 +51,7 @@
 #define TFTP_PORT 69
 //#define TFTP_DEBUG(x) printf("%s\n\r", x);
 
-enum TFTPServerState { listen, reading, writing, error, suspended, deleted }; 
+enum TFTPServerState { listen, reading, writing, tftperror, suspended, deleted }; 
 
 class TFTPServer {
 

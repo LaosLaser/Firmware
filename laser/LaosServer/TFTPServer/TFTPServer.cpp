@@ -37,7 +37,7 @@ TFTPServer::TFTPServer(char* dir, int myport) {
     // ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
     if (ListenSock->bind(port))
-        state = error;
+        state = tftperror;
     ListenSock->set_blocking(false, 1);
     //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
     sprintf(workdir, "%s", dir);
@@ -61,7 +61,7 @@ void TFTPServer::reset() {
     //ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
     if (ListenSock->bind(port))
-        state = error;
+        state = tftperror;
     ListenSock->set_blocking(false, 1);
     //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
     strcpy(filename, "");
@@ -231,7 +231,7 @@ int TFTPServer::modeOctet(char* buff) {
 
 // event driven routines to handle incoming packets
 void TFTPServer::poll() {
-    if ((state == suspended) || (state == deleted) || (state == error)) {
+    if ((state == suspended) || (state == deleted) || (state == tftperror)) {
         return;
     }
     ListenSock->set_blocking(false,1);
