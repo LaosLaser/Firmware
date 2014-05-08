@@ -58,7 +58,7 @@ public:
   */ 
   void Handle();
   void SetScreen(int screen);
-  void SetScreen(char *s);
+  void SetScreen(const std::string& msg);
   void SetFileName(char * name);
   
 private:

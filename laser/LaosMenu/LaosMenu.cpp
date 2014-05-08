@@ -135,7 +135,7 @@ LaosMenu::LaosMenu(LaosDisplay *display) {
     dsp = display;
     if ( dsp == NULL ) dsp = new LaosDisplay();
     dsp->cls();
-    SetScreen(NULL);
+    SetScreen("");
     runfile = NULL;
 }
 
@@ -159,14 +159,15 @@ void LaosMenu::SetScreen(int screen) {
 /**
 *** Goto specific screen
 **/
-void LaosMenu::SetScreen(char *msg) {
-    if ( msg == NULL ) {
+void LaosMenu::SetScreen(const std::string& msg) {
+    if ( msg.size() == 0 ) {
         sarg = NULL;
         screen = MAIN;
-    } else if ( msg[0] == 0 ) {
-        screen = MAIN;
+    // } else if ( msg[0] == 0 ) {
+    //    screen = MAIN;
     } else {
-        sarg = msg;
+        sarg = new char[msg.size()+1];
+        strcpy(sarg, msg.c_str());
         screen = STARTUP;
     }
     prevscreen = -1; // force update
@@ -181,7 +182,7 @@ void LaosMenu::SetScreen(char *msg) {
 *** something changed
 **/
 void LaosMenu::Handle() {
-    int xt, yt, zt, cnt=0, nodisplay = 0;
+    int xt, yt, zt, nodisplay = 0;
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
     extern GlobalConfig *cfg;

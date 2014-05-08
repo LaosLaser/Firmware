@@ -512,7 +512,7 @@ int readint(FILE *fp)
 } // read integer
 
 void strtolower(char *name) {
-    for(int i = 0; i < strlen(name); i++)
+    for(unsigned int i = 0; i < strlen(name); i++)
         name[i] = tolower(name[i]);
 }
 

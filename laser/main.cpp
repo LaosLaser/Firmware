@@ -96,7 +96,8 @@ int main()
   eth_speed=0;
 
  printf("TEST SD...\n"); 
-  FILE *fp = sd.openfile("test.txt", "wb");
+  char testfile[] = "test.txt";
+  FILE *fp = sd.openfile(testfile, "wb");
   if ( fp == NULL )
   {
     mnu->SetScreen("SD NOT READY!"); 
@@ -107,7 +108,7 @@ int main()
   {
     printf("SD: READY...\n");
     fclose(fp);
-    removefile("test.txt");
+    removefile(testfile);
   }
   
   // See if there's a .bin file on the SD
@@ -161,7 +162,7 @@ int main()
 
   // clean sd card?
   if (cfg->cleandir) cleandir();
-  mnu->SetScreen(NULL);  
+  mnu->SetScreen("");  
 
   if (cfg->nodisplay) {
     printf("No display set\n\r");

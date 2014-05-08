@@ -31,7 +31,7 @@
 // #define DO_MOTION_TEST 1
 
 // globals
-int step=0;
+unsigned int step=0;
 int command=0;
 int mark_speed = 100; // 100 [mm/sec]
 
