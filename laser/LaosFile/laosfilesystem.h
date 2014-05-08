@@ -37,7 +37,7 @@ class LaosFileSystem : public SDFileSystem {
         LaosFileSystem(PinName mosi, PinName miso, PinName sclk, PinName cs, 
                 const char* name);        // Create the filesystem on SD
         virtual ~LaosFileSystem();                // destructor
-        FILE* openfile(char* fname, char* iom);    // open a file
+        FILE* openfile(char* fname, const std::string& iom);    // open a file
         void getlongname(char *result, char *searchname);   // return long names
         void getshortname(char* shortname, char* name); //get a short name
         char pathname[MAXFILESIZE+2];
