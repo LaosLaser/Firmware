@@ -78,7 +78,7 @@ public:
   * @param def Default value. If the key is not found in the file, this value is copied. 
   * @return "true" if the key is found "false" is key is not found (default value is returned)
   */ 
-    bool Value(char *key, char *value,  size_t maxlen, char *def);
+    bool Value(const std::string& key, char *value,  size_t maxlen, const std::string& def);
 
 /** Read Integer value. If file is not open, or key does not exist: copy default value (return false)
   * @param key name of the key in the file
@@ -86,7 +86,7 @@ public:
   * @param def Default value. If the key is not found in the file, this value is copied. 
   * @return "true" if the key is found "false" is key is not found (default value is returned)
   */ 
-    bool Value(char *key, int *value, int def);
+    bool Value(const std::string& key, int *value, int def);
     
   /** See if file was present
   * @return "true" if file is open, "false" file is not found 

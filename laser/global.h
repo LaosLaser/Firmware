@@ -24,9 +24,7 @@
 #define _GLOBAL_H_
  
 #include "mbed.h"
-#include "LaosDisplay.h"
-#include "LaosMotion.h"
- 
+#include <string>
 typedef char IPAddress[16];
 void IpParse(char *a, int i[]);
 
@@ -59,7 +57,7 @@ public:
   int zscale; // steps per meter
   int escale; // steps per meter
   int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
-  GlobalConfig(char *filename);
+  GlobalConfig(const std::string& filename);
 };
 extern GlobalConfig *cfg; 
 

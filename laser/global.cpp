@@ -54,13 +54,15 @@ void IpParse(char *a, int i[])
 *** Global config
 *** Config settings into global Config struct
 **/
-GlobalConfig::GlobalConfig(char *filename)
+GlobalConfig::GlobalConfig(const std::string& filename)
 {
-   printf("\r\nOpen config file: '%s'\r\n", filename);
-   ConfigFile cfg(filename);
+   char *file = new char[filename.size()+1];
+   strcpy(file, filename.c_str());
+   printf("\r\nOpen config file: '%s'\r\n", file);
+   ConfigFile cfg(file);
     if ( !cfg.IsOpen() ) 
     {
-      printf("File does not exists. Using defaults\n");
+      printf("File does not exists. Using defaults\r\n");
     }
     
     // IP settings
