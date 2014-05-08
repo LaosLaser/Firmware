@@ -69,7 +69,6 @@ static uint32_t direction_inv;    // invert mask for direction bits
 static uint32_t direction_bits;   // all axes direction (different ports)
 static uint32_t step_bits;        // all axis step bits
 static uint32_t step_inv;      // invert mask for the stepper bits
-static uint32_t nominal_rate; // [steps/min]
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y,
                counter_z;
@@ -125,13 +124,13 @@ void st_init(void)
    (cfg->zinv ? (1<<Z_STEP_BIT) : 0) |
    (cfg->einv ? (1<<E_STEP_BIT) : 0);
  
-  printf("Direction: %d\n", direction_inv);
+  printf("Direction: %lu\n", direction_inv);
   pwmofs = to_fixed(cfg->pwmmin) / 100; // offset (0 .. 1.0)
   if ( cfg->pwmmin == cfg->pwmmax )
     pwmscale = 0;
   else
     pwmscale = div_f(to_fixed(cfg->pwmmax - cfg->pwmmin), to_fixed(100) );
-  printf("ofs: %d, scale: %d\n", pwmofs, pwmscale);
+  printf("ofs: %lu, scale: %lu\n", pwmofs, pwmscale);
   actpos_x = actpos_y = actpos_z = actpos_e = 0;
   st_wake_up();
   trapezoid_tick_cycle_counter = 0;

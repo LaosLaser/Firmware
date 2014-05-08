@@ -177,7 +177,7 @@ static void planner_reverse_pass_kernel(block_t *previous, block_t *current, blo
 // planner_recalculate() needs to go over the current plan twice. Once in reverse and once forward. This 
 // implements the reverse pass.
 static void planner_reverse_pass() {
-  auto int8_t block_index = block_buffer_head;
+  int8_t block_index = block_buffer_head;
   block_t *block[3] = {NULL, NULL, NULL};
   while(block_index != block_buffer_tail) {    
     block_index = prev_block_index( block_index );
@@ -679,7 +679,7 @@ void plan_set_current_position(tTarget *new_position)
   position[E_AXIS] = lround(new_position->e*(float)config.steps_per_mm_e);    
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   clear_vector_double(previous_unit_vec);
-  printf("Set Position: %d,%d,%d,%d", position[X_AXIS],  position[Y_AXIS],  position[Z_AXIS],  position[E_AXIS]);
+  // printf("Set Position: %d,%d,%d,%d", position[X_AXIS],  position[Y_AXIS],  position[Z_AXIS],  position[E_AXIS]);
   // Wait for all motion to stop and THEN set the actual stepper axis positions;
   // while( !mot->ready() );
   actpos_x =  position[X_AXIS];

@@ -45,6 +45,7 @@
 // #define READ_FILE_DEBUG
 // #define READ_FILE_DEBUG_VERBOSE
  
+#include "pins.h"
 #include "global.h"
 #include "ConfigFile.h"
 #include "EthConfig.h"
@@ -54,15 +55,7 @@
 #include "SDFileSystem.h"
 #include "laosfilesystem.h"
 
-// MBED blue status leds
-DigitalOut led1(LED1);
-DigitalOut led2(LED2);
-DigitalOut led3(LED3);
-DigitalOut led4(LED4);
-
 // Status and communication
-DigitalOut eth_link(p29); // green
-DigitalOut eth_speed(p30); // yellow
 EthernetInterface *eth; // Ethernet, tcp/ip
 
 // Filesystems
