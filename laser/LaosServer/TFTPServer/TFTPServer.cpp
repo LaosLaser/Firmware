@@ -21,26 +21,18 @@
  *
  */
 #include "TFTPServer.h"
-extern Serial pc;
-//extern Watchdog wdt;
-extern char mac[6];
-extern LaosFileSystem sd;
-Endpoint client;
 
 // create a new tftp server, with file directory dir and
 // listening on port
 
-TFTPServer::TFTPServer(char* dir, int myport) {
+TFTPServer::TFTPServer(int myport) {
     port = myport;
     printf("TFTPServer(): port=%d\n", myport);
     ListenSock = new UDPSocket();
-    // ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
     if (ListenSock->bind(port))
         state = tftperror;
     ListenSock->set_blocking(false, 1);
-    //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
-    sprintf(workdir, "%s", dir);
     filecnt = 0;
 }
 
@@ -56,14 +48,11 @@ void TFTPServer::reset() {
     ListenSock->close();
     delete(ListenSock);
     strcpy(remote_ip,"");
-    //TFTPServerTimer.detach();
     ListenSock = new UDPSocket();
-    //ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
     if (ListenSock->bind(port))
         state = tftperror;
     ListenSock->set_blocking(false, 1);
-    //TFTPServerTimer.attach(this, &TFTPServer::cleanUp, 5000);
     strcpy(filename, "");
     filecnt = 0;
 }
@@ -198,9 +187,9 @@ void TFTPServer::Ack(int val) {
 }
 
 // send ERR message to named client
-void TFTPServer::Err(char* msg) {
+void TFTPServer::Err(const std::string& msg) {
     char message[32];
-    strncpy(message, msg, 32);
+    strncpy(message, msg.c_str(), 32);
     char err[37];
     sprintf(err, "0000%s0", message);
     err[0] = 0x00;
@@ -379,6 +368,12 @@ void TFTPServer::poll() {
                 printf("Ignoring packege from other host during WRQ");
             }
             break; // writing
+        }
+        case tftperror: {
+        }
+        case suspended: {
+        }
+        case deleted: {
         }
     } // state
 }

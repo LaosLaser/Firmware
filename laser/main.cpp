@@ -136,7 +136,7 @@ int main()
   eth_speed=1;
       
   printf("SERVER...\n");
-  srv = new TFTPServer("/sd", cfg->port);
+  srv = new TFTPServer(cfg->port);
   mnu->SetScreen("SERVER OK...."); 
   wait(0.5);
   mnu->SetScreen(9); // IP
