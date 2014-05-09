@@ -562,6 +562,23 @@ void removeFirmware() { // remove old firmware from SD
     }
 }
 
+char* getLaosFile() {
+    extern LaosFileSystem sd;
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if (d != NULL)
+        while ((p=readdir(d)) != NULL)
+            if (isLaosFile(p->d_name)) {
+                char *name = new char[strlen(p->d_name)+1];
+                strcpy(name, p->d_name);
+                closedir(d);
+                return name;
+            }
+    closedir(d);
+    return NULL;
+}
+
 int SDcheckFirmware() {
     extern LaosFileSystem sd;
     DIR *d;
