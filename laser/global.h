@@ -25,6 +25,7 @@
  
 #include "mbed.h"
 #include <string>
+#include "ConfigFile.h"
 typedef char IPAddress[16];
 void IpParse(char *a, int i[]);
 
@@ -59,7 +60,6 @@ public:
   int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
   GlobalConfig(const std::string& filename);
 };
-extern GlobalConfig *cfg; 
 
 #ifndef __GIT_HASH
 #define __GIT_HASH ""

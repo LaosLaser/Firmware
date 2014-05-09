@@ -56,6 +56,7 @@ static uint8_t acceleration_manager_enabled;   // Acceleration management active
 // initial entry point of the planner
 // Clear values and set defaults
 void plan_init() {
+  extern GlobalConfig *cfg;
   block_buffer_head = 0;
   block_buffer_tail = 0;
   plan_set_acceleration_manager_enabled(true);

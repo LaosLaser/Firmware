@@ -58,6 +58,7 @@ unsigned char bitmap_bpp=1, bitmap_enable=0;
 **/
 LaosMotion::LaosMotion()
 {
+  extern GlobalConfig *cfg;
 #if DO_MOTION_TEST
   tActionRequest act[2];
   int i=0;
@@ -122,6 +123,7 @@ LaosMotion::~LaosMotion()
 **/
 void LaosMotion::reset()
 {
+  extern GlobalConfig *cfg;
   #ifdef READ_FILE_DEBUG
     printf("LaosMotion::reset()\n");
   #endif
@@ -161,6 +163,7 @@ int LaosMotion::queue()
 **/
 void LaosMotion::moveTo(int x, int y, int z)
 {
+   extern GlobalConfig *cfg;
    action.target.x = ofsx + x/1000.0;
    action.target.y = ofsy + y/1000.0;
    action.target.z = ofsz + z/1000.0;
@@ -175,6 +178,7 @@ void LaosMotion::moveTo(int x, int y, int z)
 **/
 void LaosMotion::moveTo(int x, int y, int z, int speed)
 {
+   extern GlobalConfig *cfg;
    action.target.x = ofsx + x/1000.0;
    action.target.y = ofsy + y/1000.0;
    action.target.z = ofsz + z/1000.0;
@@ -191,6 +195,7 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
 **/
 void LaosMotion::write(int i)
 {
+  extern GlobalConfig *cfg;
   static int x=0,y=0,z=0,power=10000;
   //if (  plan_queue_empty() )
   //printf("Empty\n");
@@ -402,6 +407,7 @@ void LaosMotion::setOrigin(int x, int y, int z)
 **/
 void LaosMotion::home(int x, int y, int z)
 {
+  extern GlobalConfig *cfg;
   int i=0;
   printf("Homing %d,%d, with speed %d\n", x, y, cfg->homespeed);
   xdir = cfg->xhomedir;

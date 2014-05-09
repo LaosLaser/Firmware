@@ -54,6 +54,7 @@ bool EthLink(void)
 **/
 EthernetInterface * EthConfig()
  {
+    extern GlobalConfig *cfg;
     EthernetInterface *eth;
     eth = new EthernetInterface();
     if ( cfg->dhcp )

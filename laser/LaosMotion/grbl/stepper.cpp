@@ -113,6 +113,7 @@ extern unsigned long bitmap[], bitmap_width, bitmap_size;
 // Initialize and start the stepper motor subsystem
 void st_init(void)
 {
+  extern GlobalConfig *cfg;
   direction_inv =
    (cfg->xscale<0 ? (1<<X_DIRECTION_BIT) : 0) |
    (cfg->yscale<0 ? (1<<Y_DIRECTION_BIT) : 0) |
@@ -197,6 +198,7 @@ void st_wake_up()
 // (some delay might have to be implemented). Currently no motor switchoff is done.
 static void st_go_idle()
 {
+  extern GlobalConfig *cfg;
   timer.detach();
   running = 0;
   clear_all_step_pins();
@@ -269,6 +271,7 @@ static inline void trapezoid_generator_reset()
 // Set the step timer. Note: this starts the ticker at an interval of "cycles"
 static inline void set_step_timer (uint32_t cycles)
 {
+   extern GlobalConfig *cfg;
    volatile static double p;
    timer.attach_us(&st_interrupt,cycles);
    // p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
