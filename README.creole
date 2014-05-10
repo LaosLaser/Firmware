@@ -1,52 +1,39 @@
 Embedded software (firmware) for the laser system and components, including configuration files.
 
-==Build Setup
-As copied from gcc4mbed: 
-These steps install the laos firmware source code and GCC4MBED project on your machine so that you can perform an offline build using the GNU for ARM Embedded toolchain:
-* git clone --recursive https://github.com/LaosLaser/Firmware.git
-* git clone https://github.com/adamgreen/gcc4mbed.git
-* cd gcc4mbed
-* Run the install script appropriate for your platform:
-** Windows: win_install.cmd
-** OS X: mac_install
-** Linux: linux_install
-* You can then run the BuildShell script which will be created during the install to properly configure the PATH environment variable.  You may want to edit this script to further customize your development environment or copy its essence into your existing shell setup script.
-* cd ../Firmware/laser
-* make clean all
-
 ==Build setup, using MBED library sources (No GCC4MBED requried):
 --> for now, this only works in the mbed-gcc branch <--
 * Get your compiler here: https://launchpad.net/gcc-arm-embedded (or use the one that comes with your
     distribution: apt-get install gcc-arm-none-eabi )
 * Download LaosLaser source:
-    git clone https://github.com/LaosLaser/Firmware.git -b mbed-gcc
+```
+git clone https://github.com/LaosLaser/Firmware.git -b mbed-gcc
+```
 * Download mbed libraries (latest version)
-    cd Firmware
-    git clone https://github.com/mbedmicro/mbed
+```
+cd Firmware
+git clone https://github.com/mbedmicro/mbed
+```
 * Patch mbed libraries:
-    cd mbed/
-    patch -p1 < ../laser/mbed.patch
+```
+cd mbed/
+patch -p1 < ../laser/mbed.patch
+```
 * Set your GCC path in Firmware/mbed/workspace_tools/private_settings.py, for example:
-    GCC_ARM_PATH = "/usr/bin/"
+```
+GCC_ARM_PATH = "/usr/bin/"
+```
 * Build MBED libraries:
-    python workspace_tools/build.py -m LPC1768 -t GCC_ARM -r -e -u -c
+```
+python workspace_tools/build.py -m LPC1768 -t GCC_ARM -r -e -u -c
+```
 * Link LaOSlaser as an mbed example project
-    cd Firmware/mbed/libraries/tests/net/protocols/
-    ln -s  ../../../../../laser .
+```
+cd Firmware/mbed/libraries/tests/net/protocols/
+ln -s  ../../../../../laser .
+```
 * Build LaosLaser:
-    cd Firmware/mbed
-    python workspace_tools/make.py -m LPC1768 -t GCC_ARM -n laser
-
+```
+cd Firmware/mbed
+python workspace_tools/make.py -m LPC1768 -t GCC_ARM -n laser
+```
 * Read http://mbed.org/handbook/mbed-tools for more info
-
-===Important Notes:
-* Files will fail to install to a FAT based file system.  Extract to a more appropriate file system (ie. NTFS on Windows) first and then copy to a FAT drive after installation.
-* If the installation should fail, please refer to win_install.log, linux_install.log, or mac_install.log.  It will contain the details of the installation process and any errors that were encountered.
-* The OS X install only supports 64-bit Intel machines.  The installers for the other platforms only install 32-bit Intel binaries.
-* The Linux install only installs 32-bit Intel binaries.  If you are running a 64-bit version of Intel Linux then you may need to install the 32-bit support libraries.  This problem typically shows up as a file not found error when you attempt to run tools such as arm-none-eabi-g++.  On Ubuntu, the necessary libraries can be installed by running {{{sudo apt-get install ia32-libs}}}
-
-==More Information
-**[[https://github.com/adamgreen/mri/blob/master/README.creole#mri---monitor-for-remote-inspection|Debugging]]:**  Learn how to use the GNU Debugger, GDB, with the new MRI debug monitor in GCC4MBED.\\
-\\
-**[[https://github.com/adamgreen/gcc4mbed/blob/master/notes/makefile.creole#make-variables|Makefile Configuration]]:**  Information about makefile options to customize your project's binary.\\
-\\
