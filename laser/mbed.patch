@@ -1,0 +1,70 @@
+diff --git a/workspace_tools/make.py b/workspace_tools/make.py
+index ad7bc1a..4a86b3b 100644
+--- a/workspace_tools/make.py
++++ b/workspace_tools/make.py
+@@ -31,7 +31,7 @@ sys.path.insert(0, ROOT)
+ from workspace_tools.options import get_default_options_parser
+ from workspace_tools.build_api import build_project
+ from workspace_tools.tests import TESTS, Test, TEST_MAP
+-from workspace_tools.paths import BUILD_DIR, RTOS_LIBRARIES
++from workspace_tools.paths import BUILD_DIR, RTOS_LIBRARIES, ETH_LIBRARY
+ from workspace_tools.targets import TARGET_MAP
+ from workspace_tools.utils import args_error
+ try:
+@@ -82,6 +82,11 @@ if __name__ == '__main__':
+     # without the rtos
+     parser.add_option("--rtos", action="store_true", dest="rtos",
+                       default=False, help="Link to the rtos")
++    parser.add_option("--net", action="store_true", dest="net",
++                      default=False, help="Link to the Network libraries")
++    parser.add_option("--usb", action="store_true", dest="usb",
++                     default=False, help="Link to the USB libraries")
++
+ 
+     # Specify a different linker script
+     parser.add_option("-l", "--linker", dest="linker_script",
+@@ -130,6 +135,8 @@ if __name__ == '__main__':
+     toolchain = options.tool
+ 
+     # Test
++    print(p)
++    print(options.dependencies)
+     test = Test(p)
+     if options.automated is not None:
+         test.automated = options.automated
+@@ -148,9 +155,14 @@ if __name__ == '__main__':
+         print 'The selected test is not supported on target %s with toolchain %s' % (mcu, toolchain)
+         sys.exit()
+ 
++    print(test.dependencies)
++
+     # RTOS
+     if options.rtos:
+         test.dependencies.append(RTOS_LIBRARIES)
++    if options.net:
++        test.dependencies.append( ETH_LIBRARY )
++
+ 
+     build_dir = join(BUILD_DIR, "test", mcu, toolchain, test.id)
+     if options.source_dir is not None:
+diff --git a/workspace_tools/tests.py b/workspace_tools/tests.py
+index 7b05fbf..2451951 100644
+--- a/workspace_tools/tests.py
++++ b/workspace_tools/tests.py
+@@ -693,6 +693,16 @@ TESTS = [
+         "host_test": "udp_link_layer_auto.py",
+         "peripherals": ["ethernet"],
+     },
++    {
++        "id": "NET_14", "description": "TFTPServer",
++        "source_dir": join(TEST_DIR, "net", "protocols", "TFTPServer"),
++        "dependencies": [MBED_LIBRARIES, RTOS_LIBRARIES, ETH_LIBRARY,  SD_FS, FAT_FS],
++    },
++    {
++        "id": "laser", "description": "LaosLaser",
++        "source_dir": join(TEST_DIR, "net", "protocols", "laser"),
++        "dependencies": [MBED_LIBRARIES, RTOS_LIBRARIES, ETH_LIBRARY,  SD_FS, FAT_FS],
++    },
+ 
+     # u-blox tests
+     {

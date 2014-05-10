@@ -25,11 +25,7 @@
 #ifndef _LAOSMOTION_H_
 #define _LAOSMOTION_H_
 #include "global.h"
-
-
-// the state of the laser OUTPUT
-#define LASEROFF 1
-#define LASERON 0
+#include "pins.h"
 
     /** Motion Controll system
       *
@@ -59,7 +55,5 @@ public:
 private:
   
 };
-
- 
 
 #endif

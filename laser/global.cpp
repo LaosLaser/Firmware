@@ -21,9 +21,6 @@
  * 
  */
 #include "global.h"
-#include "ConfigFile.h"
-
-
 
 /**
 *** Return a IpAddress, from a string in the format: ppp.qqq.rrr.sss
@@ -54,25 +51,22 @@ void IpParse(char *a, int i[])
 *** Global config
 *** Config settings into global Config struct
 **/
-GlobalConfig::GlobalConfig(char *filename)
+GlobalConfig::GlobalConfig(const std::string& filename)
 {
-   char val[32];
-   printf("\r\nOpen config file: '%s'\r\n", filename);
-   ConfigFile cfg(filename);
+   char *file = new char[filename.size()+1];
+   strcpy(file, filename.c_str());
+   printf("\r\nOpen config file: '%s'\r\n", file);
+   ConfigFile cfg(file);
     if ( !cfg.IsOpen() ) 
     {
-      printf("File does not exists. Using defaults\n");
+      printf("File does not exists. Using defaults\r\n");
     }
     
     // IP settings
-    cfg.Value("net.ip", val, sizeof(val), "192.168.0.111");
-    IpParse(val, ip);
-    cfg.Value("net.mask", val, sizeof(val), "255.255.255.0");
-    IpParse(val, nm);
-    cfg.Value("net.gateway", val, sizeof(val), "192.168.0.1");
-    IpParse(val, gw);
-    cfg.Value("net.dns", val, sizeof(val), "192.168.0.1");
-    IpParse(val, dns);
+    cfg.Value("net.ip", ip, sizeof(ip), "192.168.0.111");
+    cfg.Value("net.mask", nm, sizeof(nm), "255.255.255.0");
+    cfg.Value("net.gateway", gw, sizeof(gw), "192.168.0.1");
+    cfg.Value("net.dns", dns, sizeof(dns), "192.168.0.1");
     cfg.Value("net.port", &port, 69);
     cfg.Value("net.dhcp", &dhcp, 0);
 

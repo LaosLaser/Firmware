@@ -27,51 +27,49 @@ ConfigFile::ConfigFile(char *file)
 {
   printf("ConfigFile:ConfigFile (%s)\n\r", file);
   extern LaosFileSystem sd;
-  printf("ConfigFile(%s)\n\r", file);
   fp =sd.openfile(file, "r");
   if (fp==NULL) {
-    printf("Local configfile\n\r");
     char tmpname[32];
     sprintf(tmpname, "/local/%s", file);
-    printf("name: %s\n\r", tmpname); 
     fp = fopen(tmpname,"r");
-  }
+  } 
 }
 
 // Destroy a config file (closes the file handle)
 ConfigFile::~ConfigFile() 
 {
-   printf("~ConfigFile()\n\r");
   if ( fp != NULL )
     fclose(fp);
 }
 
 // Read value
-bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
+bool ConfigFile::Value(const std::string& key, char *value,  size_t maxlen, const std::string& def)
 {
-  int m=0,n=0,c,s=0;
+  unsigned int m=0,n=0,c,s=0;
   char *v = value;
+  char *newkey = new char[key.size()+1];
+  strcpy(newkey, key.c_str());
   if (fp == NULL)
   {
-    strncpy(value, def, maxlen);
+    strncpy(value, def.c_str(), maxlen);
     return false;
   }
 
-  n = strlen(key);
+  n = strlen(newkey);
   fseek(fp, 0L, SEEK_SET);
   while( s != 99  ) 
   {
     c = fgetc(fp);
     if ( c == EOF ) 
       break;
-  //  printf("%d(%d): '%c'\n\r", s, m, c);
+    // printf("%d(%d): '%c'\n\r", s, m, c);
     switch( s  )// sate machine
     { 
       case 0: // (re) start: note: no break; fall through to case 1
         m=0; 
         s=1;
-      case 1: // read key, skip spaces
-        if ( c == key[m] ) 
+      case 1: // read newkey, skip spaces
+        if ( c == newkey[m] ) 
           m++; 
         else 
           s = 0;
@@ -79,7 +77,7 @@ bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
           s = 10; 
         else if ( c == ' ' || c == '\t' || c == '\n' || c == '\r') 
         {
-          if ( n == m ) // key found
+          if ( n == m ) // newkey found
           {
             s = 2;
             m = 0; 
@@ -88,7 +86,7 @@ bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
             s = 0;
         }
         break;
-      case 2: // key matched, skip whitepaces upto the first char
+      case 2: // newkey matched, skip whitepaces upto the first char
         if ( c == ';' ) s = 99;
         else if ( c != ' ' && c != '\t' ) 
         { 
@@ -113,35 +111,36 @@ bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
         break;
      }
   }
-  if ( s == 99 && m > 0) // key found, and value assigned
+  if ( s == 99 && m > 0) // newkey found, and value assigned
   {
     *value = 0; // terminate string
-    printf("'%s'='%s'\n", key,v);
+    printf("'%s'='%s'\n\r", newkey,v);
     return true; 
   }
   else
   {
-    strncpy(value, def, maxlen);
-    printf("'%s'='%s' (default)\n", key,v);
+    strncpy(value, def.c_str(), maxlen);
+    printf("'%s'='%s' (default)\n\r", newkey,v);
     return false;
   } 
 }
 
-
 // Read int value
-bool ConfigFile::Value(char *key, int *value, int def)
+bool ConfigFile::Value(const std::string& key, int *value, int def)
 {
+  char *newkey = new char[key.size()+1];
+  strcpy(newkey, key.c_str());
   char val[32];
-  bool b = Value(key, val, 31, "");
+  bool b = Value(newkey, val, 31, "");
   if ( b )
   {
     *value = atoi(val);
-     printf("%s: numeric value=%d\n", key, *value);
+     // printf("%s: numeric value=%d\n\r", newkey, *value);
   }
   else
   {
     *value = def;
-     printf("%s default (%d)\n", key, *value);
+     // printf("%s default (%d)\n\r", newkey, *value);
   }
   return b;
 }

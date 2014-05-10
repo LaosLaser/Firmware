@@ -135,7 +135,7 @@ LaosMenu::LaosMenu(LaosDisplay *display) {
     dsp = display;
     if ( dsp == NULL ) dsp = new LaosDisplay();
     dsp->cls();
-    SetScreen(NULL);
+    SetScreen("");
     runfile = NULL;
 }
 
@@ -159,14 +159,15 @@ void LaosMenu::SetScreen(int screen) {
 /**
 *** Goto specific screen
 **/
-void LaosMenu::SetScreen(char *msg) {
-    if ( msg == NULL ) {
+void LaosMenu::SetScreen(const std::string& msg) {
+    if ( msg.size() == 0 ) {
         sarg = NULL;
         screen = MAIN;
-    } else if ( msg[0] == 0 ) {
-        screen = MAIN;
+    // } else if ( msg[0] == 0 ) {
+    //    screen = MAIN;
     } else {
-        sarg = msg;
+        sarg = new char[msg.size()+1];
+        strcpy(sarg, msg.c_str());
         screen = STARTUP;
     }
     prevscreen = -1; // force update
@@ -181,9 +182,10 @@ void LaosMenu::SetScreen(char *msg) {
 *** something changed
 **/
 void LaosMenu::Handle() {
-    int xt, yt, zt, cnt=0, nodisplay = 0;
+    int xt, yt, zt, nodisplay = 0;
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
+    extern GlobalConfig *cfg;
     static int count=0;
     
     int c = dsp->read();
@@ -334,6 +336,11 @@ void LaosMenu::Handle() {
                 break;
 
             case IP: // IP
+                int myip[4], mynm[4], mygw[4], mydns[4];
+                IpParse(cfg->ip, myip);
+                IpParse(cfg->nm, mynm);
+                IpParse(cfg->gw, mygw);
+                IpParse(cfg->dns, mydns);
                 switch ( c ) {
                     case K_RIGHT: ipfield++; waitup=1; break;
                     case K_LEFT: ipfield--; waitup=1; break;
@@ -343,11 +350,11 @@ void LaosMenu::Handle() {
                 ipfield %= 4;
                 sarg = (char*)ipfields[ipfield];
                 switch (ipfield) {
-                    case 0: memcpy(args, cfg->ip, 4*sizeof(int) ); break;
-                    case 1: memcpy(args, cfg->nm, 4*sizeof(int) ); break;
-                    case 2: memcpy(args, cfg->gw, 4*sizeof(int) ); break;
-                    case 3: memcpy(args, cfg->dns, 4*sizeof(int) ); break;
-                    default: memset(args,0,4*sizeof(int)); break;
+                    case 0: memcpy(args, myip, 4*sizeof(int) ); break;
+                    case 1: memcpy(args, mynm, 4*sizeof(int) ); break;
+                    case 2: memcpy(args, mygw, 4*sizeof(int) ); break;
+                    case 3: memcpy(args, mydns, 4*sizeof(int) ); break;
+                    default: memset(args, 0, 4*sizeof(int)); break;
                 }
                 break;
 

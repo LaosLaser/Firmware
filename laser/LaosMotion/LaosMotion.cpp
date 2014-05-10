@@ -30,39 +30,9 @@
 
 // #define DO_MOTION_TEST 1
 
-// status leds
-extern DigitalOut led1,led2,led3,led4;
-
-// Inputs;
-DigitalIn xhome(p8);
-DigitalIn yhome(p17);
-DigitalIn zmin(p15);
-DigitalIn zmax(p16);
-
-// motors
-DigitalOut enable(p7);
-DigitalOut xdir(p23);
-DigitalOut xstep(p24);
-DigitalOut ydir(p25);
-DigitalOut ystep(p26);
-DigitalOut zdir(p27);
-DigitalOut zstep(p28);
-DigitalOut estep(p29); // NOK: CAN, (TODO)
-DigitalOut edir(p30);  // NOK: CAN, (TODO)
-
-
-// laser
-PwmOut pwm(p22);                // O1: PWM (Yellow)
-DigitalOut laser_enable(p21);   // O2: enable laser
-DigitalOut o3(p6);              // 03: NC
-DigitalOut *laser = NULL;           // O4: (p5) LaserON (White)
-
-// Analog in/out (cover sensor) + NC
-DigitalIn cover(p19);
-
-
 // globals
-int step=0, command=0;
+unsigned int step=0;
+int command=0;
 int mark_speed = 100; // 100 [mm/sec]
 
 // next planner action to enqueue
@@ -88,6 +58,7 @@ unsigned char bitmap_bpp=1, bitmap_enable=0;
 **/
 LaosMotion::LaosMotion()
 {
+  extern GlobalConfig *cfg;
 #if DO_MOTION_TEST
   tActionRequest act[2];
   int i=0;
@@ -152,6 +123,7 @@ LaosMotion::~LaosMotion()
 **/
 void LaosMotion::reset()
 {
+  extern GlobalConfig *cfg;
   #ifdef READ_FILE_DEBUG
     printf("LaosMotion::reset()\n");
   #endif
@@ -191,6 +163,7 @@ int LaosMotion::queue()
 **/
 void LaosMotion::moveTo(int x, int y, int z)
 {
+   extern GlobalConfig *cfg;
    action.target.x = ofsx + x/1000.0;
    action.target.y = ofsy + y/1000.0;
    action.target.z = ofsz + z/1000.0;
@@ -205,6 +178,7 @@ void LaosMotion::moveTo(int x, int y, int z)
 **/
 void LaosMotion::moveTo(int x, int y, int z, int speed)
 {
+   extern GlobalConfig *cfg;
    action.target.x = ofsx + x/1000.0;
    action.target.y = ofsy + y/1000.0;
    action.target.z = ofsz + z/1000.0;
@@ -221,6 +195,7 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
 **/
 void LaosMotion::write(int i)
 {
+  extern GlobalConfig *cfg;
   static int x=0,y=0,z=0,power=10000;
   //if (  plan_queue_empty() )
   //printf("Empty\n");
@@ -262,6 +237,8 @@ void LaosMotion::write(int i)
 		  case AT_MOVE: action.target.feed_rate = 60 * cfg->speed; break;
 		  case AT_LASER: action.target.feed_rate = 60 * mark_speed; break;
 		  case AT_BITMAP: action.target.feed_rate = 60 * cfg->xspeed; break;
+          case AT_MOVE_ENDSTOP: break;
+          case AT_WAIT: break;
 		}
 
 		if ( action.ActionType == AT_BITMAP )
@@ -430,6 +407,7 @@ void LaosMotion::setOrigin(int x, int y, int z)
 **/
 void LaosMotion::home(int x, int y, int z)
 {
+  extern GlobalConfig *cfg;
   int i=0;
   printf("Homing %d,%d, with speed %d\n", x, y, cfg->homespeed);
   xdir = cfg->xhomedir;

@@ -27,6 +27,7 @@
 // Ethernet connection status inputs (from phy) and outputs (to leds)
 #define ETH_LINK (1<<25)
 #define ETH_SPEED (1<<26)
+const char ESC = 0x1b; 
 PortIn eth_conn(Port1, ETH_LINK | ETH_SPEED);   // p25: link, 0=connected, 1=NC, p26: speed, 0=100mbit, 1=10mbit
 
 
@@ -48,39 +49,32 @@ bool EthLink(void)
   return !(s & ETH_LINK);
 }
 
-#define IP(x) IpAddr(x[0], x[1], x[2], x[3])
-
-
 /**
 *** EthConfig
 **/
-EthernetNetIf * EthConfig()
+EthernetInterface * EthConfig()
  {
-    EthernetNetIf *eth;
+    extern GlobalConfig *cfg;
+    EthernetInterface *eth;
+    eth = new EthernetInterface();
     if ( cfg->dhcp )
     {
-        printf("DHCP...\n");
-        eth = new EthernetNetIf();
+        printf("DHCP...\n\r");
+        eth->init();
     }
     else
     {
-        printf("FIXED IP...\n");
-        eth = new EthernetNetIf(IP(cfg->ip), IP(cfg->nm), IP(cfg->gw), IP(cfg->dns));
+        printf("FIXED IP...\n\r");
+        printf("IP: %s\n\r", cfg->ip);
+        eth->init(cfg->ip, cfg->nm, cfg->gw);
     }
-    printf("Ethernet Setup...\n");
-    if ( eth->setup() == ETH_TIMEOUT ) 
-    {
-        printf("Timeout!\n");
-        delete eth;
-        eth = new EthernetNetIf(IP(cfg->ip), IP(cfg->nm), IP(cfg->gw), IP(cfg->dns));
-    }
-
-    IpAddr myip = eth->getIp();
-    cfg->ip[0] = myip[0];
-    cfg->ip[1] = myip[1];
-    cfg->ip[2] = myip[2];
-    cfg->ip[3] = myip[3];
+    eth->connect();
+    // tell global about current IP
+    strcpy(cfg->ip, eth->getIPAddress());
+    strcpy(cfg->nm, eth->getNetworkMask());
+    strcpy(cfg->gw, eth->getGateway());
     
-    printf("mbed IP Address is %d.%d.%d.%d\r\n", myip[0], myip[1], myip[2], myip[3]);
+    printf("IP Address is: %c[8;34;2m%s%c[0m  \n\r", ESC, eth->getIPAddress(), ESC);
     return eth;
 }
+

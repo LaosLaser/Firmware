@@ -30,6 +30,8 @@
 #include "global.h"
 #include "LaosDisplay.h"
 #include "laosfilesystem.h"
+#include "global.h"
+#include "LaosMotion.h"
 extern "C" void mbed_reset();
 
     /** Menu system
@@ -56,7 +58,7 @@ public:
   */ 
   void Handle();
   void SetScreen(int screen);
-  void SetScreen(char *s);
+  void SetScreen(const std::string& msg);
   void SetFileName(char * name);
   
 private:

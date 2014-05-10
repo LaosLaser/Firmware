@@ -45,6 +45,7 @@
 // #define READ_FILE_DEBUG
 // #define READ_FILE_DEBUG_VERBOSE
  
+#include "pins.h"
 #include "global.h"
 #include "ConfigFile.h"
 #include "EthConfig.h"
@@ -54,16 +55,8 @@
 #include "SDFileSystem.h"
 #include "laosfilesystem.h"
 
-// MBED blue status leds
-DigitalOut led1(LED1);
-DigitalOut led2(LED2);
-DigitalOut led3(LED3);
-DigitalOut led4(LED4);
-
 // Status and communication
-DigitalOut eth_link(p29); // green
-DigitalOut eth_speed(p30); // yellow
-EthernetNetIf *eth; // Ethernet, tcp/ip
+EthernetInterface *eth; // Ethernet, tcp/ip
 
 // Filesystems
 LocalFileSystem local("local");   //File System
@@ -80,7 +73,6 @@ Timer systime;
 GlobalConfig *cfg;
 
 // Protos
-void GetFile(void);
 void main_nodisplay();
 void main_menu();
 
@@ -104,7 +96,8 @@ int main()
   eth_speed=0;
 
  printf("TEST SD...\n"); 
-  FILE *fp = sd.openfile("test.txt", "wb");
+  char testfile[] = "test.txt";
+  FILE *fp = sd.openfile(testfile, "wb");
   if ( fp == NULL )
   {
     mnu->SetScreen("SD NOT READY!"); 
@@ -115,7 +108,7 @@ int main()
   {
     printf("SD: READY...\n");
     fclose(fp);
-    removefile("test.txt");
+    removefile(testfile);
   }
   
   // See if there's a .bin file on the SD
@@ -137,7 +130,7 @@ int main()
   eth_speed=1;
       
   printf("SERVER...\n");
-  srv = new TFTPServer("/sd", cfg->port);
+  srv = new TFTPServer(cfg->port);
   mnu->SetScreen("SERVER OK...."); 
   wait(0.5);
   mnu->SetScreen(9); // IP
@@ -169,7 +162,7 @@ int main()
 
   // clean sd card?
   if (cfg->cleandir) cleandir();
-  mnu->SetScreen(NULL);  
+  mnu->SetScreen("");  
 
   if (cfg->nodisplay) {
     printf("No display set\n\r");
@@ -182,98 +175,74 @@ int main()
 
 void main_nodisplay() {
   float x, y, z = 0;
+  led1=led2=led3=led4=0;
   
   // main loop  
    while(1) 
   {  
-    led1=led2=led3=led4=0;
+    int filecnt = srv->fileCnt();
     mnu->SetScreen("Wait for file ...");
     while (srv->State() == listen)
-        Net::poll();
-    GetFile();
-    mot->reset();
-    plan_get_current_position_xyz(&x, &y, &z);
-     printf("%f %f\n", x,y); 
-    mnu->SetScreen("Laser BUSY..."); 
-    
-    char name[32];
-    srv->getFilename(name);
-    printf("Now processing file: '%s'\n\r", name);
-    FILE *in = sd.openfile(name, "r");
-    while (!feof(in))
-    { 
-      while (!mot->ready() );
-      mot->write(readint(in));
+        srv->poll();
+    if (srv->State() != listen) {
+      mnu->SetScreen("Receive file");
+      while (srv->State() != listen) srv->poll();
     }
-    fclose(in);
-    removefile(name);
-    // done
-    printf("DONE!...\n");
-	while (!mot->ready() );
-    mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+    if (filecnt < srv->fileCnt()) {
+      mot->reset();
+      plan_get_current_position_xyz(&x, &y, &z);
+       printf("%f %f\n", x,y); 
+       mnu->SetScreen("Laser BUSY..."); 
+    
+       char name[32];
+       srv->getFilename(name);
+       printf("Now processing file: '%s'\n\r", name);
+       FILE *in = sd.openfile(name, "r");
+       while (!feof(in))
+       { 
+         while (!mot->ready() );
+         mot->write(readint(in));
+       }
+       fclose(in);
+       removefile(name);
+       // done
+       printf("DONE!...\n");
+	   while (!mot->ready() );
+       mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+    }
   }
 }
 
-
 void main_menu() {
   // main loop  
-  while (1) {
-        led1=led2=led3=led4=0;
+  led1=led2=led3=led4=0;
                 
-        mnu->SetScreen(1);
-        while (1) {;
-            mnu->Handle();
-            Net::poll();
-            if (srv->State() != listen) {
-                GetFile();
-                char myname[32];
-                srv->getFilename(myname);
-                if (isFirmware(myname)) {
-                    installFirmware(myname);
-                    mnu->SetScreen(1);
-                } else {
-                    if (strcmp("config.txt", myname) == 0) {
-                        // it's a config file!
-                        mnu->SetScreen(1);
-                    } else {
-                        if (isLaosFile(myname)) {
-                            mnu->SetFileName(myname);
-                            mnu->SetScreen(2);
-                        }
-                    }
-                }
-            }           
-        }
+  mnu->SetScreen(1);
+  while (1) {
+    int filecnt = srv->fileCnt();
+    mnu->Handle();
+    srv->poll();
+    if (srv->State() != listen) {
+      mnu->SetScreen("Receive file");
+      while (srv->State() != listen) srv->poll();
     }
+    if (filecnt < srv->fileCnt()) {
+      char myname[32];
+      srv->getFilename(myname);
+      if (isFirmware(myname)) {
+        installFirmware(myname);
+        mnu->SetScreen(1);
+      } else {
+        if (strcmp("config.txt", myname) == 0) {
+          // it's a config file!
+          mnu->SetScreen(1);
+        } else {
+          if (isLaosFile(myname)) {
+            mnu->SetFileName(myname);
+            mnu->SetScreen(2);
+          }
+        }
+      }
+    }           
+  }
 }
-
-/**
-*** Get file from network and save on SDcard
-*** Ascii data is read from the network, and saved on the SD card in binary int32 format
-**/
-void GetFile(void) {
-   Timer t;
-   printf("Main::GetFile()\n\r" );
-   mnu->SetScreen("Receive file...");
-   t.start();
-   while (srv->State() != listen) {
-     Net::poll();
-     switch ((int)t.read()) {
-        case 1:
-            mnu->SetScreen("Receive file");
-            break;
-        case 2:
-            mnu->SetScreen("Receive file.");
-            break;
-        case 3:
-            mnu->SetScreen("Receive file..");
-            break;
-        case 4:
-            mnu->SetScreen("Receive file...");
-            t.reset();
-            break;
-     }
-   }
-   mnu->SetScreen("Received file.");
-} // GetFile
-

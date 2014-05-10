@@ -32,27 +32,27 @@ LaosFileSystem::LaosFileSystem(PinName mosi, PinName miso, PinName sclk, PinName
 LaosFileSystem::~LaosFileSystem() {
 }
 
-FILE* LaosFileSystem::openfile(char *name, char* iom) {
+FILE* LaosFileSystem::openfile(char *name, const std::string& iom) {
     if (islegalname(name)) {  // check length and chars in name
 
         char shortname[SHORTFILESIZE] = "";
         getshortname(shortname, name);
         char fullname[MAXFILESIZE+SHORTFILESIZE+1];
-        if (strstr(iom, "r")) {        // open file for reading
+        if (strstr(iom.c_str(), "r")) {        // open file for reading
             if (strlen(shortname)!=0) {
                 sprintf(fullname, "%s%s", pathname, shortname);
-                return fopen(fullname, iom);
+                return fopen(fullname, iom.c_str());
             } else {                // no file exists
                 return NULL;
             }
         } else {                    // open file for writng
             if (strlen(shortname)!=0) {
                 sprintf(fullname, "%s%s", pathname, shortname);
-                return fopen(fullname, iom);
+                return fopen(fullname, iom.c_str());
             } else {                    // create a new file
                 makeshortname(shortname, name);
                 sprintf(fullname, "%s%s", pathname, shortname);
-                return fopen(fullname, iom);
+                return fopen(fullname, iom.c_str());
             }
         }
     } else {    // (islegalname(name))
@@ -95,8 +95,8 @@ int LaosFileSystem::islegalname(char* name) {
 }
 
 int LaosFileSystem::isshortname(char* name) {
-    int len = strlen(name);
-    for (int x=0; x<len; x++)
+    unsigned int len = strlen(name);
+    for (unsigned int x=0; x<len; x++)
         if (name[x] == ' ') return 0; // spaces not allowed in shortname
 
     char myname[MAXFILESIZE];
@@ -127,10 +127,10 @@ int LaosFileSystem::isshortname(char* name) {
 }
 
 void LaosFileSystem::removespaces(char* name) {
-    int spaces = 1;
+    unsigned int spaces = 1;
     while (spaces) {
         spaces = 0;
-        int x = 0;
+        unsigned int x = 0;
         while ((name[x] != ' ') && (x<strlen(name))) x++;
         if (name[x] == ' ') {
             spaces = 1;
@@ -268,11 +268,17 @@ size_t LaosFileSystem::dirread(char* longname, char* shortname, FILE *fp) {
 
 size_t LaosFileSystem::dirwrite(char* longname, char* shortname, FILE* fp) {
     char buff[MAXFILESIZE+SHORTFILESIZE];
-    int x=0; 
-    while (longname[x] != 0) buff[x++] = longname[x];
+    unsigned int x = 0; 
+    while (longname[x] != 0) {
+        buff[x] = longname[x];
+        x++;
+    }
     while (x<MAXFILESIZE-1) buff[x++] = ' ';
     buff[x++] = '\t';
-    while (shortname[x-MAXFILESIZE] != 0) buff[x++] = shortname[x-MAXFILESIZE];
+    while (shortname[x-MAXFILESIZE] != 0) {
+        buff[x] = shortname[x-MAXFILESIZE];
+        x++;
+    }
     while (x<MAXFILESIZE+SHORTFILESIZE-1) buff[x++] = ' ';
     buff[x++] = '\n';
     
@@ -506,7 +512,7 @@ int readint(FILE *fp)
 } // read integer
 
 void strtolower(char *name) {
-    for(int i = 0; i < strlen(name); i++)
+    for(unsigned int i = 0; i < strlen(name); i++)
         name[i] = tolower(name[i]);
 }
 
@@ -554,6 +560,23 @@ void removeFirmware() { // remove old firmware from SD
     } else {
         printf("removeFirmware: Could not open directory!\n\r");
     }
+}
+
+char* getLaosFile() {
+    extern LaosFileSystem sd;
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if (d != NULL)
+        while ((p=readdir(d)) != NULL)
+            if (isLaosFile(p->d_name)) {
+                char *name = new char[strlen(p->d_name)+1];
+                strcpy(name, p->d_name);
+                closedir(d);
+                return name;
+            }
+    closedir(d);
+    return NULL;
 }
 
 int SDcheckFirmware() {

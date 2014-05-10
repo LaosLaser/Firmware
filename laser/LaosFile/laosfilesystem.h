@@ -37,7 +37,7 @@ class LaosFileSystem : public SDFileSystem {
         LaosFileSystem(PinName mosi, PinName miso, PinName sclk, PinName cs, 
                 const char* name);        // Create the filesystem on SD
         virtual ~LaosFileSystem();                // destructor
-        FILE* openfile(char* fname, char* iom);    // open a file
+        FILE* openfile(char* name, const std::string& iom);    // open a file
         void getlongname(char *result, char *searchname);   // return long names
         void getshortname(char* shortname, char* name); //get a short name
         char pathname[MAXFILESIZE+2];
@@ -68,6 +68,7 @@ void strtolower(char *name);    // change characters to lowercase
 int isFirmware(char *name);     // check if it's firmware
 void installFirmware(char *filename); // put firmware in place
 void removeFirmware(); // remove old firmware
+char* getLaosFile(); // get filename of the first available file on S
 int SDcheckFirmware();  // check for firmware
 int isLaosFile(char *filename);   // check extension for LaOS compatibility
 #endif
