@@ -52,6 +52,8 @@ static float previous_nominal_speed;   // Nominal speed of previous path line se
 
 static uint8_t acceleration_manager_enabled;   // Acceleration management active?
 
+static float rounde[NUM_AXES]; // Rounding errors.
+
 
 // initial entry point of the planner
 // Clear values and set defaults
@@ -77,6 +79,10 @@ void plan_init() {
   config.maximum_feedrate_e = 60 * cfg->espeed;
   config.acceleration = cfg->accel; // [mm/sec2]
   config.junction_deviation = cfg->tolerance/1000.0; //  convert tolerance from [micron] to [mm]
+  rounde[X_AXIS]=0;
+  rounde[Y_AXIS]=0;
+  rounde[Z_AXIS]=0;
+
   
   config.junction_deviation = 0.05;
  //  config.steps_per_mm_x =  config.steps_per_mm_y =  config.steps_per_mm_z =  config.steps_per_mm_e = 200;
@@ -390,11 +396,14 @@ void plan_buffer_line (tActionRequest *pAction)
   // printf("%f %f %f %f %f\n", x,y,z,(float)feed_rate); 
   // Calculate target position in absolute steps
   int32_t target[NUM_AXES];
-  target[X_AXIS] = lround(x*(float)config.steps_per_mm_x);
-  target[Y_AXIS] = lround(y*(float)config.steps_per_mm_y);
-  target[Z_AXIS] = lround(z*(float)config.steps_per_mm_z);     
-  target[E_AXIS] = lround(pAction->target.e*(float)config.steps_per_mm_e);     
-  
+  target[X_AXIS] = lround(x*(float)config.steps_per_mm_x+rounde[X_AXIS]);
+  target[Y_AXIS] = lround(y*(float)config.steps_per_mm_y+rounde[Y_AXIS]);
+  target[Z_AXIS] = lround(z*(float)config.steps_per_mm_z+rounde[Z_AXIS]);     
+  target[E_AXIS] = lround(pAction->target.e*(float)config.steps_per_mm_e); 
+  rounde[X_AXIS]=(x*(float)config.steps_per_mm_x+rounde[X_AXIS])-(float)target[X_AXIS];
+  rounde[Y_AXIS]=(y*(float)config.steps_per_mm_y+rounde[Y_AXIS])-(float)target[Y_AXIS];
+  rounde[Z_AXIS]=(z*(float)config.steps_per_mm_z+rounde[Z_AXIS])-(float)target[Z_AXIS];
+
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index( block_buffer_head );    
   

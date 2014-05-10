@@ -34,7 +34,7 @@
 unsigned int step=0;
 int command=0;
 int mark_speed = 100; // 100 [mm/sec]
-
+int power = 10000 ;
 // next planner action to enqueue
 tActionRequest  action;
 
@@ -196,7 +196,7 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
 void LaosMotion::write(int i)
 {
   extern GlobalConfig *cfg;
-  static int x=0,y=0,z=0,power=10000;
+  static int x=0,y=0,z=0;
   //if (  plan_queue_empty() )
   //printf("Empty\n");
   
