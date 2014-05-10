@@ -1,26 +1,21 @@
 Embedded software (firmware) for the laser system and components, including configuration files.
 
 ==Build setup, using MBED library sources (No GCC4MBED requried):
---> for now, this only works in the mbed-gcc branch <--
 * Get your compiler here: https://launchpad.net/gcc-arm-embedded (or use the one that comes with your
     distribution: apt-get install gcc-arm-none-eabi )
 * Download LaosLaser source:
 ```
-git clone https://github.com/LaosLaser/Firmware.git -b mbed-gcc
+git clone --recursive https://github.com/LaosLaser/Firmware.git
 ```
-* Download mbed libraries (latest version)
-```
-cd Firmware
-git clone https://github.com/mbedmicro/mbed
 ```
 * Patch mbed libraries:
 ```
 cd mbed/
 patch -p1 < ../laser/mbed.patch
 ```
-* Set your GCC path in Firmware/mbed/workspace_tools/private_settings.py, for example:
+* Set your GCC path in private_settings.py, for example using:
 ```
-GCC_ARM_PATH = "/usr/bin/"
+echo 'GCC_ARM_PATH = "/usr/bin/"' > workspace_tools/private_settings.py
 ```
 * Build MBED libraries:
 ```
