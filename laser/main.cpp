@@ -1,107 +1,92 @@
-/*
- * main.cpp
- * Laos Controller, main function
- *
- * Copyright (c) 2011 Peter Brier & Jaap Vermaas
- *
- *   This file is part of the LaOS project (see: http://wiki.laoslaser.org)
- *
- *   LaOS is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   LaOS is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with LaOS.  If not, see <http://www.gnu.org/licenses/>.
- *
- * This program consists of a few parts:
- *
- * ConfigFile   Read configuration files
- * EthConfig    Initialize an ethernet stack, based on a configuration file (includes link status monitoring)
- * LaosDisplay  User interface functions (read keys, display text and menus on LCD)
- * LaosMenu     User interface stuctures (menu navigation)
- * LaosServer   TCP/IP server, accept connections read/write data
- * LaosMotion   Motion control functions (X,Y,Z motion, homing)
- * LaosIO       Input/Output functions
- * LaosFile     File based jobs (read/write/delete)
- *
- * Program functions:
- * 1) Read config file
- * 2) Enable TCP/IP stack (Fixed ip or DHCP)
- * 3) Instantiate tcp/ip port and accept connections
- * 4) Show menus, peform user actions
- * 5) Controll laser
- * 6) Controll motion
- * 7) Set and read IO, check status (e.g. interlocks)
- *
- */
-
-// uncomment this to get debugging output in file parser
-// #define READ_FILE_DEBUG
-// #define READ_FILE_DEBUG_VERBOSE
- 
+// Simple TFTP Server based on UDP echo server
+// files are written to internal /local/ storage
+#include "mbed.h"
+#include "cmsis_os.h"
 #include "pins.h"
 #include "global.h"
 #include "ConfigFile.h"
-#include "EthConfig.h"
-#include "TFTPServer.h"
-#include "LaosMenu.h"
-#include "LaosMotion.h"
-#include "SDFileSystem.h"
+#include "EthernetInterface.h"
 #include "laosfilesystem.h"
+#include "LaosMotion.h"
 
-// Status and communication
-EthernetInterface *eth; // Ethernet, tcp/ip
+enum TFTPState { idle, receiving } tftpState = idle;
 
-// Filesystems
+void test_sd();
+void tftpthread(void const *args);
+void diskiothread(void const *args);
+void diskiothread2(void const *args);
+void sd_writefile(char *filename);
+void sd_readfile(char *filename);
+LaosMotion *mot;
+
 LocalFileSystem local("local");   //File System
 LaosFileSystem sd(p11, p12, p13, p14, "sd");
+Serial        pc(USBTX, USBRX);
 
-// Laos objects
-LaosDisplay *dsp;
-LaosMenu *mnu;
-TFTPServer *srv;
-LaosMotion *mot;
-Timer systime;
-
+EthernetInterface eth;
+UDPSocket server;
 // Config
 GlobalConfig *cfg;
 
-// Protos
-void main_nodisplay();
-void main_menu();
+// osThreadDef(diskiothread2, osPriorityNormal, DEFAULT_STACK_SIZE*3);
+osThreadDef(tftpthread, osPriorityNormal, DEFAULT_STACK_SIZE*2);
 
-// for debugging:
+const int DATA_SIZE = 256;
 extern void plan_get_current_position_xyz(float *x, float *y, float *z);
-extern PwmOut pwm;
-extern "C" void mbed_reset();
 
-/**
-*** Main function
-**/
-int main() 
-{
-  systime.start();
-  //float x, y, z;
-  eth_speed = 1;
-  
-  dsp = new LaosDisplay();
-  printf( VERSION_STRING "...\nBOOT...\n" ); 
-  mnu = new LaosMenu(dsp);
-  eth_speed=0;
+int main (void) {
+    extern LaosFileSystem sd;
+    extern DigitalOut led3;
 
- printf("TEST SD...\n"); 
+    test_sd();
+    if (SDcheckFirmware()) mbed_reset();
+    cfg =  new GlobalConfig("config.txt");
+    printf("READ CONFIG\n\r");
+    led3  = !led3;
+
+    osThreadCreate(osThread(tftpthread), NULL);
+
+    mot = new LaosMotion();
+    if ( cfg->autohome )
+    {
+        printf("WAIT FOR COVER...\n");
+        wait(1);
+
+        // Start homing
+        //if ( cfg->waitforstart ) 
+        while ( !mot->isStart() );
+        printf("HOME...\n");
+
+        // NO MACHINE, SKIP THIS AT HOME
+        mot->home(cfg->xhome,cfg->yhome, cfg->zhome);
+        printf("HOME DONE. (%d,%d, %d)\n",cfg->xhome,cfg->yhome,cfg->zhome);
+    }
+    else
+        printf("Homing skipped: %d\n", cfg->autohome);
+
+    // osThreadCreate(osThread(diskiothread2), NULL);
+
+    printf("READY\n\r");
+    while (true) {
+        osDelay(2500);
+        led3  = !led3;
+        printf(".");
+    }
+}
+
+void test_sd() {
+  extern LaosFileSystem sd;
+  printf("TEST SD...\n");
   char testfile[] = "test.txt";
-  FILE *fp = sd.openfile(testfile, "wb");
+  FILE *fp = NULL;
+  int cnt = 0;
+  while (( fp == NULL ) && ( cnt < 3 )) 
+  {
+    osDelay(100);
+    fp = sd.openfile(testfile, "wb");
+  } 
   if ( fp == NULL )
   {
-    mnu->SetScreen("SD NOT READY!"); 
-    wait(2.0);
     mbed_reset();
   }
   else
@@ -110,139 +95,178 @@ int main()
     fclose(fp);
     removefile(testfile);
   }
-  
-  // See if there's a .bin file on the SD
-  // if so, put it on the MBED and reboot
-  if (SDcheckFirmware()) mbed_reset();
-  
-  mnu->SetScreen(VERSION_STRING);
-  printf("START...\n");
-  cfg =  new GlobalConfig("config.txt");
-  mnu->SetScreen("CONFIG OK...."); 
-  printf("CONFIG OK...\n");
-  if (!cfg->nodisplay)
-    dsp->testI2C();
-  
-  printf("MOTION...\n"); 
-  mot = new LaosMotion();
-    
-  eth = EthConfig();
-  eth_speed=1;
-      
-  printf("SERVER...\n");
-  srv = new TFTPServer(cfg->port);
-  mnu->SetScreen("SERVER OK...."); 
-  wait(0.5);
-  mnu->SetScreen(9); // IP
-  wait(1.0);
-  
-  printf("RUN...\n");
-  
-  // Wait for key, and then home
-  
-  if ( cfg->autohome )
-  {
-    printf("WAIT FOR COVER...\n");
-    wait(1);
-  
-  
-  // Start homing
-    mnu->SetScreen("WAIT FOR COVER....");
-    //if ( cfg->waitforstart ) 
-      while ( !mot->isStart() );
-    mnu->SetScreen("HOME....");
-    printf("HOME...\n");
-
-    mot->home(cfg->xhome,cfg->yhome, cfg->zhome);
-    // if ( !mot->isHome ) exit(1);
-    printf("HOME DONE. (%d,%d, %d)\n",cfg->xhome,cfg->yhome,cfg->zhome);
-  }
-  else
-    printf("Homing skipped: %d\n", cfg->autohome);
-
-  // clean sd card?
-  if (cfg->cleandir) cleandir();
-  mnu->SetScreen("");  
-
-  if (cfg->nodisplay) {
-    printf("No display set\n\r");
-    main_nodisplay();
-  } else {
-    printf("Entering display\n\r");
-    main_menu();
-  }
 }
 
-void main_nodisplay() {
-  float x, y, z = 0;
-  led1=led2=led3=led4=0;
-  
-  // main loop  
-   while(1) 
-  {  
-    int filecnt = srv->fileCnt();
-    mnu->SetScreen("Wait for file ...");
-    while (srv->State() == listen)
-        srv->poll();
-    if (srv->State() != listen) {
-      mnu->SetScreen("Receive file");
-      while (srv->State() != listen) srv->poll();
-    }
-    if (filecnt < srv->fileCnt()) {
-      mot->reset();
-      plan_get_current_position_xyz(&x, &y, &z);
-       printf("%f %f\n", x,y); 
-       mnu->SetScreen("Laser BUSY..."); 
-    
-       char name[32];
-       srv->getFilename(name);
-       printf("Now processing file: '%s'\n\r", name);
-       FILE *in = sd.openfile(name, "r");
-       while (!feof(in))
-       { 
-         while (!mot->ready() );
-         mot->write(readint(in));
-       }
-       fclose(in);
-       removefile(name);
-       // done
-       printf("DONE!...\n");
-	   while (!mot->ready() );
-       mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
-    }
-  }
-}
+void tftpthread(void const *args) {
+    const int TFTP_SERVER_PORT = 69;
+    const int BUFFER_SIZE = 592;
+    eth.init(); //Use DHCP
+    eth.connect();
+    server.bind(TFTP_SERVER_PORT);
+    printf("TFTP Server listening on IP Address %s port %d\n\r", eth.getIPAddress(), TFTP_SERVER_PORT);
+    server.set_blocking(false,1); // Set non-blocking
 
-void main_menu() {
-  // main loop  
-  led1=led2=led3=led4=0;
-                
-  mnu->SetScreen(1);
-  while (1) {
-    int filecnt = srv->fileCnt();
-    mnu->Handle();
-    srv->poll();
-    if (srv->State() != listen) {
-      mnu->SetScreen("Receive file");
-      while (srv->State() != listen) srv->poll();
-    }
-    if (filecnt < srv->fileCnt()) {
-      char myname[32];
-      srv->getFilename(myname);
-      if (isFirmware(myname)) {
-        installFirmware(myname);
-        mnu->SetScreen(1);
-      } else {
-        if (strcmp("config.txt", myname) == 0) {
-          // it's a config file!
-          mnu->SetScreen(1);
+    extern LaosFileSystem sd;
+    char buffer[BUFFER_SIZE] = {0};
+    char ack[4]; ack[0] = 0x00; ack[1] = 0x04; ack[2] = 0x00; ack[3] = 0x00;
+    char filename[32], mode[6], errmsg[32];
+    unsigned int cnt = 0;
+    Endpoint client;
+    FILE *fp = NULL;
+    short int timeout = 0;
+
+    while (true) {
+        int n = server.receiveFrom(client, buffer, sizeof(buffer));
+        if (n > 0) {
+            if (cnt>603235) cnt = 0;    // package count is only 2 bytes in TFTP
+            ack[2] = cnt >> 8;          // store current count in ACK for sending
+            ack[3] = cnt & 255;         //
+            if (tftpState == idle) {
+                if (buffer[1] == 0x02) {    // 0x02 means "request to write file"
+                    printf("Received WRQ, %d bytes\n\r", n);
+                    snprintf(filename, 32, "%s", &buffer[2]); // filename starts at byte 2
+                    snprintf(mode, 6, "%s", &buffer[3+strlen(filename)]); // mode is after filename
+                    printf("Received WRQ for file %s, mode %s.\n\r", filename, mode);
+                    if (strcmp(mode, "octet") == 0) { // we only support octet/binary mode!
+                        tftpState = receiving;
+                        fp = sd.openfile(filename, "wb");
+                        if (fp == NULL) {
+                            printf("Error opening file %s\n\r", filename);
+                            snprintf(errmsg, 32, "%c%c%c%cError opening file %s",ack[0], 0x05, ack[2], ack[3], filename);
+                            server.sendTo(client, errmsg, strlen(errmsg));
+                            tftpState  = idle;
+                            led2 = !led2;
+                        } else {
+                            printf("Receiving file opened\n\r");
+                            ack[1] = 0x04;
+                            server.sendTo(client, ack, 4);
+                            led2 = !led2;
+                            cnt++;
+                            timeout=0;
+                        }
+                    } else {
+                        printf("No octet\n\r");
+                        snprintf(errmsg, 32, "%c%c%c%cOnly octet files accepted",ack[0], 0x05, ack[2], ack[3]);
+                        server.sendTo(client, errmsg, strlen(errmsg));
+                        led2 = !led2;
+                    }
+                }
+            } else if (tftpState == receiving) {
+                if(buffer[1] == 0x03) {
+                    if ((buffer[2] == ack[2]) && (buffer[3] == ack[3])) {
+                        fwrite(&buffer[4], 1, n-4, fp);
+                        server.sendTo(client,ack, 4);
+                        led2 = !led2;
+                        cnt++;
+                        timeout = 0;
+                        if (n < 516) {
+                            printf("Received %d packages\n\r", cnt+1);
+                            fclose(fp);
+                            tftpState = idle;
+                            cnt = 0;
+                        }
+                    } else {
+                        printf("Order mismatch\n\r");
+                        snprintf(errmsg, 32, "%c%c%c%cPacket order mismatch",ack[0], 0x05, ack[2], ack[3]);
+                        server.sendTo(client, errmsg, strlen(errmsg));
+                        led2 = !led2;
+                    }
+                } else {
+                    printf("Unexpected packet type: %d\n\r",buffer[1]);
+                    snprintf(errmsg, 32, "%c%c%c%cUnexpected packet type %d",ack[0], 0x05, ack[2], ack[3], buffer[1]);
+                    server.sendTo(client, errmsg, strlen(errmsg));
+                    led2 = !led2;
+                }
+            }
         } else {
-          if (isLaosFile(myname)) {
-            mnu->SetFileName(myname);
-            mnu->SetScreen(2);
-          }
+            if (timeout>10) {
+                if (tftpState == receiving) {
+                    printf("Timeout!\n\r");
+                    fclose(fp);
+                    // removefile(filename);
+                    tftpState = idle;
+                } else {
+                    timeout = 0;
+                    led2 = !led2;
+                }
+            }
+            timeout++;
+            osDelay(500);
         }
-      }
-    }           
-  }
+    }
+}
+
+void diskiothread(void const *args) {
+    extern TFTPState tftpState;
+    extern DigitalOut led1;
+    extern LaosMotion *mot;
+    char *filename;
+    float x, y, z = 0;
+    if (tftpState == idle) {
+        filename = getLaosFile();
+        if ( filename != NULL ) {
+            printf("STARTING FILE: %s", filename);
+            mot->reset();
+            plan_get_current_position_xyz(&x, &y, &z);
+            FILE *in = sd.openfile(filename, "r");
+            while (!feof(in))
+            {
+                while (!mot->ready() );
+                mot->write(readint(in));
+            }
+            fclose(in);
+            removefile(filename);
+            printf("DONE!...\n");
+            while (!mot->ready() );
+            mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+        }
+        osDelay(1000);
+        led1 = !led1;
+    }
+}
+
+void diskiothread2(void const *args) {
+    extern TFTPState tftpState;
+    extern DigitalOut led1;
+    char file[] = "out.txt";
+    char *filename;
+    filename = file;
+    while (true) {
+        osDelay(2500);
+        if (tftpState == idle) sd_writefile(filename);
+        osDelay(1000);
+        if (tftpState == idle) sd_readfile(filename);
+        led1 = !led1;
+    }
+}
+
+void sd_writefile(char *filename) {
+    extern LaosFileSystem sd;
+    FILE *f = sd.openfile(filename, "w");
+    printf("SD: Writing ... ");
+    if (f != NULL) {
+        for (int i = 0; i < DATA_SIZE; i++)
+            fprintf(f, "%c", rand() % 0XFF);
+        printf("[OK]\r\n");
+        fclose(f);
+    } else {
+        printf("[FAILED]\r\n");
+    }
+}
+
+void sd_readfile(char *filename) {
+    extern LaosFileSystem sd;
+    uint8_t data;
+    printf("SD: Reading ...");
+    FILE *f = sd.openfile(filename, "r");
+    if (f != NULL) {
+        while (! feof(f)) {
+            data = fgetc(f);
+            if (data == '\t') printf("TAB");
+        }
+        printf("[OK]\r\n");
+        fclose(f);
+    } else {
+        printf("[FAILED]\r\n");
+    }
 }
