@@ -191,6 +191,8 @@ void st_wake_up()
   {
     running = 1;
     set_step_timer(2000);
+    exhaust = 1; // turn air assist/exhaust on
+    exhaust_timer.detach(); // cancel any pending timer
   //  printf("wake_up()..\n");
   }
 }
