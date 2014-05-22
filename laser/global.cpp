@@ -82,7 +82,9 @@ GlobalConfig::GlobalConfig(const std::string& filename)
     cfg.Value("laser.on", &lon, 1);         // laser on polarity [0/1]
     cfg.Value("laser.pwm.min", &pwmmin, 0); // pwm at minimum power [0..100]
     cfg.Value("laser.pwm.max", &pwmmax, 0); // pwm at maximum power [0..100]
-    cfg.Value("laser.pwm.freq", &pwmfreq, 20000); // pwm frequency [Hz]  
+    cfg.Value("laser.pwm.freq", &pwmfreq, 20000); // pwm frequency [Hz]
+    cfg.Value("sys.exhaustoffdelay", &exhaust_offdelay, 30); 
+	// how long to continue air assist/extract after job completion (secs)
     
     // rest position (after homing)
     cfg.Value("x.rest", &xrest, 0);

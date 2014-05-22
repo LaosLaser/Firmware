@@ -32,8 +32,8 @@ DigitalIn zmax(p16);
 // laser IO
 PwmOut pwm(p22);                // O1: PWM (Yellow)
 DigitalOut laser_enable(p21);   // O2: enable laser
-DigitalOut o3(p6);              // 03: NC
-DigitalOut *laser = NULL;           // O4: (p5) LaserON (White)
+DigitalOut exhaust(p6);         // 03: NC
+DigitalOut *laser = NULL;       // O4: (p5) LaserON (White)
 
 // Analog in/out (cover sensor) + NC
 DigitalIn cover(p19);
