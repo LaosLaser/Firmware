@@ -176,6 +176,14 @@ void LaosMenu::SetScreen(const std::string& msg) {
     Handle();
 }
 
+/***
+ *** check if cancel is pressed
+**/
+bool LaosMenu::Cancel() {
+	int c = dsp->read();
+	return (c == K_CANCEL);
+}
+
 /**
 *** Handle menu system
 *** Read keys, and plan next action on the screen, output screen if 

@@ -186,7 +186,7 @@ void main_nodisplay() {
         srv->poll();
     if (srv->State() != listen) {
       mnu->SetScreen("Receive file");
-      while (srv->State() != listen) srv->poll();
+      while ((! mnu->Cancel()) && (srv->State() != listen)) srv->poll();
     }
     if (filecnt < srv->fileCnt()) {
       mot->reset();
@@ -224,7 +224,7 @@ void main_menu() {
     srv->poll();
     if (srv->State() != listen) {
       mnu->SetScreen("Receive file");
-      while (srv->State() != listen) srv->poll();
+	  while ((! mnu->Cancel()) && (srv->State() != listen)) srv->poll();
     }
     if (filecnt < srv->fileCnt()) {
       char myname[32];
