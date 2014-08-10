@@ -4,7 +4,7 @@ Embedded software (firmware) for the laser system and components, including conf
 (No GCC4MBED required)
 ### Get your compiler 
 Download from: `https://launchpad.net/gcc-arm-embedded` 
-(or use the one that comes with your distribution: apt-get install gcc-arm-none-eabi )
+(or use the one that comes with your distribution: apt-get install gcc-arm-none-eabi ). On Ubuntu 14.04 64 bit, you need to install libc6:i386.
 ### Download LaosLaser source:
 ```
 git clone --recursive https://github.com/LaosLaser/Firmware.git
