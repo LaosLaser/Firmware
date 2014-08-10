@@ -176,6 +176,14 @@ void LaosMenu::SetScreen(const std::string& msg) {
     Handle();
 }
 
+/***
+ *** check if cancel is pressed
+**/
+bool LaosMenu::Cancel() {
+	int c = dsp->read();
+	return (c == K_CANCEL);
+}
+
 /**
 *** Handle menu system
 *** Read keys, and plan next action on the screen, output screen if 
@@ -284,10 +292,10 @@ void LaosMenu::Handle() {
                 switch ( c ) {
                     case K_FUP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
                     case K_FDOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
-                    case K_LEFT: screen=MOVE; break;
-                    case K_RIGHT: screen=MOVE; break;
-                    case K_UP: screen=MOVE; break;
-                    case K_DOWN: screen=MOVE; break;
+                    case K_LEFT: break;
+                    case K_RIGHT: break;
+                    case K_UP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
+                    case K_DOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
                     case K_ORIGIN: screen=ORIGIN; break;
                     case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
                     case 0: break;

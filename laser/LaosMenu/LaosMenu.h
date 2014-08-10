@@ -60,7 +60,8 @@ public:
   void SetScreen(int screen);
   void SetScreen(const std::string& msg);
   void SetFileName(char * name);
-  
+  bool Cancel();
+
 private:
   // LaosDisplay *display;
   int args[5];
