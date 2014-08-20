@@ -32,6 +32,8 @@
 #include "laosfilesystem.h"
 #include "global.h"
 #include "LaosMotion.h"
+#include "LaosExtent.h"
+
 extern "C" void mbed_reset();
 
     /** Menu system
@@ -78,7 +80,7 @@ private:
   int x,y,z;
   int xoff, yoff, zoff;
   FILE *runfile;
-  
+  LaosExtent m_Extent; // extent calculator
 };
 
  
