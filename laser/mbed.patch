@@ -278,7 +278,7 @@ diff -urN mbed.clean/workspace_tools/tests.py mbed/workspace_tools/tests.py
 +    {
 +        "id": "laser", "description": "LaosLaser",
 +        "source_dir": join(TEST_DIR, "net", "protocols", "laser"),
-+        "dependencies": [MBED_LIBRARIES, RTOS_LIBRARIES, ETH_LIBRARY,  SD_FS, FAT_FS],
++        "dependencies": [MBED_LIBRARIES, RTOS_LIBRARIES, ETH_LIBRARY], #,  SD_FS, FAT_FS],
 +    },
  
      # u-blox tests
