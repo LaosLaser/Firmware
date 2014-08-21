@@ -143,6 +143,8 @@ GlobalConfig::GlobalConfig(const std::string& filename)
     cfg.Value("y.min", &ymin, 0); 
     cfg.Value("z.min", &zmin, 0);
     cfg.Value("e.min", &emin, 0); 
+
+    cfg.Value("bedheight", &bedheight, 0);
         
     // motion settings: enable output state    
     cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [mm/sec]

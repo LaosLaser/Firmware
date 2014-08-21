@@ -123,6 +123,10 @@ static const char *screens[] = {
     "Or: +3210, +3210"
     "Siz: 3210 x 3210",
 
+#define ERROR (CALCULATEDBOUNDARIES+1)
+    "ERROR:          "
+    "$$$$$$$$$$$$$$$$",
+
 };
 
 
@@ -334,13 +338,31 @@ void LaosMenu::Handle() {
                 }
                 break;
 
+            case ERROR:
+                switch ( c ) {
+                    case K_OK:
+                    case K_CANCEL: 
+                        screen=MAIN;
+                        waitup=1; 
+                        break;
+                }
+                break;
+
             case ORIGIN: // origin
                 switch ( c ) {
                     case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
                     case K_OK:
                     case K_ORIGIN:
-                        mot->MakeCurrentPositionOrigin();
-                        screen = lastscreen;
+                        if(cfg->bedheight == 0)
+                        {
+                            screen=ERROR;
+                            sarg="bedheight unknwn";
+                        }
+                        else
+                        {
+                            mot->MakeCurrentPositionOrigin();
+                            screen = lastscreen;
+                        }
                         waitup = 1;
                         break;
                 }

@@ -443,14 +443,16 @@ void LaosMotion::setOriginAbsolute(int x, int y, int z)
   ofsz = -z;
 }
 
+/* 
+  Make current position the origin. 'origin' is defined here as the top left corner (0,0) in Visicut
+  Since LAOS has the y coordinate 0 at the bottom of the bed, we need to offset by the bed height.
+*/
 void LaosMotion::MakeCurrentPositionOrigin()
 {
   extern GlobalConfig *cfg;
   int x,y,z;
   getCurrentPositionAbsolute(&x, &y, &z);
-  x -= cfg->xhome;
-  y -= cfg->yhome;
-  z -= cfg->zhome;
+  y -= cfg->bedheight;
   setOriginAbsolute(x, y, z);
 }
 
