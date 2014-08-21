@@ -77,8 +77,8 @@ private:
   unsigned char menu, ipfield, iofield;
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
-  int x,y,z;
-  int xoff, yoff, zoff;
+  // int x,y,z;
+  // int xoff, yoff, zoff;
   FILE *runfile;
   LaosExtent m_Extent; // extent calculator
 };

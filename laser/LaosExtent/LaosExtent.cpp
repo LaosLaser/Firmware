@@ -161,7 +161,7 @@ void LaosExtent::ShowBoundaries(LaosMotion *mot) const
 	if( (!m_Error) && (m_HasMinMaxCoordinates))
 	{
 		int dummy1, dummy2, z;
-        mot->getPosition(&dummy1, &dummy2, &z);
+    mot->getPlannedPositionRelativeToOrigin(&dummy1, &dummy2, &z);
 		for(int step = 0; step <= 4; step++)
 		{
 			int x,y;
@@ -187,8 +187,7 @@ void LaosExtent::ShowBoundaries(LaosMotion *mot) const
 				// wait a bit after going to the origin, so the user knows it's the origin:
 			    wait(1.0);
 			}
-			mot->moveTo(x, y, z);
+			mot->moveToRelativeToOrigin(x, y, z);
 		}
 	}
-
 }
