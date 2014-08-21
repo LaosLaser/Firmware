@@ -590,7 +590,7 @@ bool LaosMenu::CheckFileLimits()
             int minx, miny, minz, maxx, maxy, maxz;
             mot->getLimitsRelative(&minx, &miny, &minz, &maxx, &maxy, &maxz);
             if( (fileMinx < minx) || (fileMiny < miny) || 
-                (fileMaxx > minx) || (fileMaxy > miny) )
+                (fileMaxx > maxx) || (fileMaxy > maxy) )
             {
                 ok = false;
             }
