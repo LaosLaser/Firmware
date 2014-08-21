@@ -467,6 +467,7 @@ void LaosMenu::Handle() {
                         {
                             bool ok=CheckFileLimits();
                             fclose(runfile);
+                            runfile=NULL;
                             if(!ok)
                             {
                                 screen=ERROR;
