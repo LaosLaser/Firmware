@@ -19,7 +19,7 @@ class LaosExtent {
 public:
 	typedef enum {errNone=0, errCoordReferenceChanged, errFileFormatError, errEmpty} TError;
 	LaosExtent();
-	void Reset();       // reset state machine
+	void Reset(bool onlyMovesWithLaserOn);       // reset state machine
 	void Write(int i);  // feed a simplecode value
 	// get the boundaries
 	// result is value only if the returned error code is errNone
@@ -38,6 +38,7 @@ private:
 	int m_BitmapBpp;
 	int m_Step;
 	int m_Command;
+	bool m_OnlyMovesWithLaserOn;
 	TError m_Error;
 };
 

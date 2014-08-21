@@ -174,17 +174,27 @@ void LaosMotion::moveToRelativeToOriginWithAbsoluteFeedrate(int x, int y, int z,
 
 void LaosMotion::moveToAbsoluteWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype)
 {
-   tActionRequest action;
-   action.target.x = x/1000.0;
-   action.target.y = y/1000.0;
-   action.target.z = z/1000.0;
-   action.ActionType = actiontype;
-   action.target.feed_rate =  feedrate;
-   action.param = power;
-   plan_buffer_line(&action);
-   m_PlannedXAbsolute = x;
-   m_PlannedYAbsolute = y;
-   m_PlannedZAbsolute = z;
+  extern GlobalConfig *cfg;
+  if(cfg->enforcelimits)
+  {
+    if(x < cfg->xmin) x=cfg->xmin;
+    if(y < cfg->ymin) y=cfg->ymin;
+    if(z < cfg->zmin) z=cfg->zmin;
+    if(x > cfg->xmax) x=cfg->xmax;
+    if(y > cfg->ymax) y=cfg->ymax;
+    if(z > cfg->zmax) z=cfg->zmax;
+  }
+  tActionRequest action;
+  action.target.x = x/1000.0;
+  action.target.y = y/1000.0;
+  action.target.z = z/1000.0;
+  action.ActionType = actiontype;
+  action.target.feed_rate =  feedrate;
+  action.param = power;
+  plan_buffer_line(&action);
+  m_PlannedXAbsolute = x;
+  m_PlannedYAbsolute = y;
+  m_PlannedZAbsolute = z;
    //printf("To buffer: %d, %d, %d, %d\n", x, y,z,speed);
 }
 
@@ -429,6 +439,17 @@ void LaosMotion::getPlannedPositionAbsolute(int *x, int *y, int *z)
   *x = m_PlannedXAbsolute;
   *y = m_PlannedYAbsolute;
   *z = m_PlannedZAbsolute;
+}
+
+void LaosMotion::getLimitsRelative(int *minx, int *miny, int *minz, int *maxx, int *maxy, int *maxz)
+{
+  extern GlobalConfig *cfg;
+  *minx=cfg->xmin + ofsx;
+  *miny=cfg->ymin + ofsy;
+  *minz=cfg->zmin + ofsz;
+  *maxx=cfg->xmax + ofsx;
+  *maxy=cfg->ymax + ofsy;
+  *maxz=cfg->zmax + ofsz;
 }
 
 /**

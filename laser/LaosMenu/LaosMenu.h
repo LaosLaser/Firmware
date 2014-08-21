@@ -63,6 +63,9 @@ public:
   void SetScreen(const std::string& msg);
   void SetFileName(char * name);
   bool Cancel();
+  
+private:
+  bool CheckFileLimits();
 
 private:
   // LaosDisplay *display;

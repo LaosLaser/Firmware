@@ -27,10 +27,13 @@
 
 LaosExtent::LaosExtent()
 {
-	Reset();
+	Reset(true);
 }
 
-void LaosExtent::Reset()
+// onlyMovesWithLaserOn: if true will only take into accounts those moves where the laser is on
+//   (to get the actual burned area)
+//   if false, will also take into account moves without the laser on
+void LaosExtent::Reset(bool onlyMovesWithLaserOn)
 {
 	m_MinX=0;
 	m_MaxX=0;
@@ -40,6 +43,7 @@ void LaosExtent::Reset()
 	m_Error=errNone;
 	m_Step=0;
 	m_Command=0;
+  m_OnlyMovesWithLaserOn=onlyMovesWithLaserOn;
 }
 
 void LaosExtent::AddToBoundary(int x, int y)
@@ -103,7 +107,7 @@ void LaosExtent::Write(int i)
               case 2:
                 m_TargetY = i;
                 m_Step=0;
-                if(m_Command == 1) // ignore moves with the laser off
+                if( (!m_OnlyMovesWithLaserOn) || (m_Command == 1) )
                 {
                 	AddToBoundary(m_TargetX, m_TargetY);
                 }
@@ -147,7 +151,7 @@ void LaosExtent::Write(int i)
             }
             break;
          default: // I do not understand:
-         	if(!m_Error) m_Error = errFileFormatError;
+         	//if(!m_Error) m_Error = errFileFormatError;
             m_Step = 0;
             break;
     }

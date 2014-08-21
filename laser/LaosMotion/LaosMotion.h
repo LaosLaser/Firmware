@@ -60,6 +60,8 @@ public:
   void moveToRelativeToOriginWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype);
   void moveToAbsoluteWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype);
   int queue(); // queued items
+  void getLimitsRelative(int *minx, int *miny, int *minz, int *maxx, int *maxy, int *maxz);
+
 private:
   int ofsx, ofsy, ofsz;
   int m_PlannedXAbsolute, m_PlannedYAbsolute, m_PlannedZAbsolute; // in absolute coordinates

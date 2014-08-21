@@ -356,7 +356,7 @@ void LaosMenu::Handle() {
                         if(cfg->bedheight == 0)
                         {
                             screen=ERROR;
-                            sarg="bedheight unknwn";
+                            sarg=(char*)"bedheight unknwn";
                         }
                         else
                         {
@@ -451,30 +451,52 @@ void LaosMenu::Handle() {
                         runfile=NULL; screen=MAIN; menu=MAIN;
                         break; */
                     default:
-                        if (runfile == NULL) {
+                        if (runfile == NULL) 
+                        {
                             runfile = sd.openfile(jobname, "rb");
                             if (! runfile) 
+                            {
                               screen=MAIN;
+                            }
                             else
+                            {
                                mot->reset();
-                        } else {
-                        		#ifdef READ_FILE_DEBUG
-                        			printf("Parsing file: \n");
-                        		#endif
-                            while ((!feof(runfile)) && mot->ready())
-                                mot->write(readint(runfile));
-                            #ifdef READ_FILE_DEBUG
-                        			printf("File parsed \n");
-                        		#endif
-                            if (feof(runfile) && mot->ready()) {
-                                fclose(runfile);
-                                runfile = NULL;
-                                mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
-                                screen=MAIN;
-                            } else {
-                                nodisplay = 1;
+                            }
+                        } 
+                        else 
+                        {
+                            bool ok=CheckFileLimits();
+                            fclose(runfile);
+                            if(!ok)
+                            {
+                                screen=ERROR;
+                                sarg=(char*)"Limit overrun";
+                                waitup=1;
+                            }
+                            else
+                            {
+                                runfile = sd.openfile(jobname, "rb");
+#ifdef READ_FILE_DEBUG
+                    			printf("Parsing file: \n");
+#endif
+                                while ((!feof(runfile)) && mot->ready())
+                                {
+                                    mot->write(readint(runfile));
+                                }
+#ifdef READ_FILE_DEBUG
+                    			printf("File parsed \n");
+#endif
+                                if (feof(runfile) && mot->ready()) {
+                                    fclose(runfile);
+                                    runfile = NULL;
+                                    mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
+                                    screen=MAIN;
+                                } else {
+                                    nodisplay = 1;
+                                }
                             }
                         }
+                        break;
                 }
                 break;
 
@@ -489,7 +511,7 @@ void LaosMenu::Handle() {
                         }
                         else
                         {
-                            m_Extent.Reset();
+                            m_Extent.Reset(true);
                             while (!feof(runfile))
                             {
                                 m_Extent.Write(readint(runfile));
@@ -546,4 +568,33 @@ void LaosMenu::Handle() {
 
 void LaosMenu::SetFileName(char * name) {
     strcpy(jobname, name);
+}
+
+// returns true if OK (head will stay within limits)
+bool LaosMenu::CheckFileLimits()
+{
+    bool ok=true;
+    extern GlobalConfig *cfg;
+    extern LaosMotion *mot;
+    if(cfg->enforcelimits)   // limit checking will only be done if enforcelimits = 1 in config.txt
+    {
+        m_Extent.Reset(false);
+        while (!feof(runfile))
+        {
+            m_Extent.Write(readint(runfile));
+        }
+        int fileMinx, fileMiny, fileMaxx, fileMaxy;
+        LaosExtent::TError err=m_Extent.GetBoundary(fileMinx, fileMiny, fileMaxx, fileMaxy);
+        if(!err)
+        {
+            int minx, miny, minz, maxx, maxy, maxz;
+            mot->getLimitsRelative(&minx, &miny, &minz, &maxx, &maxy, &maxz);
+            if( (fileMinx < minx) || (fileMiny < miny) || 
+                (fileMaxx > minx) || (fileMaxy > miny) )
+            {
+                ok = false;
+            }
+        }
+    }
+    return ok;
 }
