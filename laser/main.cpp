@@ -208,7 +208,7 @@ void main_nodisplay() {
        // done
        printf("DONE!...\n");
 	   while (!mot->ready() );
-       mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
+       mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
     }
   }
 }
