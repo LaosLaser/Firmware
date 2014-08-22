@@ -28,7 +28,8 @@
 #include  "pins.h"
 
 // #define DO_MOTION_TEST 1
-
+//#define READ_FILE_DEBUG_VERBOSE
+ 
 // globals
 unsigned int step=0;
 int command=0;
@@ -175,15 +176,12 @@ void LaosMotion::moveToRelativeToOriginWithAbsoluteFeedrate(int x, int y, int z,
 void LaosMotion::moveToAbsoluteWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype)
 {
   extern GlobalConfig *cfg;
-  if(cfg->enforcelimits)
-  {
-    if(x < cfg->xmin) x=cfg->xmin;
-    if(y < cfg->ymin) y=cfg->ymin;
-    if(z < cfg->zmin) z=cfg->zmin;
-    if(x > cfg->xmax) x=cfg->xmax;
-    if(y > cfg->ymax) y=cfg->ymax;
-    if(z > cfg->zmax) z=cfg->zmax;
-  }
+  if(x < cfg->xmin) x=cfg->xmin;
+  if(y < cfg->ymin) y=cfg->ymin;
+  if(z < cfg->zmin) z=cfg->zmin;
+  if(x > cfg->xmax) x=cfg->xmax;
+  if(y > cfg->ymax) y=cfg->ymax;
+  if(z > cfg->zmax) z=cfg->zmax;
   tActionRequest action;
   action.target.x = x/1000.0;
   action.target.y = y/1000.0;
@@ -212,17 +210,20 @@ void LaosMotion::write(int i)
   //printf("Empty\n");
   
   
-  #ifdef READ_FILE_DEBUG_VERBOSE
-  	printf(">%i (command: %i, step: %i)\n",i,command,step);
-  #endif	
   
   if ( step == 0 )
   {
     command = i;
+  #ifdef READ_FILE_DEBUG_VERBOSE
+    printf(">%i (command: %i, step: %i)\n",i,command,step);
+  #endif  
     step++;
   }
   else
   {
+  #ifdef READ_FILE_DEBUG_VERBOSE
+    printf(">%i (command: %i, step: %i)\n",i,command,step);
+  #endif  
      switch( command )
      {
           case 0: // move x,y (laser off)
@@ -473,7 +474,7 @@ void LaosMotion::MakeCurrentPositionOrigin()
   extern GlobalConfig *cfg;
   int x,y,z;
   getCurrentPositionAbsolute(&x, &y, &z);
-  y -= cfg->bedheight;
+  y -= cfg->BedHeight();
   setOriginAbsolute(x, y, z);
 }
 

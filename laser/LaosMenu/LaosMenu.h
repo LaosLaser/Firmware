@@ -65,7 +65,6 @@ public:
   bool Cancel();
   
 private:
-  bool CheckFileLimits();
 
 private:
   // LaosDisplay *display;
@@ -84,6 +83,8 @@ private:
   // int xoff, yoff, zoff;
   FILE *runfile;
   LaosExtent m_Extent; // extent calculator
+  int m_StageAfterAnalyzing;
+  int m_SubStage;
 };
 
  
