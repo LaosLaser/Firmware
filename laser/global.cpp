@@ -135,17 +135,14 @@ GlobalConfig::GlobalConfig(const std::string& filename)
     cfg.Value("e.home", &ehome, 0);
      
     // min and max [um]
-    cfg.Value("x.max", &xmax, 1E6);
-    cfg.Value("y.max", &ymax, 1E6);
-    cfg.Value("z.max", &zmax, 200000);
-    cfg.Value("e.max", &emax, 1E6); 
-    cfg.Value("x.min", &xmin, 0); 
-    cfg.Value("y.min", &ymin, 0); 
-    cfg.Value("z.min", &zmin, 0);
-    cfg.Value("e.min", &emin, 0); 
-
-    cfg.Value("bedheight", &bedheight, 0);
-    cfg.Value("enforcelimits", &enforcelimits, 0);
+    cfg.Value("x.max", &xmax, GlobalConfig::VERYLARGE);
+    cfg.Value("y.max", &ymax, GlobalConfig::VERYLARGE);
+    cfg.Value("z.max", &zmax, GlobalConfig::VERYLARGE);
+    cfg.Value("e.max", &emax, GlobalConfig::VERYLARGE); 
+    cfg.Value("x.min", &xmin, GlobalConfig::MINUSVERYLARGE); 
+    cfg.Value("y.min", &ymin, GlobalConfig::MINUSVERYLARGE); 
+    cfg.Value("z.min", &zmin, GlobalConfig::MINUSVERYLARGE);
+    cfg.Value("e.min", &emin, GlobalConfig::MINUSVERYLARGE); 
         
     // motion settings: enable output state    
     cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [mm/sec]
@@ -154,5 +151,17 @@ GlobalConfig::GlobalConfig(const std::string& filename)
     cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2]
     cfg.Value("motion.enable", &enable, 0); // enable output polarity [0/1]
     cfg.Value("motion.tolerance", &tolerance, 50); // cornering tolerance [1/1000 units]
+}
+
+// get the configured bed height (y.max - y.min), or 0 if undefined
+int GlobalConfig::BedHeight() const
+{
+    int result=0;
+    if( (ymax != (int)GlobalConfig::VERYLARGE) && (ymin != (int)GlobalConfig::MINUSVERYLARGE) )
+    {
+        result = ymax - ymin;
+        if(result < 0) result = 0;
+    }
+    return result;
 }
 

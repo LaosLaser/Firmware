@@ -169,7 +169,8 @@ void LaosExtent::ShowBoundaries(LaosMotion *mot) const
 		for(int step = 0; step <= 4; step++)
 		{
 			int x,y;
-			if( (step == 2)||(step ==3) )
+      // start in bottom right corner, then go counter clockwise:
+			if( (step == 1)||(step == 2) )
 			{
 				y=m_MaxY;
 			}
@@ -177,13 +178,13 @@ void LaosExtent::ShowBoundaries(LaosMotion *mot) const
 			{
 				y=m_MinY;
 			}
-			if( (step == 1)||(step ==2) )
+			if( (step == 2)||(step ==3) )
 			{
-				x=m_MaxX;
+				x=m_MinX;
 			}
 			else
 			{
-				x=m_MinX;
+				x=m_MaxX;
 			}
 			while(mot->queue()) {} // wait until motion is done
 			if(step == 1)

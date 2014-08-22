@@ -111,11 +111,11 @@ static const char *screens[] = {
     "ANALYZING...    "
     "                ",
 
-#define RUNNING (HOMING+1)
+#define RUNNING (ANALYZING+1)
     "RUNNING...      "
     "[cancel]        ",
 
-#define BUSY (ANALYZING+1)
+#define BUSY (RUNNING+1)
     "BUSY: $$$$$$$$$$"
     "[cancel][ok]    ",
 
@@ -287,8 +287,8 @@ void LaosMenu::Handle() {
                     int xt = x;
                     int yt= y;
                     switch ( c ) {
-                        case K_DOWN: y+=100*speed; break;
-                        case K_UP: y-=100*speed;  break;
+                        case K_DOWN: y-=100*speed; break;
+                        case K_UP: y+=100*speed;  break;
                         case K_LEFT: x-=100*speed; break;
                         case K_RIGHT: x+=100*speed;  break;
                         case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
@@ -357,7 +357,7 @@ void LaosMenu::Handle() {
                     case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
                     case K_OK:
                     case K_ORIGIN:
-                        if(cfg->bedheight == 0)
+                        if(cfg->BedHeight() == 0)
                         {
                             screen=ERROR;
                             sarg=(char*)"bedheight unknwn";
@@ -455,56 +455,33 @@ void LaosMenu::Handle() {
                         runfile=NULL; screen=MAIN; menu=MAIN;
                         break; */
                     default:
-                        if (runfile == NULL) 
-                        {
+                        if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
                             if (! runfile) 
-                            {
                               screen=MAIN;
-                            }
                             else
-                            {
                                mot->reset();
-                            }
-                        } 
-                        else 
-                        {
-                            bool ok=CheckFileLimits();
-                            fclose(runfile);
-                            runfile=NULL;
-                            if(!ok)
-                            {
-                                screen=ERROR;
-                                sarg=(char*)"Limit overrun";
-                                waitup=1;
-                            }
-                            else
-                            {
-                                runfile = sd.openfile(jobname, "rb");
-#ifdef READ_FILE_DEBUG
-                    			printf("Parsing file: \n");
-#endif
-                                while ((!feof(runfile)) && mot->ready())
-                                {
-                                    mot->write(readint(runfile));
-                                }
-#ifdef READ_FILE_DEBUG
-                    			printf("File parsed \n");
-#endif
-                                if (feof(runfile) && mot->ready()) {
-                                    fclose(runfile);
-                                    runfile = NULL;
-                                    mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
-                                    screen=MAIN;
-                                } else {
-                                    nodisplay = 1;
-                                }
+                        } else {
+                                #ifdef READ_FILE_DEBUG
+                                    printf("Parsing file: \n");
+                                #endif
+                            while ((!feof(runfile)) && mot->ready())
+                                mot->write(readint(runfile));
+                            #ifdef READ_FILE_DEBUG
+                                    printf("File parsed \n");
+                                #endif
+                            if (feof(runfile) && mot->ready()) {
+                                fclose(runfile);
+                                runfile = NULL;
+                                mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
+                                screen=MAIN;
+                            } else {
+                                nodisplay = 1;
                             }
                         }
-                        break;
                 }
                 break;
-
+                
             case BOUNDARIES:
                 if (strlen(jobname) == 0) getprevjob(jobname); 
                 switch ( c ) {
@@ -561,17 +538,16 @@ void LaosMenu::Handle() {
                     {
                         if(m_StageAfterAnalyzing == CALCULATEDBOUNDARIES)
                         {
-                            args[0]=(minx+500)/1000;
-                            args[1]=(miny+500)/1000;
-                            args[2]=((maxx-minx)+500)/1000;
-                            args[3]=((maxy-miny)+500)/1000;
+                            args[0]=(fileMinx+500)/1000;
+                            args[1]=(fileMiny+500)/1000;
+                            args[2]=((fileMaxx-fileMinx)+500)/1000;
+                            args[3]=((fileMaxy-fileMiny)+500)/1000;
                             screen=CALCULATEDBOUNDARIES;
                             m_SubStage=0;
                         }
                         else if(m_StageAfterAnalyzing == RUNNING)
                         {
-
-                        
+                            screen=RUNNING;
                         }
                         else
                         {
