@@ -107,11 +107,15 @@ static const char *screens[] = {
     "HOMING...       "
     "                ",
 
+#define ANALYZING (HOMING+1)
+    "ANALYZING...    "
+    "                ",
+
 #define RUNNING (HOMING+1)
     "RUNNING...      "
     "[cancel]        ",
 
-#define BUSY (RUNNING+1)
+#define BUSY (ANALYZING+1)
     "BUSY: $$$$$$$$$$"
     "[cancel][ok]    ",
 
@@ -255,7 +259,7 @@ void LaosMenu::Handle() {
             case RUN: // START JOB select job to run
                 if (strlen(jobname) == 0) getprevjob(jobname); 
                 switch ( c ) {
-                    case K_OK: screen=RUNNING; break;
+                    case K_OK: screen = ANALYZING; m_StageAfterAnalyzing = RUNNING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_RIGHT: screen=BOUNDARIES; waitup=1; break;
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
@@ -505,39 +509,7 @@ void LaosMenu::Handle() {
                 if (strlen(jobname) == 0) getprevjob(jobname); 
                 switch ( c ) {
                     case K_OK: 
-                        runfile = sd.openfile(jobname, "rb");
-                        if (! runfile)
-                        {
-                            screen=MAIN;
-                        }
-                        else
-                        {
-                            m_Extent.Reset(true);
-                            while (!feof(runfile))
-                            {
-                                m_Extent.Write(readint(runfile));
-                            }
-                            fclose(runfile);
-                            runfile = NULL;
-                            int minx, miny, maxx, maxy;
-                            LaosExtent::TError err=m_Extent.GetBoundary(minx, miny, maxx, maxy);
-                            if(err)
-                            {
-                                // todo: display error text
-                                screen=MAIN;
-                            }
-                            else
-                            {
-                                args[0]=(minx+500)/1000;
-                                args[1]=(miny+500)/1000;
-                                args[2]=((maxx-minx)+500)/1000;
-                                args[3]=((maxy-miny)+500)/1000;
-                                screen=CALCULATEDBOUNDARIES;
-                                m_Extent.ShowBoundaries(mot);
-                                waitup=1;
-                            }
-                        }
-                        break;
+                        screen = ANALYZING; m_StageAfterAnalyzing = CALCULATEDBOUNDARIES; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_LEFT: screen=RUN; waitup=1; break;
@@ -547,11 +519,84 @@ void LaosMenu::Handle() {
                 sarg = (char *)&jobname;
                 break;
 
+            case ANALYZING: // determine the boundaries of the file. This is done prior to running, and when executing the BOUNDAIES function
+                // m_StageAfterAnalyzing is set to the menu stage that will be executed after this (RUNNING or CALCULATEDBOUNDARIES)
+                runfile = sd.openfile(jobname, "rb");
+                if (! runfile)
+                {
+                    screen=MAIN;
+                }
+                else
+                {
+                    // when running we need the bounds including all moves
+                    // when executing BOUNDARIES we only need the actual lasered area
+                    bool boundsOnlyWithLaserOn = (m_StageAfterAnalyzing == CALCULATEDBOUNDARIES);
+                    m_Extent.Reset(boundsOnlyWithLaserOn);
+                    while (!feof(runfile))
+                    {
+                        m_Extent.Write(readint(runfile));
+                    }
+                    fclose(runfile);
+                    runfile = NULL;
+                    int fileMinx, fileMiny, fileMaxx, fileMaxy;
+                    LaosExtent::TError err=m_Extent.GetBoundary(fileMinx, fileMiny, fileMaxx, fileMaxy);
+                    bool outOfBounds=false;
+                    if(!err)
+                    {
+                        int minx, miny, minz, maxx, maxy, maxz;
+                        mot->getLimitsRelative(&minx, &miny, &minz, &maxx, &maxy, &maxz);
+                        if( (fileMinx < minx) || (fileMiny < miny) || 
+                            (fileMaxx > maxx) || (fileMaxy > maxy) )
+                        {
+                            outOfBounds = true;
+                        }
+                    }
+                    if(outOfBounds)
+                    {
+                        screen=ERROR;
+                        sarg=(char*)"Limit overrun";
+                        waitup=1;                        
+                    }
+                    else
+                    {
+                        if(m_StageAfterAnalyzing == CALCULATEDBOUNDARIES)
+                        {
+                            args[0]=(minx+500)/1000;
+                            args[1]=(miny+500)/1000;
+                            args[2]=((maxx-minx)+500)/1000;
+                            args[3]=((maxy-miny)+500)/1000;
+                            screen=CALCULATEDBOUNDARIES;
+                            m_SubStage=0;
+                        }
+                        else if(m_StageAfterAnalyzing == RUNNING)
+                        {
+
+                        
+                        }
+                        else
+                        {
+                            screen = MAIN;
+                        }
+                        waitup=1;
+                    }
+                }
+                break;
+
             case CALCULATEDBOUNDARIES: // Screen after calculating the boundaries of a file
-                switch ( c ) {
-                    case K_OK:
-                     screen=MAIN;
-                     break;
+                if(m_SubStage == 0)
+                {
+                    m_Extent.ShowBoundaries(mot);
+                    m_SubStage++;
+                }
+                else
+                {
+                    switch ( c ) {
+                        case K_OK:
+                        case K_CANCEL:
+                         screen=MAIN;
+                         break;
+                    }
+                    break;
                 }
                 break;
 
@@ -571,31 +616,3 @@ void LaosMenu::SetFileName(char * name) {
     strcpy(jobname, name);
 }
 
-// returns true if OK (head will stay within limits)
-bool LaosMenu::CheckFileLimits()
-{
-    bool ok=true;
-    extern GlobalConfig *cfg;
-    extern LaosMotion *mot;
-    if(cfg->enforcelimits)   // limit checking will only be done if enforcelimits = 1 in config.txt
-    {
-        m_Extent.Reset(false);
-        while (!feof(runfile))
-        {
-            m_Extent.Write(readint(runfile));
-        }
-        int fileMinx, fileMiny, fileMaxx, fileMaxy;
-        LaosExtent::TError err=m_Extent.GetBoundary(fileMinx, fileMiny, fileMaxx, fileMaxy);
-        if(!err)
-        {
-            int minx, miny, minz, maxx, maxy, maxz;
-            mot->getLimitsRelative(&minx, &miny, &minz, &maxx, &maxy, &maxz);
-            if( (fileMinx < minx) || (fileMiny < miny) || 
-                (fileMaxx > maxx) || (fileMaxy > maxy) )
-            {
-                ok = false;
-            }
-        }
-    }
-    return ok;
-}

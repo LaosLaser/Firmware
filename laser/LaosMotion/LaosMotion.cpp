@@ -28,7 +28,8 @@
 #include  "pins.h"
 
 // #define DO_MOTION_TEST 1
-
+#define READ_FILE_DEBUG_VERBOSE
+ 
 // globals
 unsigned int step=0;
 int command=0;
@@ -212,17 +213,20 @@ void LaosMotion::write(int i)
   //printf("Empty\n");
   
   
-  #ifdef READ_FILE_DEBUG_VERBOSE
-  	printf(">%i (command: %i, step: %i)\n",i,command,step);
-  #endif	
   
   if ( step == 0 )
   {
     command = i;
+  #ifdef READ_FILE_DEBUG_VERBOSE
+    printf(">%i (command: %i, step: %i)\n",i,command,step);
+  #endif  
     step++;
   }
   else
   {
+  #ifdef READ_FILE_DEBUG_VERBOSE
+    printf(">%i (command: %i, step: %i)\n",i,command,step);
+  #endif  
      switch( command )
      {
           case 0: // move x,y (laser off)
