@@ -59,6 +59,8 @@ public:
   int escale; // steps per meter
   int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
   int exhaust, exhaust_offdelay; // How long to continue powering air 
+  int bedheight; // the bed height as defined in VisiCut
+  int enforcelimits; // whether we should stay within the limits
 	// nozzle/exhaust after job has ended (seconds).
   GlobalConfig(const std::string& filename);
 };
