@@ -26,6 +26,7 @@
 #define _LAOSMOTION_H_
 #include "global.h"
 #include "pins.h"
+#include  "planner.h"
 
     /** Motion Controll system
       *
@@ -46,13 +47,24 @@ public:
   void home(int xhome, int yhome, int zhome); // home the system, move to the sensors and set the specified position
   bool isStart(); // start button is enabled
   bool isHome; // system is homed
-  void setPosition(int x, int y, int z); // set the absolute position [micron]
-  void getPosition(int *x, int *y, int *z); // get actual absolute position [micron] (current position of the motors)
-  void setOrigin(int x, int y, int z); // set the origin to this absolute position [micron]
-  void moveTo(int x, int y, int z); // move (jog) to a specific position [microns]
-  void moveTo(int x, int y, int z, int speed); // move (jog) to a specific position [microns]
+  void setPositionRelativeToOrigin(int x, int y, int z);
+  void setPositionAbsolute(int x, int y, int z);
+  void getCurrentPositionRelativeToOrigin(int *x, int *y, int *z);
+  void getCurrentPositionAbsolute(int *x, int *y, int *z);
+  void getPlannedPositionRelativeToOrigin(int *x, int *y, int *z);
+  void getPlannedPositionAbsolute(int *x, int *y, int *z);
+  void setOriginAbsolute(int x, int y, int z); // set the origin to this absolute position [micron]
+  void MakeCurrentPositionOrigin(); // set the current position to be the origin
+  void moveToRelativeToOrigin(int x, int y, int z, int speed=100, int power=100);
+  void moveToAbsolute(int x, int y, int z, int speed=100, int power=100);
+  void moveToRelativeToOriginWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype);
+  void moveToAbsoluteWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype);
   int queue(); // queued items
+  void getLimitsRelative(int *minx, int *miny, int *minz, int *maxx, int *maxy, int *maxz);
+
 private:
+  int ofsx, ofsy, ofsz;
+  int m_PlannedXAbsolute, m_PlannedYAbsolute, m_PlannedZAbsolute; // in absolute coordinates
   
 };
 

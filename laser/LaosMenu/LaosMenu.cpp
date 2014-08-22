@@ -26,16 +26,17 @@ static const char *menus[] = {
     "STARTUP",     //0
     "MAIN",        //1
     "START JOB",   //2
-    "DELETE JOB",  //3
-    "HOME",        //4
-    "MOVE",        //5
-    "FOCUS",       //6
-    "ORIGIN",      //7
-    "REMOVE ALL JOBS", //8
-    "IP",          //9
-    "REBOOT", //10
-    // "POWER / SPEED",//11
-    // "IO", //12
+    "BOUNDARIES", //3
+    "DELETE JOB",  //4
+    "HOME",        //5
+    "MOVE",        //6
+    "FOCUS",       //7
+    "ORIGIN",      //8
+    "REMOVE ALL JOBS", //9
+    "IP",          //10
+    "REBOOT", //11
+    // "POWER / SPEED",//12
+    // "IO", //13
 };
 
 static const char *screens[] = {
@@ -53,7 +54,11 @@ static const char *screens[] = {
     "RUN:            "
     "$$$$$$$$$$$$$$$$",
 
-#define DELETE (RUN+1)
+#define BOUNDARIES (RUN+1)
+    "BOUNDARIES:     "
+    "$$$$$$$$$$$$$$$$",
+
+#define DELETE (BOUNDARIES+1)
     "DELETE:         "
     "$$$$$$$$$$$$$$$$",
 
@@ -102,11 +107,15 @@ static const char *screens[] = {
     "HOMING...       "
     "                ",
 
+#define ANALYZING (HOMING+1)
+    "ANALYZING...    "
+    "                ",
+
 #define RUNNING (HOMING+1)
     "RUNNING...      "
     "[cancel]        ",
 
-#define BUSY (RUNNING+1)
+#define BUSY (ANALYZING+1)
     "BUSY: $$$$$$$$$$"
     "[cancel][ok]    ",
 
@@ -114,7 +123,17 @@ static const char *screens[] = {
     "PAUSE: $$$$$$$$$"
     "[cancel][ok]    ",
 
+#define CALCULATEDBOUNDARIES (PAUSE+1)
+    "Or: +3210, +3210"
+    "Siz: 3210 x 3210",
+
+#define ERROR (CALCULATEDBOUNDARIES+1)
+    "ERROR:          "
+    "$$$$$$$$$$$$$$$$",
+
 };
+
+
 
 static  const char *ipfields[] = { "IP", "NETMASK", "GATEWAY", "DNS" };
 //static  const char *powerfields[] = { "Pmin %", "Pmax %", "Voff", "Von" };
@@ -127,8 +146,6 @@ static  const char *ipfields[] = { "IP", "NETMASK", "GATEWAY", "DNS" };
 LaosMenu::LaosMenu(LaosDisplay *display) {
     waitup=timeout=iofield=ipfield=0;
     sarg = NULL;
-    x=y=z=0;
-    xoff=yoff=zoff=0;
     screen=prevscreen=lastscreen=speed=0;
     menu=1;
     strcpy(jobname, "");
@@ -190,7 +207,8 @@ bool LaosMenu::Cancel() {
 *** something changed
 **/
 void LaosMenu::Handle() {
-    int xt, yt, zt, nodisplay = 0;
+//    int xt, yt, zt, 
+    int nodisplay = 0;
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
     extern GlobalConfig *cfg;
@@ -241,9 +259,9 @@ void LaosMenu::Handle() {
             case RUN: // START JOB select job to run
                 if (strlen(jobname) == 0) getprevjob(jobname); 
                 switch ( c ) {
-                    case K_OK: screen=RUNNING; break;
+                    case K_OK: screen = ANALYZING; m_StageAfterAnalyzing = RUNNING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
-                    case K_RIGHT: screen=DELETE; waitup=1; break;
+                    case K_RIGHT: screen=BOUNDARIES; waitup=1; break;
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
                 }
@@ -256,57 +274,65 @@ void LaosMenu::Handle() {
                         break; // INSERT: delete current job
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
-                    case K_LEFT: screen=RUN; waitup=1; break;
+                    case K_LEFT: screen=BOUNDARIES; waitup=1; break;
                     case K_CANCEL: screen=lastscreen; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
                 break;
                 
             case MOVE: // pos xy
-                mot->getPosition(&x, &y, &z);
-                xt = x; yt= y;
-                switch ( c ) {
-                    case K_DOWN: y+=100*speed; break;
-                    case K_UP: y-=100*speed;  break;
-                    case K_LEFT: x-=100*speed; break;
-                    case K_RIGHT: x+=100*speed;  break;
-                    case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
-                    case K_FUP: screen=FOCUS; break; 
-                    case K_FDOWN: screen=FOCUS; break;
-                    case K_ORIGIN: screen=ORIGIN; break;
+                {
+                    int x,y,z;
+                    mot->getCurrentPositionRelativeToOrigin(&x, &y, &z);
+                    int xt = x;
+                    int yt= y;
+                    switch ( c ) {
+                        case K_DOWN: y+=100*speed; break;
+                        case K_UP: y-=100*speed;  break;
+                        case K_LEFT: x-=100*speed; break;
+                        case K_RIGHT: x+=100*speed;  break;
+                        case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
+                        case K_FUP: screen=FOCUS; break; 
+                        case K_FDOWN: screen=FOCUS; break;
+                        case K_ORIGIN: screen=ORIGIN; break;
+                    }
+                    if  ((mot->queue() < 5) && ( (x!=xt) || (y != yt) )) {
+                        mot->moveToRelativeToOrigin(x, y, z, speed/2);
+    					printf("Move: %d %d %d %d\n", x,y,z, speed);
+                    } else {
+                        // if (! mot->ready()) 
+                        // printf("Buffer vol\n");
+                    }
+                    args[0]=x;
+                    args[1]=y;
                 }
-                if  ((mot->queue() < 5) && ( (x!=xt) || (y != yt) )) {
-                    mot->moveTo(x, y, z, speed/2);
-					printf("Move: %d %d %d %d\n", x,y,z, speed);
-                } else {
-                    // if (! mot->ready()) 
-                    // printf("Buffer vol\n");
-                }
-                args[0]=x-xoff;
-                args[1]=y-yoff;
                 break;
 
             case FOCUS: // focus
-                mot->getPosition(&x, &y, &z);
-		zt = z;
-                switch ( c ) {
-                    case K_FUP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
-                    case K_FDOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
-                    case K_LEFT: break;
-                    case K_RIGHT: break;
-                    case K_UP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
-                    case K_DOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
-                    case K_ORIGIN: screen=ORIGIN; break;
-                    case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
-                    case 0: break;
-                    default: screen=MAIN; waitup=1; break;
+                {
+
+                    int x,y,z;
+                    mot->getCurrentPositionRelativeToOrigin(&x, &y, &z);
+                    int zt = z;
+                    switch ( c ) {
+                        case K_FUP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
+                        case K_FDOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
+                        case K_LEFT: break;
+                        case K_RIGHT: break;
+                        case K_UP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
+                        case K_DOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
+                        case K_ORIGIN: screen=ORIGIN; break;
+                        case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
+                        case 0: break;
+                        default: screen=MAIN; waitup=1; break;
+                    }
+                    if ( mot->ready() && (z!=zt) ) 
+    				{
+                      mot->moveToRelativeToOrigin(x, y, z, speed);
+    				  printf("Move: %d %d %d %d\n", x,y,z, speed);
+    				}
+                    args[0]=z;
                 }
-                if ( mot->ready() && (z!=zt) ) 
-				{
-                  mot->moveTo(x, y, z, speed);
-				  printf("Move: %d %d %d %d\n", x,y,z, speed);
-				}
-                args[0]=z-zoff;
                 break;
 
             case HOME:// home
@@ -316,16 +342,31 @@ void LaosMenu::Handle() {
                 }
                 break;
 
+            case ERROR:
+                switch ( c ) {
+                    case K_OK:
+                    case K_CANCEL: 
+                        screen=MAIN;
+                        waitup=1; 
+                        break;
+                }
+                break;
+
             case ORIGIN: // origin
                 switch ( c ) {
                     case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
                     case K_OK:
                     case K_ORIGIN:
-                        xoff = x;
-                        yoff = y; 
-                        zoff = z; 
-                        mot->setOrigin(x,y,z);
-                        screen = lastscreen;
+                        if(cfg->bedheight == 0)
+                        {
+                            screen=ERROR;
+                            sarg=(char*)"bedheight unknwn";
+                        }
+                        else
+                        {
+                            mot->MakeCurrentPositionOrigin();
+                            screen = lastscreen;
+                        }
                         waitup = 1;
                         break;
                 }
@@ -400,8 +441,6 @@ void LaosMenu::Handle() {
                 break;
 */
             case HOMING: // Homing screen
-                x = cfg->xhome;
-                y = cfg->yhome;
                 while ( !mot->isStart() );
                 mot->home(cfg->xhome,cfg->yhome,cfg->zhome);
                 screen=lastscreen;
@@ -416,30 +455,148 @@ void LaosMenu::Handle() {
                         runfile=NULL; screen=MAIN; menu=MAIN;
                         break; */
                     default:
-                        if (runfile == NULL) {
+                        if (runfile == NULL) 
+                        {
                             runfile = sd.openfile(jobname, "rb");
                             if (! runfile) 
+                            {
                               screen=MAIN;
+                            }
                             else
+                            {
                                mot->reset();
-                        } else {
-                        		#ifdef READ_FILE_DEBUG
-                        			printf("Parsing file: \n");
-                        		#endif
-                            while ((!feof(runfile)) && mot->ready())
-                                mot->write(readint(runfile));
-                            #ifdef READ_FILE_DEBUG
-                        			printf("File parsed \n");
-                        		#endif
-                            if (feof(runfile) && mot->ready()) {
-                                fclose(runfile);
-                                runfile = NULL;
-                                mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
-                                screen=MAIN;
-                            } else {
-                                nodisplay = 1;
+                            }
+                        } 
+                        else 
+                        {
+                            bool ok=CheckFileLimits();
+                            fclose(runfile);
+                            runfile=NULL;
+                            if(!ok)
+                            {
+                                screen=ERROR;
+                                sarg=(char*)"Limit overrun";
+                                waitup=1;
+                            }
+                            else
+                            {
+                                runfile = sd.openfile(jobname, "rb");
+#ifdef READ_FILE_DEBUG
+                    			printf("Parsing file: \n");
+#endif
+                                while ((!feof(runfile)) && mot->ready())
+                                {
+                                    mot->write(readint(runfile));
+                                }
+#ifdef READ_FILE_DEBUG
+                    			printf("File parsed \n");
+#endif
+                                if (feof(runfile) && mot->ready()) {
+                                    fclose(runfile);
+                                    runfile = NULL;
+                                    mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
+                                    screen=MAIN;
+                                } else {
+                                    nodisplay = 1;
+                                }
                             }
                         }
+                        break;
+                }
+                break;
+
+            case BOUNDARIES:
+                if (strlen(jobname) == 0) getprevjob(jobname); 
+                switch ( c ) {
+                    case K_OK: 
+                        screen = ANALYZING; m_StageAfterAnalyzing = CALCULATEDBOUNDARIES; break;
+                    case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+                    case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
+                    case K_LEFT: screen=RUN; waitup=1; break;
+                    case K_RIGHT: screen=DELETE; waitup=1; break;
+                    case K_CANCEL: screen=lastscreen; waitup = 1; break;
+                }
+                sarg = (char *)&jobname;
+                break;
+
+            case ANALYZING: // determine the boundaries of the file. This is done prior to running, and when executing the BOUNDAIES function
+                // m_StageAfterAnalyzing is set to the menu stage that will be executed after this (RUNNING or CALCULATEDBOUNDARIES)
+                runfile = sd.openfile(jobname, "rb");
+                if (! runfile)
+                {
+                    screen=MAIN;
+                }
+                else
+                {
+                    // when running we need the bounds including all moves
+                    // when executing BOUNDARIES we only need the actual lasered area
+                    bool boundsOnlyWithLaserOn = (m_StageAfterAnalyzing == CALCULATEDBOUNDARIES);
+                    m_Extent.Reset(boundsOnlyWithLaserOn);
+                    while (!feof(runfile))
+                    {
+                        m_Extent.Write(readint(runfile));
+                    }
+                    fclose(runfile);
+                    runfile = NULL;
+                    int fileMinx, fileMiny, fileMaxx, fileMaxy;
+                    LaosExtent::TError err=m_Extent.GetBoundary(fileMinx, fileMiny, fileMaxx, fileMaxy);
+                    bool outOfBounds=false;
+                    if(!err)
+                    {
+                        int minx, miny, minz, maxx, maxy, maxz;
+                        mot->getLimitsRelative(&minx, &miny, &minz, &maxx, &maxy, &maxz);
+                        if( (fileMinx < minx) || (fileMiny < miny) || 
+                            (fileMaxx > maxx) || (fileMaxy > maxy) )
+                        {
+                            outOfBounds = true;
+                        }
+                    }
+                    if(outOfBounds)
+                    {
+                        screen=ERROR;
+                        sarg=(char*)"Limit overrun";
+                        waitup=1;                        
+                    }
+                    else
+                    {
+                        if(m_StageAfterAnalyzing == CALCULATEDBOUNDARIES)
+                        {
+                            args[0]=(minx+500)/1000;
+                            args[1]=(miny+500)/1000;
+                            args[2]=((maxx-minx)+500)/1000;
+                            args[3]=((maxy-miny)+500)/1000;
+                            screen=CALCULATEDBOUNDARIES;
+                            m_SubStage=0;
+                        }
+                        else if(m_StageAfterAnalyzing == RUNNING)
+                        {
+
+                        
+                        }
+                        else
+                        {
+                            screen = MAIN;
+                        }
+                        waitup=1;
+                    }
+                }
+                break;
+
+            case CALCULATEDBOUNDARIES: // Screen after calculating the boundaries of a file
+                if(m_SubStage == 0)
+                {
+                    m_Extent.ShowBoundaries(mot);
+                    m_SubStage++;
+                }
+                else
+                {
+                    switch ( c ) {
+                        case K_OK:
+                        case K_CANCEL:
+                         screen=MAIN;
+                         break;
+                    }
+                    break;
                 }
                 break;
 
@@ -458,3 +615,4 @@ void LaosMenu::Handle() {
 void LaosMenu::SetFileName(char * name) {
     strcpy(jobname, name);
 }
+
