@@ -340,9 +340,13 @@ void LaosMenu::Handle() {
                     case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
                     case K_FUP: screen=FOCUS; break; 
                     case K_FDOWN: screen=FOCUS; break;
-                    case K_ORIGIN: screen=ORIGIN; break;
+                    case K_ORIGIN: screen=ORIGIN; waitup=1; break;
                 }
                 if  ((mot->queue() < 5) && ( (x!=xt) || (y != yt) )) {
+					if (x < cfg->xmin) x = cfg->xmin;
+					if (x > cfg->xmax) x = cfg->xmax;
+					if (y < cfg->ymin) y = cfg->ymin;
+					if (y > cfg->ymax) y = cfg->ymax;
                     mot->moveTo(x, y, z, speed/2);
 					printf("Move: %d %d %d %d\n", x,y,z, speed);
                 } else {
@@ -370,6 +374,8 @@ void LaosMenu::Handle() {
                 }
                 if ( mot->ready() && (z!=zt) ) 
 				{
+				  if (z < cfg->zmin) z = cfg->zmin;
+				  if (z > cfg->zmax) z = cfg->zmax;
                   mot->moveTo(x, y, z, speed);
 				  printf("Move: %d %d %d %d\n", x,y,z, speed);
 				}
