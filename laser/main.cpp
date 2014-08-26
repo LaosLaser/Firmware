@@ -44,7 +44,8 @@
 // uncomment this to get debugging output in file parser
 // #define READ_FILE_DEBUG
 // #define READ_FILE_DEBUG_VERBOSE
- 
+
+#include <string>
 #include "pins.h"
 #include "global.h"
 #include "ConfigFile.h"
@@ -114,8 +115,11 @@ int main()
   // See if there's a .bin file on the SD
   // if so, put it on the MBED and reboot
   if (SDcheckFirmware()) mbed_reset();
-  
-  mnu->SetScreen(VERSION_STRING);
+  {
+  	std::string ct = COMPILE_TIME;
+	std::string ct2 = ct.substr(0,3) + ct.substr(4,13) + VERSION_STRING;
+  	mnu->SetScreen(ct2);
+  }
   printf("START...\n");
   cfg =  new GlobalConfig("config.txt");
   mnu->SetScreen("CONFIG OK...."); 
