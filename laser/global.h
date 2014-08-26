@@ -67,6 +67,7 @@ public:
 #define __GIT_HASH ""
 #endif
 
-#define VERSION_STRING "\033LAOS v0.3-" __GIT_HASH "\n" __DATE__ " " __TIME__
+#define VERSION_STRING "LAOS v0.3-" __GIT_HASH
+#define COMPILE_TIME __DATE__ " " __TIME__
 
 #endif
