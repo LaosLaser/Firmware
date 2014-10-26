@@ -339,6 +339,7 @@ void LaosMotion::write(int i)
 			  // printf("[%ld] = %ld\n", (step-3) % BITMAP_SIZE, i);
 			  if ( step-2 == bitmap_size ) // last dword received
               {
+			  	bitmap[ (step-2) % BITMAP_SIZE ] = 0;
                 step = 0;
                 // printf("Bitmap: received %d dwords\n\r", bitmap_size);
               }
