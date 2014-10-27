@@ -23,6 +23,7 @@
  *
  */
 #include "LaosDisplay.h"
+#include "MODI2C.h"
 #include "mbed.h"
 
 // Serial
@@ -32,7 +33,7 @@ Serial serial(USBTX, USBRX);
 #endif
 
 // I2C
-I2C i2c(p9, p10);        // sda, scl
+MODI2C i2c(p9, p10);        // sda, scl
 #define _I2C_ADDRESS 0x04
 #define _I2C_HOME 0xFE
 #define _I2C_CLS 0xFF
@@ -79,8 +80,10 @@ void LaosDisplay::write(char *s)
 #endif
     return;
   } else {
-    while (*s)
+    while (*s) {
       i2c.write(_I2C_ADDRESS, s++, 1);
+      while(i2c.getQueue()) wait_us(1);
+    }
   }
 }
 
@@ -107,7 +110,37 @@ int LaosDisplay::read()
       key = 0;
   }
   else
+  {
     i2c.read(_I2C_ADDRESS ,&key, 1);
+  }
+  if ((key < '1') || (key > '9'))
+    key = 0;
+  return key;   
+}
+
+// Read Key non-blocking (needs to be called often to retrieve key)
+int LaosDisplay::read_nb() 
+{
+  char key = 0;
+  static char bg_buf = 0;  // Static buffer for background retrieve
+  static int status = 1;   // for first start
+  if (sim)
+  {
+#if !MRI_ENABLE
+    if ( serial.readable() )
+      key =  serial.getc();
+    else
+#endif
+      key = 0;
+  }
+  else
+  {
+    if(status) {
+      // last I2C read has finished now
+      key = bg_buf;
+      i2c.read_nb(_I2C_ADDRESS ,&bg_buf, 1, false, &status);
+    }
+  }
   if ((key < '1') || (key > '9'))
     key = 0;
   return key;   

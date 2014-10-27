@@ -53,10 +53,15 @@ public:
   */ 
    void cls();
 
-/** Read key value. (non blocking)
+/** Read key value. (blocking)
   * @return (ASCII) character value, zero if no character is available
   */ 
   int read();
+
+/** Read key value. (non blocking)
+  * @return (ASCII) character value, zero if no character is available
+  */ 
+  int read_nb();
     
 private:
   bool sim;

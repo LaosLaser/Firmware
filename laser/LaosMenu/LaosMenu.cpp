@@ -426,8 +426,14 @@ void LaosMenu::Handle() {
                         		#ifdef READ_FILE_DEBUG
                         			printf("Parsing file: \n");
                         		#endif
-                            while ((!feof(runfile)) && mot->ready())
+                            while ((!feof(runfile)) && mot->ready()) {
                                 mot->write(readint(runfile));
+                                if(dsp->read_nb() == K_CANCEL) {
+                                   while (mot->queue());
+                                   mot->reset();
+                                   fseek(runfile, 0, SEEK_END);
+                                }
+                            }
                             #ifdef READ_FILE_DEBUG
                         			printf("File parsed \n");
                         		#endif
