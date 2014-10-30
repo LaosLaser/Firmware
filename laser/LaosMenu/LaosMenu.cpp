@@ -258,8 +258,6 @@ void LaosMenu::Handle() {
                     case K_OK: screen=RUNNING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_RIGHT: screen=BOUNDARIES; waitup=1; break;
-<<<<<<< HEAD
-=======
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
                 }
@@ -311,59 +309,6 @@ void LaosMenu::Handle() {
                 sarg = (char *)&jobname;
                 break;
             
-			case BOUNDARIES:
-                if (strlen(jobname) == 0) getprevjob(jobname); 
-                switch ( c ) {
-                    case K_OK: 
-                        runfile = sd.openfile(jobname, "rb");
-                        if (! runfile)
-                            screen=MAIN;
-                        else
-                        {
-							LaosExtent m_Extent;
-                            m_Extent.Reset(true);
-                            while (!feof(runfile))
-                            {
-                                m_Extent.Write(readint(runfile));
-                            }
-                            fclose(runfile);
-                            runfile = NULL;
-                            int minx, miny, maxx, maxy;
-                            LaosExtent::TError err=m_Extent.GetBoundary(minx, miny, maxx, maxy);
-                            if(err)
-                            {
-                                // todo: display error text
-                                screen=MAIN; waitup=1; 
-                            }
-                            else
-                            {
-                                args[0]=(minx+500)/1000;
-                                args[1]=(miny+500)/1000;
-                                args[2]=((maxx-minx)+500)/1000;
-                                args[3]=((maxy-miny)+500)/1000;
-                                screen=CALCULATEDBOUNDARIES;
-                                m_Extent.ShowBoundaries(mot);
-                                waitup=1;
-                            }
-                        }
-                        break;
-                    case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
-                    case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
-                    case K_LEFT: screen=RUN; waitup=1; break;
-                    case K_RIGHT: screen=DELETE; waitup=1; break;
-                    case K_CANCEL: screen=1; waitup = 1; break;
-                }
-                sarg = (char *)&jobname;
-                break;
-
-            case CALCULATEDBOUNDARIES: // Screen after calculating the boundaries of a file
-                switch ( c ) {
-					case K_UP: case K_DOWN: case K_LEFT: case K_RIGHT: case K_OK: 
-						screen=BOUNDARIES; waitup=1; break;
-                    case K_CANCEL: screen=1; waitup=1; break;
-                }
-                break;
-
             case CALCULATEDBOUNDARIES: // Screen after calculating the boundaries of a file
                 switch ( c ) {
 					case K_UP: case K_DOWN: case K_LEFT: case K_RIGHT: case K_OK: 
