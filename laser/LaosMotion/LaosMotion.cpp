@@ -34,6 +34,7 @@
 unsigned int step=0;
 int command=0;
 int mark_speed = 100; // 100 [mm/sec]
+int bitmap_speed = 100; // 100 [mm/sec]
 int power = 10000 ;
 // next planner action to enqueue
 tActionRequest  action;
@@ -78,6 +79,7 @@ LaosMotion::LaosMotion()
   st_init();
   reset();
   mark_speed = cfg->speed;
+  bitmap_speed = cfg->xspeed;
   action.param = 0;
   action.target.x = action.target.y = action.target.z = action.target.e =0;
   action.target.feed_rate = 60*mark_speed;
@@ -202,8 +204,8 @@ void LaosMotion::write(int i)
   
   
   #ifdef READ_FILE_DEBUG_VERBOSE
-  	printf(">%i (command: %i, step: %i)\n",i,command,step);
-  #endif	
+    printf(">%i (command: %i, step: %i)\n",i,command,step);
+  #endif 
   
   if ( step == 0 )
   {
@@ -227,29 +229,29 @@ void LaosMotion::write(int i)
                 action.target.z = 0;
                 action.param = power;
                 action.ActionType =  (command ? AT_LASER : AT_MOVE);
-                if ( bitmap_enable && action.ActionType == AT_LASER)
+                if ( bitmap_enable && (action.ActionType == AT_LASER))
                 {
                   action.ActionType = AT_BITMAP;
                   bitmap_enable = 0;
                 }
-		switch ( action.ActionType )
-		{
-		  case AT_MOVE: action.target.feed_rate = 60 * cfg->speed; break;
-		  case AT_LASER: action.target.feed_rate = 60 * mark_speed; break;
-		  case AT_BITMAP: action.target.feed_rate = 60 * cfg->xspeed; break;
-          case AT_MOVE_ENDSTOP: break;
-          case AT_WAIT: break;
-		}
-
-		if ( action.ActionType == AT_BITMAP )
-		{
+                switch ( action.ActionType )
+                {
+                  case AT_MOVE: action.target.feed_rate = 60 * cfg->speed; break;
+                  case AT_LASER: action.target.feed_rate = 60 * mark_speed; break;
+                  case AT_BITMAP: action.target.feed_rate = 60 * bitmap_speed; break;
+                  case AT_MOVE_ENDSTOP: break;
+                  case AT_WAIT: break;
+                }
+                
+                if ( action.ActionType == AT_BITMAP )
+                {
                   while ( queue() );// printf("-"); // wait for queue to empty
                   plan_set_accel(cfg->xaccel);
                   plan_buffer_line(&action);
                   while ( queue() ); // printf("*"); // wait for queue to empty
-		  plan_set_accel(cfg->accel);
-		}
-		else
+                  plan_set_accel(cfg->accel);
+                }
+                else
                   plan_buffer_line(&action);
 
                 break;
@@ -302,6 +304,7 @@ void LaosMotion::write(int i)
                     if ( val < 1 ) val = 1;
                     if ( val > 9999 ) val = 10000;
                     mark_speed = val * cfg->speed / 10000;
+                    bitmap_speed = val * cfg->xspeed / 10000;
                     #ifdef READ_FILE_DEBUG
                       printf("> speed: %i\n",mark_speed);
                     #endif	
@@ -336,10 +339,10 @@ void LaosMotion::write(int i)
             else if ( step > 2 )// copy data
             {
               bitmap[ (step-3) % BITMAP_SIZE ] = i;
-			  // printf("[%ld] = %ld\n", (step-3) % BITMAP_SIZE, i);
-			  if ( step-2 == bitmap_size ) // last dword received
+              // printf("[%ld] = %ld\n", (step-3) % BITMAP_SIZE, i);
+              if ( step-2 == bitmap_size ) // last dword received
               {
-			  	bitmap[ (step-2) % BITMAP_SIZE ] = 0;
+                bitmap[ (step-2) % BITMAP_SIZE ] = 0;
                 step = 0;
                 // printf("Bitmap: received %d dwords\n\r", bitmap_size);
               }
@@ -350,7 +353,7 @@ void LaosMotion::write(int i)
             break;
     }
     if ( step )
-	  step++;
+      step++;
   }
 }
 
