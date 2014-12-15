@@ -6,7 +6,7 @@
 ; Save on MBED in the root, as "config.txt"
 ;
 net.ip 192.168.123.111      ; IP address [xxx.xxx.xxx.xxx]
-net.netmask 255.255.255.0   ; netmask [xxx.xxx.xxx.xxx]
+net.mask 255.255.255.0   	; netmask [xxx.xxx.xxx.xxx]
 net.gateway 192.168.123.254 ; gateway
 net.dns 192.168.123.194     ; DNS server
 net.dhcp 0                  ; Enable DHCP for IP address [0/1]
