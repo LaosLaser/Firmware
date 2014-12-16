@@ -145,8 +145,8 @@ GlobalConfig::GlobalConfig(const std::string& filename)
     cfg.Value("e.min", &emin, 0); 
         
     // motion settings: enable output state    
-    cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [mm/sec]
-    cfg.Value("motion.zhomespeed", &zhomespeed, 10); // z-axis speed during homing [mm/sec]
+    cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [usec/step]
+    cfg.Value("motion.zhomespeed", &zhomespeed, 10); // z-axis speed during homing [usec/step]
     cfg.Value("motion.speed", &speed, 100);   // max speed [mm/sec]
     cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2]
     cfg.Value("motion.enable", &enable, 0); // enable output polarity [0/1]

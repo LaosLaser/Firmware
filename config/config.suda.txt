@@ -26,7 +26,7 @@ laser.pwm.max  0		; maximum pwm value [%]
 laser.pwm.freq 1000		; pwm frequency [Hz]
 
 motion.enable  0		; Enable signal state to enable motors [0/1] 
-motion.homespeed  100		; Homing speed [mm/sec]
+motion.homespeed  100		; Homing speed [usec/step]
 motion.speed  400		; max linear speed [mm/sec]
 motion.accel  800		; linear acceleration [mm/sec2]
 motion.tolerance  50		; tolerance [1/1000 units]
