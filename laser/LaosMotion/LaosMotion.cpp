@@ -75,6 +75,7 @@ LaosMotion::LaosMotion()
   xhome.mode(PullUp);
   yhome.mode(PullUp);
   isHome = false;
+    setOriginAbsolute(0,0,0);
   plan_init();
   st_init();
   reset();
@@ -103,6 +104,7 @@ LaosMotion::LaosMotion()
       printf("%d PONG...\n", t.read_ms());
     if ( i > 1 || i<0) i = 0;
     plan_buffer_line (&act[i]);
+    UpdatePlannedCoordinates(&action);
     led1 = 0;
   }
 #endif
@@ -130,7 +132,9 @@ void LaosMotion::reset()
     printf("LaosMotion::reset()\n");
   #endif
   xstep = xdir = ystep = ydir = zstep = zdir = step = command = 0;
-  ofsx = ofsy = ofsz = 0;
+  m_PlannedXAbsolute = 0;
+  m_PlannedYAbsolute = 0;
+  m_PlannedZAbsolute = 0;
   *laser = LASEROFF;
   enable = cfg->enable;
   cover.mode(PullUp);
@@ -163,31 +167,49 @@ int LaosMotion::queue()
 /**
 *** MoveTo()
 **/
-void LaosMotion::moveTo(int x, int y, int z)
+void LaosMotion::moveToRelativeToOrigin(int x, int y, int z, int speed, int power)
 {
-   extern GlobalConfig *cfg;
-   action.target.x = ofsx + x/1000.0;
-   action.target.y = ofsy + y/1000.0;
-   action.target.z = ofsz + z/1000.0;
-   action.ActionType = AT_MOVE;
-   action.target.feed_rate =  60.0 * cfg->speed;
-   plan_buffer_line(&action);
-   //printf("To buffer: %d, %d, %d\n", x, y, z);
+  moveToAbsolute(x-ofsx, y-ofsy, z-ofsz, speed, power);
 }
 
-/**
-*** MoveTo() width specific speed (%)
-**/
-void LaosMotion::moveTo(int x, int y, int z, int speed)
+void LaosMotion::moveToAbsolute(int x, int y, int z, int speed, int power)
 {
-   extern GlobalConfig *cfg;
-   action.target.x = ofsx + x/1000.0;
-   action.target.y = ofsy + y/1000.0;
-   action.target.z = ofsz + z/1000.0;
-   action.ActionType = AT_MOVE;
-   action.target.feed_rate =  (speed * 60.0 * cfg->speed) / 100;
-   plan_buffer_line(&action);
+  extern GlobalConfig *cfg;
+  int feedrate = (speed * 60.0 * cfg->speed) / 100;
+  moveToAbsoluteWithAbsoluteFeedrate(x, y, z, feedrate, power, AT_MOVE);
+}
+
+void LaosMotion::moveToRelativeToOriginWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype)
+{
+  moveToAbsoluteWithAbsoluteFeedrate(x-ofsx, y-ofsy, z-ofsz, feedrate, power, actiontype);
+}
+
+void LaosMotion::moveToAbsoluteWithAbsoluteFeedrate(int x, int y, int z, int feedrate, int power, eActionType actiontype)
+{
+  extern GlobalConfig *cfg;
+  if(x < cfg->xmin) x=cfg->xmin;
+  if(y < cfg->ymin) y=cfg->ymin;
+  if(z < cfg->zmin) z=cfg->zmin;
+  if(x > cfg->xmax) x=cfg->xmax;
+  if(y > cfg->ymax) y=cfg->ymax;
+  if(z > cfg->zmax) z=cfg->zmax;
+  tActionRequest action;
+  action.target.x = x/1000.0;
+  action.target.y = y/1000.0;
+  action.target.z = z/1000.0;
+  action.ActionType = actiontype;
+  action.target.feed_rate =  feedrate;
+  action.param = power;
+  plan_buffer_line(&action);
+  UpdatePlannedCoordinates(&action);
    //printf("To buffer: %d, %d, %d, %d\n", x, y,z,speed);
+}
+
+void LaosMotion::UpdatePlannedCoordinates(const tActionRequest *action)
+{
+  m_PlannedXAbsolute = action->target.x * 1000.0;
+  m_PlannedYAbsolute = action->target.y * 1000.0;
+  m_PlannedZAbsolute = action->target.z * 1000.0;
 }
 
 /**
@@ -221,10 +243,10 @@ void LaosMotion::write(int i)
             switch ( step )
             {
               case 1:
-                action.target.x = i/1000.0;
+                action.target.x = (i-ofsx)/1000.0;
                 break;
               case 2:
-                action.target.y = i/1000.0;;
+                action.target.y = (i-ofsy)/1000.0;;
                 step=0;
                 action.target.z = 0;
                 action.param = power;
@@ -248,12 +270,13 @@ void LaosMotion::write(int i)
                   while ( queue() );// printf("-"); // wait for queue to empty
                   plan_set_accel(cfg->xaccel);
                   plan_buffer_line(&action);
+                  UpdatePlannedCoordinates(&action);
                   while ( queue() ); // printf("*"); // wait for queue to empty
                   plan_set_accel(cfg->accel);
                 }
                 else
                   plan_buffer_line(&action);
-
+                  UpdatePlannedCoordinates(&action);
                 break;
             }
             break;
@@ -267,6 +290,7 @@ void LaosMotion::write(int i)
                 action.ActionType =  AT_MOVE;
                 action.target.feed_rate =  60.0 * cfg->speed;
                 plan_buffer_line(&action);
+                UpdatePlannedCoordinates(&action);
                 break;
             }
             break;
@@ -281,7 +305,7 @@ void LaosMotion::write(int i)
                 break;
               case 3:
                 z = i;
-                setPosition(x,y,z);
+                setPositionRelativeToOrigin(x,y,z);
                 step=0;
                 break;
             }
@@ -307,13 +331,13 @@ void LaosMotion::write(int i)
                     bitmap_speed = val * cfg->xspeed / 10000;
                     #ifdef READ_FILE_DEBUG
                       printf("> speed: %i\n",mark_speed);
-                    #endif	
+                    #endif  
                     break;
                   case 101:
                     power = val;
                     #ifdef READ_FILE_DEBUG
                       printf("> power: %i\n",power);
-                    #endif	
+                    #endif  
                     break;
                 }
                 break;
@@ -366,21 +390,44 @@ bool LaosMotion::isStart()
   return cover;
 }
 
-
 /**
-*** Hard set the absolute position
+*** Hard set the position
 *** Warning: only call when the motion is not busy!
+*** current offset is taken into account
 **/
-void LaosMotion::setPosition(int x, int y, int z)
+void LaosMotion::setPositionRelativeToOrigin(int x, int y, int z)
 {
-  plan_set_current_position_xyz(x/1000.0,y/1000.0,z/1000.0);
-  ofsx = ofsy = ofsz = 0;
+  setPositionAbsolute(x-ofsx, y-ofsy, z-ofsz);
 }
 
 /**
-*** get the absolute position
+*** Hard set the position
+*** Warning: only call when the motion is not busy!
 **/
-void LaosMotion::getPosition(int *x, int *y, int *z)
+void LaosMotion::setPositionAbsolute(int x, int y, int z)
+{
+  m_PlannedXAbsolute = x;
+  m_PlannedYAbsolute = y;
+  m_PlannedZAbsolute = z;
+  plan_set_current_position_xyz(x/1000.0,y/1000.0,z/1000.0);
+}
+
+/**
+*** get the position
+*** The result is offset by the current offset location
+**/
+void LaosMotion::getCurrentPositionRelativeToOrigin(int *x, int *y, int *z)
+{
+  getCurrentPositionAbsolute(x, y, z);
+  *x += ofsx;
+  *y += ofsy;
+  *z += ofsz;
+}
+
+/**
+*** get the actual position
+**/
+void LaosMotion::getCurrentPositionAbsolute(int *x, int *y, int *z)
 {
   float xx,yy,zz;
   plan_get_current_position_xyz(&xx, &yy, &zz);
@@ -389,20 +436,56 @@ void LaosMotion::getPosition(int *x, int *y, int *z)
   *z = zz * 1000;
 }
 
+void LaosMotion::getPlannedPositionRelativeToOrigin(int *x, int *y, int *z)
+{
+  getPlannedPositionAbsolute(x, y, z);
+  *x += ofsx;
+  *y += ofsy;
+  *z += ofsz;  
+}
 
+void LaosMotion::getPlannedPositionAbsolute(int *x, int *y, int *z)
+{
+  *x = m_PlannedXAbsolute;
+  *y = m_PlannedYAbsolute;
+  *z = m_PlannedZAbsolute;
+}
+
+void LaosMotion::getLimitsRelative(int *minx, int *miny, int *minz, int *maxx, int *maxy, int *maxz)
+{
+  extern GlobalConfig *cfg;
+  *minx=cfg->xmin + ofsx;
+  *miny=cfg->ymin + ofsy;
+  *minz=cfg->zmin + ofsz;
+  *maxx=cfg->xmax + ofsx;
+  *maxy=cfg->ymax + ofsy;
+  *maxz=cfg->zmax + ofsz;
+}
 
 /**
 *** set the origin to this absolute position
 *** set to (0,0,0) to reset the orgin back to its original position.
 *** Note: Make sure you only call this at stand-still (motion queue is empty), otherwise strange things may happen
 **/
-void LaosMotion::setOrigin(int x, int y, int z)
+void LaosMotion::setOriginAbsolute(int x, int y, int z)
 {
-  ofsx = x;
-  ofsy = y;
-  ofsz = z;
+  ofsx = -x;
+  ofsy = -y;
+  ofsz = -z;
 }
 
+/* 
+  Make current position the origin. 'origin' is defined here as the top left corner (0,0) in Visicut
+  Since LAOS has the y coordinate 0 at the bottom of the bed, we need to offset by the bed height.
+*/
+void LaosMotion::MakeCurrentPositionOrigin()
+{
+  extern GlobalConfig *cfg;
+  int x,y,z;
+  getCurrentPositionAbsolute(&x, &y, &z);
+  y -= cfg->BedHeight();
+  setOriginAbsolute(x, y, z);
+}
 
 
 
@@ -443,8 +526,9 @@ void LaosMotion::home(int x, int y, int z)
     led4 = ((i++) & 0x10000);
     if ( !(xhome ^ cfg->xpol) && !(yhome ^ cfg->ypol) )
     {
-      setPosition(x,y,z);
-      moveTo(x,y,z);
+      setOriginAbsolute(0, 0, 0); // reset origin
+      setPositionAbsolute(x,y,z);
+      moveToAbsolute(x,y,z);
       isHome = true;
       printf("Home done.\n\r");
       return;

@@ -591,10 +591,11 @@ void plan_buffer_line (tActionRequest *pAction)
   // now that the options are set: make this a MOVE action.
   pAction->ActionType = AT_MOVE;
   
-  // Move buffer head
-  block_buffer_head = next_buffer_head;     
   // Update position
   memcpy(position, target, sizeof(target)); // position[] = target[]
+
+  // Move buffer head
+  block_buffer_head = next_buffer_head;     
 
   startpoint = pAction->target;
   
@@ -729,8 +730,11 @@ uint8_t plan_queue_items(void)
 {
  // BLOCK_BUFFER_SIZE;
   int len =  block_buffer_head - block_buffer_tail;
-  if ( len < 0 ) len = -len;
+  //if ( len < 0 ) len = -len;
+  if(len < 0)
+  {
+    len += BLOCK_BUFFER_SIZE;
+  }
   return len;
 }
-
 

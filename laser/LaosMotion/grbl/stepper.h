@@ -114,4 +114,9 @@ void st_wake_up();
 // leave exhaust running after job completes.
 void exhaust_off();
 
+void st_debug_block(const block_t *block);
+
+void st_debug();
+
+
 #endif

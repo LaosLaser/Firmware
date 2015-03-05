@@ -32,7 +32,7 @@
  *
  * Program functions:
  * 1) Read config file
- * 2) Enable TCP/IP stack (Fixed ip or DHCP)
+ * 2) enable TCP/IP stack (Fixed ip or DHCP)
  * 3) Instantiate tcp/ip port and accept connections
  * 4) Show menus, peform user actions
  * 5) Controll laser
@@ -133,7 +133,7 @@ int main()
   srv = new TFTPServer(cfg->port);
   mnu->SetScreen("SERVER OK...."); 
   wait(0.5);
-  mnu->SetScreen(9); // IP
+  mnu->SetScreen(10); // IP
   wait(1.0);
   
   printf("RUN...\n");
@@ -208,7 +208,7 @@ void main_nodisplay() {
        // done
        printf("DONE!...\n");
 	   while (!mot->ready() );
-       mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+       mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
     }
   }
 }

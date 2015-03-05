@@ -32,6 +32,8 @@
 #include "laosfilesystem.h"
 #include "global.h"
 #include "LaosMotion.h"
+#include "LaosExtent.h"
+
 extern "C" void mbed_reset();
 
     /** Menu system
@@ -61,6 +63,8 @@ public:
   void SetScreen(const std::string& msg);
   void SetFileName(char * name);
   bool Cancel();
+  
+private:
 
 private:
   // LaosDisplay *display;
@@ -75,10 +79,16 @@ private:
   unsigned char menu, ipfield, iofield;
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;
-  int x,y,z;
-  int xoff, yoff, zoff;
+  // int x,y,z;
+  // int xoff, yoff, zoff;
   FILE *runfile;
-  
+  LaosExtent m_Extent; // extent calculator
+  int m_StageAfterAnalyzing;
+  int m_SubStage;
+  int m_PrevKey;
+  bool m_MoveWaitTillQueueEmpty;
+  int m_LaserTestPower; // in percent
+  int m_LaserTestTime; // in ms
 };
 
  

@@ -33,6 +33,11 @@ void IpParse(char *a, int i[]);
 class GlobalConfig
 {
 public:
+  enum {VERYLARGE = 0x7fffffff, MINUSVERYLARGE = 0x80000000};
+
+  GlobalConfig(const std::string& filename);
+  int BedHeight() const;
+
   IPAddress ip, gw, nm, dns;
   int port, dhcp;  // network settings
   int enable; // enable state (1 or 0)
@@ -60,7 +65,6 @@ public:
   int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
   int exhaust, exhaust_offdelay; // How long to continue powering air 
 	// nozzle/exhaust after job has ended (seconds).
-  GlobalConfig(const std::string& filename);
 };
 
 #ifndef __GIT_HASH
