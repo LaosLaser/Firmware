@@ -24,6 +24,7 @@ echo 'GCC_ARM_PATH = "home/usr/gcc-arm-none-eabi-4_8-2014q1/bin/"' > workspace_t
 ```
 python workspace_tools/build.py -m LPC1768 -t GCC_ARM -r -e -u -c
 ```
+You might need to install the python-colorama package for this to work.
 ### Link LaOSlaser as an mbed example project
 ```
 cd libraries/tests/net/protocols/
