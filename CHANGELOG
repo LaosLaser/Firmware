@@ -8,7 +8,7 @@ Changelog for LaOS project, inspired on: http://keepachangelog.com
 - updated mbed.patch to match new mbed subrepository
 - updated mbed subrepository to latest version
 
-## 2015-02-23 (laoslaser-2015-02-23.bin)
+## 2015-02-23 (laoslaser-2015-02-23.bin / laoslaser-23-02-2015.bin)
 Also see: 
 http://redmine.laoslaser.org/boards/3/topics/765
 https://github.com/LaosLaser/Firmware/pull/42
@@ -20,7 +20,7 @@ https://github.com/LaosLaser/Firmware/pull/42
 ### Fixed
 - Incorrect path for netmask (issue #44)
 
-## 2014-11-14 (laoslaser-14-11-2014.bin)
+## 2014-11-14 (laoslaser-2014-11-14.bin / laoslaser-14-11-2014.bin)
 ### Fixed
 - Engrave speed setting (see: http://redmine.laoslaser.org/boards/3/topics/841?r=847)
 - Cancel button (see: http://redmine.laoslaser.org/boards/3/topics/833) 
