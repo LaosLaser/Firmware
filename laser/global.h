@@ -64,6 +64,7 @@ public:
   int escale; // steps per meter
   int lenable, lon, pwmmin, pwmmax, pwmfreq; // laser enable, laser on and pwm min/max [%] and frequency [Hz];
   int exhaust, exhaust_offdelay; // How long to continue powering air 
+  int dir_us, pulse_us; // extra wait time for longer pulse/dir
 	// nozzle/exhaust after job has ended (seconds).
 };
 

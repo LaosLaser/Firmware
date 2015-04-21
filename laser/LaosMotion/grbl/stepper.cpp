@@ -41,7 +41,6 @@
 #include "config.h"
 #include "planner.h"
 
-
 #define TICKS_PER_MICROSECOND (1) // Ticker uses 1usec units
 // #define CYCLES_PER_ACCELERATION_TICK ((TICKS_PER_MICROSECOND*1000000)/ACCELERATION_TICKS_PER_SECOND)
 #define STEP_TIMER_FREQ 1000000 // 1 MHz
@@ -143,10 +142,13 @@ void st_init(void)
 // output the direction bits to the appropriate output pins
 static inline void  set_direction_pins (void)
 {
+  extern GlobalConfig *cfg;
   xdir = ( (direction_bits & (1<<X_DIRECTION_BIT))? 0 : 1 );
   ydir = ( (direction_bits & (1<<Y_DIRECTION_BIT))? 0 : 1 );
   zdir = ( (direction_bits & (1<<Z_DIRECTION_BIT))? 0 : 1 );
   // edir = ( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);
+  if (cfg->dir_us)
+  	wait_us(cfg->dir_us);
 }
 
 // output the step bits on the appropriate output pins
@@ -300,6 +302,7 @@ static inline void set_step_timer (uint32_t cycles)
 // The bresenham line tracer algorithm controls all three stepper outputs simultaneously with these two interrupts.
 static  void st_interrupt (void)
 {
+  extern GlobalConfig *cfg;
   // TODO: Check if the busy-flag can be eliminated by just disabeling this interrupt while we are in it
 
   if(busy){ /*printf("busy!\n"); */ return; } // The busy-flag is used to avoid reentering this interrupt
@@ -391,6 +394,8 @@ static  void st_interrupt (void)
       }
 
       //clear_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
+      if (cfg->pulse_us) 
+	  	wait_us(cfg->pulse_us);
       step_events_completed++; // Iterate step events
 
       // This is a homing block, keep moving until all end-stops are triggered

@@ -3,6 +3,11 @@ Changelog for LaOS project, inspired on: http://keepachangelog.com
 
 ## Unreleased
 
+## 2015-04-20 (no binary release)
+- added optional wait_us() in stepper.cpp to support slower
+  stepper drivers that need a longer pulse and earlier dir signal. 
+  Activate by defining dir_us and pulse_us in config.txt
+
 ## 2015-03-18 (laoslaser-2015-03-18.bin)
 - added python-colorama to README
 - updated mbed.patch to match new mbed subrepository

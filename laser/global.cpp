@@ -151,6 +151,9 @@ GlobalConfig::GlobalConfig(const std::string& filename)
     cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2]
     cfg.Value("motion.enable", &enable, 0); // enable output polarity [0/1]
     cfg.Value("motion.tolerance", &tolerance, 50); // cornering tolerance [1/1000 units]
+
+ 	cfg.Value("dir_us", &dir_us, 0);
+	cfg.Value("pulse_us", &pulse_us, 0);
 }
 
 // get the configured bed height (y.max - y.min), or 0 if undefined
