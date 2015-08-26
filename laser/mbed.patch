@@ -1,7 +1,6 @@
-diff -urN mbed.orig/workspace_tools/tests.py mbed/workspace_tools/tests.py
---- mbed.orig/workspace_tools/tests.py	2015-03-18 10:02:30.241958595 +0100
-+++ mbed/workspace_tools/tests.py	2015-03-18 10:17:39.805942307 +0100
-@@ -819,6 +819,16 @@
+--- mbed.orig/workspace_tools/tests.py	2015-08-26 10:22:23.008076066 +0200
++++ mbed/workspace_tools/tests.py	2015-08-26 10:02:57.882666305 +0200
+@@ -819,6 +819,21 @@
          "host_test": "udp_link_layer_auto",
          "peripherals": ["ethernet"],
      },
@@ -13,6 +12,11 @@ diff -urN mbed.orig/workspace_tools/tests.py mbed/workspace_tools/tests.py
 +    {
 +        "id": "laser", "description": "LaosLaser",
 +        "source_dir": join(TEST_DIR, "net", "protocols", "laser"),
++        "dependencies": [MBED_LIBRARIES, RTOS_LIBRARIES, ETH_LIBRARY], #,  SD_FS, FAT_FS],
++    },
++    {
++        "id": "iotest", "description": "LaosLaser IOtest",
++        "source_dir": join(TEST_DIR, "net", "protocols", "iotest"),
 +        "dependencies": [MBED_LIBRARIES, RTOS_LIBRARIES, ETH_LIBRARY], #,  SD_FS, FAT_FS],
 +    },
  

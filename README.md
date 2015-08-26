@@ -35,4 +35,16 @@ cd ../../../..
 ```
 python workspace_tools/make.py -m LPC1768 -t GCC_ARM -n laser
 ```
+### Link IOtest as an mbed exmaple project
+```
+cd libraries/tests/net/protocols/
+ln -s ../../../../../iotest_board/ iotest
+cd ../../../..
+```
+
+### Build IOtest:
+```
+python workspace_tools/make.py -m LPC1768 -t GCC_ARM -n iotest
+```
+
 ### Read http://mbed.org/handbook/mbed-tools for more info
