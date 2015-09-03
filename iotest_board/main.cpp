@@ -261,19 +261,19 @@ int main()
       case '\r': break;
       default: printf(help); break;
     }
-    //i2c.read(_I2C_ADDRESS,&key, 1);
+    i2c.read(_I2C_ADDRESS,&key, 1);
     if (key != 0) {
         char s[48];
         printf("I2C key read: %c\n\r", key);
         sprintf(s," Key read: %c", key);
         s[0] = 0xFF;
-        //i2c.write(_I2C_ADDRESS, s, strlen(s));
+        i2c.write(_I2C_ADDRESS, s, strlen(s));
         wait(0.2);
         if (key == '7') {
             wait(1);
-            //i2c.write(_I2C_ADDRESS, iline, 17);
+            i2c.write(_I2C_ADDRESS, iline, 17);
         }
-        //i2c.read(_I2C_ADDRESS, s, 48);
+        i2c.read(_I2C_ADDRESS, s, 48);
         key=0;
     }
     if ( test ) 
