@@ -1,5 +1,5 @@
-/* mbed SDFileSystem Library, for providing file access to SD cards
- * Copyright (c) 2008-2010, sford
+/* mbed Microcontroller Library
+ * Copyright (c) 2006-2012 ARM Limited
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -16,15 +16,15 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-
 #ifndef MBED_SDFILESYSTEM_H
 #define MBED_SDFILESYSTEM_H
 
 #include "mbed.h"
 #include "FATFileSystem.h"
+#include <stdint.h>
 
 /** Access the filesystem on an SD Card using SPI
  *
@@ -53,11 +53,11 @@ public:
      */
     SDFileSystem(PinName mosi, PinName miso, PinName sclk, PinName cs, const char* name);
     virtual int disk_initialize();
-    virtual int disk_write(const char *buffer, int block_number);
-    virtual int disk_read(char *buffer, int block_number);    
     virtual int disk_status();
+    virtual int disk_read(uint8_t * buffer, uint64_t block_number);
+    virtual int disk_write(const uint8_t * buffer, uint64_t block_number);
     virtual int disk_sync();
-    virtual int disk_sectors();
+    virtual uint64_t disk_sectors();
 
 protected:
 
@@ -69,13 +69,14 @@ protected:
     int initialise_card_v1();
     int initialise_card_v2();
     
-    int _read(char *buffer, int length);
-    int _write(const char *buffer, int length);
-    int _sd_sectors();
-    int _sectors;
+    int _read(uint8_t * buffer, uint32_t length);
+    int _write(const uint8_t *buffer, uint32_t length);
+    uint64_t _sd_sectors();
+    uint64_t _sectors;
     
     SPI _spi;
-    DigitalOut _cs;     
+    DigitalOut _cs;
+    int cdv;
 };
 
 #endif
