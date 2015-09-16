@@ -1,7 +1,7 @@
 /*
  * main.cpp
  *
- * Copyright (c) 2011 Peter Brier
+ * Copyright (c) 2011-2015 Peter Brier & Jaap Vermaas
  *
  *   This file is part of the LaOS project (see: http://laoslaser.org)
  *
@@ -18,7 +18,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with LaOS.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This program tests the inputs and outputs of the laoslaser v1 board
+ * This program tests the inputs and outputs of the laoslaser board
  * LED1 = xhome
  * LED2 = yhome
  * LED3 = zmin
@@ -27,12 +27,16 @@
  */
 #include "mbed.h"
 #include "SDFileSystem.h"
+#include "EthernetInterface.h"
 
 // USB Serial
 Serial pc(USBTX, USBRX); // tx, rx
 
 // SD card
 SDFileSystem sd(p11, p12, p13, p14, "sd");
+
+// Ethernet
+EthernetInterface eth;
 
 // Analog in/out (cover sensor) + NC
 DigitalIn cover(p19);
@@ -42,7 +46,7 @@ I2C i2c(p9, p10);        // sda, scl
 #define _I2C_ADDRESS 0x04
 #define _I2C_HOME 0xFE
 #define _I2C_CLS 0xFF
-#define _I2C_BAUD 10000
+#define _I2C_BAUD 9600
 
 // status leds
 DigitalOut led1(LED1);
@@ -56,7 +60,6 @@ DigitalIn yhome(p17);
 DigitalIn zmin(p15);
 DigitalIn zmax(p16);
 
-
 // motors
 DigitalOut enable(p7);
 DigitalOut xdir(p23);
@@ -66,16 +69,14 @@ DigitalOut ystep(p26);
 DigitalOut zdir(p27);
 DigitalOut zstep(p28);
 
-// laser
-DigitalOut o1(p22);
-DigitalOut o2(p21);
-DigitalOut o3(p6);
-DigitalOut o4(p5);
-
+// laser & exhaust outputs
+DigitalOut laser_pwm(p22);
+DigitalOut laser_enable(p21);
+DigitalOut exhaust_enable(p6);
+DigitalOut laser_on(p5);
 
 // CAN bus
 CAN can(p30, p29);
-
 
 void home()
 {
@@ -108,15 +109,22 @@ void home()
 **/
 int main() 
 {
+  // enable serial communication
+  pc.baud(115200);
+
+  // enable I2C display communcation
+  i2c.frequency(_I2C_BAUD);
+
+  // test networking 
+  eth.init();
+  eth.connect();
+  printf("IP Address is: %s\n\r", eth.getIPAddress());
+
   FILE *test1=NULL, *test2=NULL;
   led1 = led2 = led3 = led4 = 1;
   Timer t;
   DigitalOut *io = NULL;
   CANMessage msg;
-
-  i2c.frequency(_I2C_BAUD);
-  pc.baud(115200);
-  //pc.baud(9600);
 
   xhome.mode(PullUp);
   yhome.mode(PullUp);
@@ -131,7 +139,7 @@ int main()
    "xX: X Step/Dir\t"
    "yY: Y Step/Dir\t"
    "zZ: Z Step/Dir\t"
-   "tT: Ext Step/Dir (o1/o2)\n\r"
+   "tT: Ext Step/Dir (laser_pwm/laser_enable)\n\r"
    "e: Toggle Stepper enable\n\r"
    "c: Can bus test\n\r"
    "sS: SD-Card test (s=test file, S=speed test)\n\r"
@@ -167,12 +175,12 @@ int main()
       TEST('y',ystep);
       TEST('Z',zdir);
       TEST('z',zstep);
-      TEST('t',o2);
-      TEST('T',o1);
-      TEST('1',o1);
-      TEST('2',o2);
-      TEST('3',o3);
-      TEST('4',o4);
+      TEST('t',laser_enable);
+      TEST('T',laser_pwm);
+      TEST('1',laser_pwm);
+      TEST('2',laser_enable);
+      TEST('3',exhaust_enable);
+      TEST('4',laser_on);
       case 'h': 
         home(); 
         break;
