@@ -125,7 +125,7 @@ void st_init(void)
    (cfg->yinv ? (1<<Y_STEP_BIT) : 0) |
    (cfg->zinv ? (1<<Z_STEP_BIT) : 0) |
    (cfg->einv ? (1<<E_STEP_BIT) : 0);
- 
+
   printf("Direction: %lu\n", direction_inv);
   pwmofs = to_fixed(cfg->pwmmin) / 100; // offset (0 .. 1.0)
   if ( cfg->pwmmin == cfg->pwmmax )
@@ -190,11 +190,13 @@ int hit_home_stop_z(int axis)
 // Start stepper again from idle state, starts the step timer at a default rate
 void st_wake_up()
 {
+  extern GlobalConfig *cfg;
   if ( ! running )
   {
     running = 1;
     s_CurrentTimerPeriod = 0; // force an update in set_step_timer
     set_step_timer(2000);
+    laser_enable = cfg->lenable;
     exhaust = 1; // turn air assist/exhaust on
     exhaust_timer.detach(); // cancel any pending timer
   //  printf("wake_up()..\n");
@@ -211,7 +213,8 @@ static void st_go_idle()
   clear_all_step_pins();
   *laser = LASEROFF;
   pwm = cfg->pwmmax / 100.0;  // set pwm to max;
-  exhaust_timer.attach(&exhaust_off, cfg->exhaust_offdelay); 
+  laser_enable = !cfg->lenable; // disable the laser
+  exhaust_timer.attach(&exhaust_off, cfg->exhaust_offdelay);
 	// when job completes turn off air assist/exhaust after
 //  printf("idle()..\n");
 }
@@ -394,7 +397,7 @@ static  void st_interrupt (void)
       }
 
       //clear_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
-      if (cfg->pulse_us) 
+      if (cfg->pulse_us)
 	  	wait_us(cfg->pulse_us);
       step_events_completed++; // Iterate step events
 
@@ -499,7 +502,7 @@ void st_debug_block(const block_t *block)
 // print debugging data for the state of the stepper
 void st_debug()
 {
-  printf("running: %d, step_events_completed: %lu, c: %f, c_min: %f, n: %d, decel_n: %d, ramp: %d\n",
+  printf("running: %d, step_events_completed: %lu, c: %f, c_min: %f, n: %ld, decel_n: %ld, ramp: %d\n",
     running, step_events_completed, to_double(c), to_double(c_min), n, decel_n, (int)ramp);
   const block_t *blk=current_block;
   if(blk)
@@ -511,5 +514,3 @@ void st_debug()
     printf("No current block\n");
   }
 }
-
-
