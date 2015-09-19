@@ -190,6 +190,7 @@ int hit_home_stop_z(int axis)
 // Start stepper again from idle state, starts the step timer at a default rate
 void st_wake_up()
 {
+  extern GlobalConfig *cfg;
   if ( ! running )
   {
     running = 1;
@@ -396,7 +397,7 @@ static  void st_interrupt (void)
       }
 
       //clear_step_pins (); // clear the pins, assume that we spend enough CPU cycles in the previous statements for the steppers to react (>1usec)
-      if (cfg->pulse_us) 
+      if (cfg->pulse_us)
 	  	wait_us(cfg->pulse_us);
       step_events_completed++; // Iterate step events
 
@@ -513,5 +514,3 @@ void st_debug()
     printf("No current block\n");
   }
 }
-
-
