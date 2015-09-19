@@ -527,10 +527,13 @@ void LaosMenu::Handle() {
                                 #endif
                             while ((!feof(runfile)) && mot->ready()) {
                                 mot->write(readint(runfile));
-                                if(dsp->read_nb() == K_CANCEL) {
-                                   while (mot->queue());
-                                   mot->reset();
-                                   fseek(runfile, 0, SEEK_END);
+                                if(cfg->disablecancelcheck == false)
+                                {
+                                    if(dsp->read_nb() == K_CANCEL) {
+                                       while (mot->queue());
+                                       mot->reset();
+                                       fseek(runfile, 0, SEEK_END);
+                                    }
                                 }
                             }
                             #ifdef READ_FILE_DEBUG
