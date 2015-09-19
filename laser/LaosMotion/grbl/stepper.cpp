@@ -502,7 +502,7 @@ void st_debug_block(const block_t *block)
 // print debugging data for the state of the stepper
 void st_debug()
 {
-  printf("running: %d, step_events_completed: %lu, c: %f, c_min: %f, n: %d, decel_n: %d, ramp: %d\n",
+  printf("running: %d, step_events_completed: %lu, c: %f, c_min: %f, n: %ld, decel_n: %ld, ramp: %d\n",
     running, step_events_completed, to_double(c), to_double(c_min), n, decel_n, (int)ramp);
   const block_t *blk=current_block;
   if(blk)
