@@ -1,4 +1,4 @@
-/*
+*
  * LaosMenu.cpp
  * Menu structure and user interface. Uses LaosDisplay
  *
@@ -25,19 +25,20 @@
 #include "pins.h"
 
 static const char *menus[] = {
-    "STARTUP",     //0
-    "MAIN",        //1
-    "START JOB",   //2
-    "BOUNDARIES", //3
-    "DELETE JOB",  //4
-    "HOME",        //5
-    "MOVE",        //6
-    "FOCUS",       //7
-    "ORIGIN",      //8
+    "STARTUP",         //0
+    "MAIN",            //1
+    "START JOB",       //2
+    "BOUNDARIES",      //3
+    "DELETE JOB",      //4
+    "HOME",            //5
+    "MOVE",            //6
+    "FOCUS",           //7
+    "ORIGIN",          //8
     "REMOVE ALL JOBS", //9
-    "IP",          //10
-    "REBOOT", //11
-    "LASER TEST", //12
+    "IP",              //10
+    "REBOOT",          //11
+    "AUTOFOCUS",      //12
+ 
     // "POWER / SPEED",//12
     // "IO", //13
 };
@@ -93,20 +94,20 @@ static const char *screens[] = {
     "REBOOTING...    "
     "Please wait...  ",
 
-#define LASERTEST (REBOOT+1)
-    "LASER TEST:     "
-    "210ms 210%      ",
-
-#define POWER (LASERTEST+1)
-    "$$$$$$$: 6543210"
+#define AUTOFOCUS (REBOOT+1)
+    "AUTOFOCUS?      "
     "      [ok]      ",
 
-#define IO (POWER+1)
-    "$$$$$$$$$$$=0 IO"
-    "      [ok]      ",
+//#define POWER (LASERTEST+1)
+//    "$$$$$$$: 6543210"
+//    "      [ok]      ",
+
+//#define IO (POWER+1)
+//    "$$$$$$$$$$$=0 IO"
+//    "      [ok]      ",
 
 // Intermediate screens
-#define DELETE_OK (IO+1)
+#define DELETE_OK (AUTOFOCUS+1)
     "DELETE 10?      "
     "      [ok]      ",
 
@@ -137,7 +138,10 @@ static const char *screens[] = {
 #define ERROR (CALCULATEDBOUNDARIES+1)
     "ERROR:          "
     "$$$$$$$$$$$$$$$$",
-
+    
+#define DOFOCUS (ERROR+1)
+    "RUNNING FOCUS..."
+    "                ",
 };
 
 
@@ -161,8 +165,8 @@ LaosMenu::LaosMenu(LaosDisplay *display) {
     dsp->cls();
     SetScreen("");
     runfile = NULL;
-    m_LaserTestPower=0;
-    m_LaserTestTime=0;
+//    m_LaserTestPower=0;
+//    m_LaserTestTime=0;
 }
 
 /**
@@ -309,8 +313,8 @@ void LaosMenu::Handle() {
                     int xt = x;
                     int yt= y;
                     switch ( c ) {
-                        case K_DOWN: y-=100*speed; break;
-                        case K_UP: y+=100*speed;  break;
+                        case K_DOWN: y+=100*speed; break;
+                        case K_UP: y-=100*speed;  break;
                         case K_LEFT: x-=100*speed; break;
                         case K_RIGHT: x+=100*speed;  break;
                         case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
@@ -355,7 +359,7 @@ void LaosMenu::Handle() {
                         mot->moveToRelativeToOrigin(x, y, z, speed);
                         printf("Move: %d %d %d %d\n", x,y,z, speed);
                         speed=speed*3;
-                        if(speed > 100) speed=100;
+                        if(speed > 30) speed=30;
                     } else {
                         // if (! mot->ready()) 
                         // printf("Buffer vol\n");
@@ -372,12 +376,14 @@ void LaosMenu::Handle() {
                     mot->getCurrentPositionRelativeToOrigin(&x, &y, &z);
                     int zt = z;
                     switch ( c ) {
-                        case K_FUP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
-                        case K_FDOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
+                        //case K_FUP: z-=cfg->zhomespeed/1E6; if (z<0) z=0; break; //z-=cfg->zspeed*speed
+                        case K_FUP: z-=5000; if (z<cfg->zhome) z=cfg->zhome-5000; break;
+                        //case K_FDOWN: z+=cfg->zhomespeed/1E6; if (z>cfg->zmax) z=cfg->zmax; break; //z+=cfg->zspeed*speed
+                        case K_FDOWN:z+=5000; if (z>cfg->zmax) z=cfg->zmax; break; 
                         case K_LEFT: break;
                         case K_RIGHT: break;
-                        case K_UP: z+=cfg->zspeed*speed; if (z>cfg->zmax) z=cfg->zmax; break;
-                        case K_DOWN: z-=cfg->zspeed*speed; if (z<0) z=0; break;
+                        case K_UP: z-=5000; if (z<cfg->zhome) z=cfg->zhome-5000; break;
+                        case K_DOWN: z+=5000; if (z>cfg->zmax) z=cfg->zmax; break;
                         case K_ORIGIN: screen=ORIGIN; break;
                         case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
                         case 0: break;
@@ -389,7 +395,7 @@ void LaosMenu::Handle() {
                       mot->moveToRelativeToOrigin(x, y, z, speed);
                       printf("Focus: %d %d %d %d\n", x,y,z, speed);
                         speed=speed*3;
-                        if(speed > 100) speed=100;
+                        if(speed > 50) speed=50;
                     }
                     args[0]=z;
                 }
@@ -470,6 +476,12 @@ void LaosMenu::Handle() {
             case REBOOT: // RESET MACHINE
                 mbed_reset();
                 break;
+            case AUTOFOCUS: // Screen after calculating the boundaries of a file
+                switch ( c ) {
+                    case K_OK: screen=DOFOCUS; break;
+                    case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
+                }
+                break;              
 
 /*
             case IO: // IO
@@ -505,7 +517,13 @@ void LaosMenu::Handle() {
                 mot->home(cfg->xhome,cfg->yhome,cfg->zhome);
                 screen=lastscreen;
                 break;
-
+                
+            case DOFOCUS: // DOFOCUS screen
+                while ( !mot->isStart() );
+                mot->focus(cfg->xhome,cfg->yhome,cfg->zhome);
+                screen=lastscreen;
+                break;
+                
             case RUNNING: // Screen while running
                 switch ( c ) {
                     /* case K_CANCEL:
@@ -642,7 +660,7 @@ void LaosMenu::Handle() {
                 }
                 break;
 
-            case LASERTEST: 
+/*          case LASERTEST: 
                 enable = !cfg->enable;
                 switch ( c ) {
                     case K_OK: 
@@ -712,11 +730,11 @@ void LaosMenu::Handle() {
                             m_LaserTestTime=0;
                             waitup = 1;
                         }
-                        break;
+                        
                 }
                 args[0]=m_LaserTestTime;
                 args[1]=m_LaserTestPower;
-                break;
+                break;*/
                 
 
             default:
@@ -734,4 +752,3 @@ void LaosMenu::Handle() {
 void LaosMenu::SetFileName(char * name) {
     strcpy(jobname, name);
 }
-
