@@ -527,6 +527,10 @@ int isFirmware(char *filename) {
         return 0;
 } 
 
+int isConfig(char *filename) {
+	return (0 == strcmp(filename, "config.txt"));
+} 
+
 void installFirmware(char *filename) {
     removeFirmware();
     char buff[512];
@@ -545,7 +549,23 @@ void installFirmware(char *filename) {
     removefile(filename);
 }
 
-void removeFirmware() { // remove old firmware from SD
+void installConfig(char *filename) {
+    char buff[512];
+    extern LaosFileSystem sd;
+    FILE *fp = sd.openfile(filename, "rb");
+    if (fp) {
+        FILE *fp2 = fopen("/local/config.txt", "wb");
+        while (!feof(fp)) {
+            int size = fread(buff, 1, 512, fp);
+            fwrite(buff, 1, size, fp2);
+        }
+        fclose(fp);
+        fclose(fp2);
+	}
+    removefile(filename);
+}
+
+void removeFirmware() { // remove old firmware from MBED
     DIR *d;
     struct dirent *p;
     d = opendir("/local");
@@ -595,6 +615,22 @@ int SDcheckFirmware() {
         }
     } else {
         printf("SDcheckFirmware: Could not open directory!\n\r");
+    }
+    return 0;
+}
+
+int SDcheckConfig() {
+    extern LaosFileSystem sd;
+    DIR *d;
+    struct dirent *p;
+    d = opendir("/sd");
+    if(d != NULL) {
+        while((p = readdir(d)) != NULL) {
+                if (isConfig(p->d_name)) {
+                    installConfig(p->d_name);
+                    return 1;
+                }
+        }
     }
     return 0;
 }

@@ -23,6 +23,7 @@ sys.cover 0				; wait for cover (1=wait, 0=no coverswitch)
 sys.autozhome 0 		; do not home z
 sys.nodisplay 0			; Disable the display [1/0]
 sys.i2cbaud 9600		; I2C display baudrate [Hz]
+sys.cleandir 0			; clean SD on startup? 0=no 1=yes
 
 laser.enable 0			; Laser enable signal polarity [0/1]
 laser.on 0			; Laser on signal polarity [0/1]
@@ -81,3 +82,7 @@ z.invert 1
 
 dir_us 5
 pulse_us 2
+
+; ideas
+; sys.allowupgrade ; disable upgrading firmware via SD/network (for public environments)
+; sys.allowconfig ; disable changing config file via SD/network (for public environments)

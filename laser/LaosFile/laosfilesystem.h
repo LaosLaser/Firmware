@@ -66,9 +66,11 @@ void removefile(char *name);    // example code to remove a file
 int readint(FILE *fp);      // read integers from open file
 void strtolower(char *name);    // change characters to lowercase
 int isFirmware(char *name);     // check if it's firmware
+int isConfig(char *name);     // check if it's firmware
 void installFirmware(char *filename); // put firmware in place
 void removeFirmware(); // remove old firmware
 char* getLaosFile(); // get filename of the first available file on S
 int SDcheckFirmware();  // check for firmware
+int SDcheckConfig();  // check for config.txt on SD
 int isLaosFile(char *filename);   // check extension for LaOS compatibility
 #endif
