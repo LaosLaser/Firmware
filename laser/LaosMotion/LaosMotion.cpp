@@ -387,7 +387,11 @@ void LaosMotion::write(int i)
 **/
 bool LaosMotion::isStart()
 {
-  return cover;
+  extern GlobalConfig *cfg;
+  if (cfg->cover)
+  	return cover;
+  else
+    return true;
 }
 
 /**
