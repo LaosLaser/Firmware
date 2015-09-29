@@ -46,6 +46,7 @@ public:
   int nodisplay; // there is no display 
   int cleandir; // remove files from SD at startup
   int i2cbaud; // i2cBaudrate
+  int cover; // machine has a cover switch
   int disablecancelcheck; // if the check for cancel button should be disabled while a job is running
   int xmax, ymax, zmax, emax; // max values
   int xmin, ymin, zmin, emin; // min values
