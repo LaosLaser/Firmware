@@ -111,9 +111,22 @@ int main()
     removefile(testfile);
   }
   
+  // See if there is a config.txt file on the SD
+  // if so, put it on the MBED
+  if (SDcheckConfig()) {
+    printf("New configfile installed\n\r");
+	mnu->SetScreen("NEWCONFIG");
+	wait(3.0);
+  }
+
   // See if there's a .bin file on the SD
   // if so, put it on the MBED and reboot
-  if (SDcheckFirmware()) mbed_reset();
+  if (SDcheckFirmware()) {
+  	printf("New firmware installed\n\r");
+	mnu->SetScreen("FIRMWARE UPDATE");
+	wait(3.0);
+	mbed_reset();
+  }
   
   mnu->SetScreen(VERSION_STRING);
   printf("START...\n");
