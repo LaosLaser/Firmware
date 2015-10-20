@@ -47,4 +47,16 @@ cd ../../../..
 python workspace_tools/make.py -m LPC1768 -t GCC_ARM -n iotest
 ```
 
+### Attach debugger for step-by-step debugging
+```
+arm-none-eabi-gdb build/test/LPC1768/GCC_ARM/laser/laser.elf --eval-command \
+    'target remote | openocd -c "gdb_port pipe" --file /usr/share/openocd/scripts/interface/cmsis-dap.cfg --file /usr/share/openocd/scripts/target/lpc1768.cfg -cinit -chalt'
+```
+This starts gdb and lets gdb start openocd to connect to the board. It
+seems you can only attach after startup. Normally, you can also use `-c
+'reset halt'` to reset the board and start debugging from the start, but
+since the startup procedure uses "semihost" calls to read config.txt
+from the flash, this generates dozens of `SIGTRAP` interrupts, making
+debugging effectively useless.
+
 ### Read http://mbed.org/handbook/mbed-tools for more info
