@@ -190,6 +190,7 @@ void main_nodisplay() {
   float x, y, z = 0;
   led1=led2=led3=led4=0;
   
+  int xx,yy,zz = 0;
   // main loop  
    while(1) 
   {  
@@ -221,7 +222,8 @@ void main_nodisplay() {
        // done
        printf("DONE!...\n");
 	   while (!mot->ready() );
-       mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
+	   mot->getCurrentPositionAbsolute(&xx,&yy,&zz);
+	   mot->moveToAbsolute(cfg->xrest, cfg->yrest, zz);
     }
   }
 }

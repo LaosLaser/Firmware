@@ -36,6 +36,8 @@ int command=0;
 int mark_speed = 100; // 100 [mm/sec]
 int bitmap_speed = 100; // 100 [mm/sec]
 int power = 10000 ;
+float zZz; // z while lasering
+
 // next planner action to enqueue
 tActionRequest  action;
 
@@ -248,7 +250,7 @@ void LaosMotion::write(int i)
               case 2:
                 action.target.y = (i-ofsy)/1000.0;;
                 step=0;
-                action.target.z = 0;
+                action.target.z = zZz;
                 action.param = power;
                 action.ActionType =  (command ? AT_LASER : AT_MOVE);
                 if ( bitmap_enable && (action.ActionType == AT_LASER))
@@ -440,6 +442,12 @@ void LaosMotion::getCurrentPositionAbsolute(int *x, int *y, int *z)
   *z = zz * 1000;
 }
 
+void LaosMotion::setZ() 
+{
+  float x,y;
+  plan_get_current_position_xyz(&x, &y, &zZz);
+}
+
 void LaosMotion::getPlannedPositionRelativeToOrigin(int *x, int *y, int *z)
 {
   getPlannedPositionAbsolute(x, y, z);
@@ -541,5 +549,16 @@ void LaosMotion::home(int x, int y, int z)
 
 }
 
-
-
+void LaosMotion::laserEnable() {
+  extern GlobalConfig *cfg;
+  pwm = cfg->pwmmin/100.0;
+  laser_enable = cfg->lenable;
+  wait(5);
+}
+ 
+void LaosMotion::laserDisable() {
+  extern GlobalConfig *cfg;
+  pwm = cfg->pwmmin/100.0;
+  laser_enable = !cfg->lenable;
+  wait(1);
+}

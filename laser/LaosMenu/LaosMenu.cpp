@@ -216,7 +216,7 @@ bool LaosMenu::Cancel() {
 *** something changed
 **/
 void LaosMenu::Handle() {
-//    int xt, yt, zt, 
+	int xx, yy, zz = 0;
     int nodisplay = 0;
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
@@ -516,11 +516,14 @@ void LaosMenu::Handle() {
                         break; */
                     default:
                         if (runfile == NULL) {
+						    mot->setZ();
                             runfile = sd.openfile(jobname, "rb");
                             if (! runfile) 
                               screen=MAIN;
-                            else
+                            else {
                                mot->reset();
+							   mot->laserEnable();
+							}
                         } else {
                                 #ifdef READ_FILE_DEBUG
                                     printf("Parsing file: \n");
@@ -542,7 +545,8 @@ void LaosMenu::Handle() {
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
-                                mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest);
+                                mot->getCurrentPositionAbsolute(&xx,&yy,&zz);
+								mot->moveToAbsolute(cfg->xrest, cfg->yrest, zz);
                                 screen=MAIN;
                             } else {
                                 nodisplay = 1;

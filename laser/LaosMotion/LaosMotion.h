@@ -47,6 +47,7 @@ public:
   void home(int xhome, int yhome, int zhome); // home the system, move to the sensors and set the specified position
   bool isStart(); // start button is enabled
   bool isHome; // system is homed
+  void setZ();
   void setPositionRelativeToOrigin(int x, int y, int z);
   void setPositionAbsolute(int x, int y, int z);
   void getCurrentPositionRelativeToOrigin(int *x, int *y, int *z);
@@ -62,6 +63,8 @@ public:
   int queue(); // queued items
   void getLimitsRelative(int *minx, int *miny, int *minz, int *maxx, int *maxy, int *maxz);
   void UpdatePlannedCoordinates(const tActionRequest *action);
+  void laserEnable();
+  void laserDisable();
 
 private:
   int m_PlannedXAbsolute, m_PlannedYAbsolute, m_PlannedZAbsolute; // in absolute coordinates
