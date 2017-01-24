@@ -169,6 +169,8 @@ int main()
     mot->home(cfg->xhome,cfg->yhome, cfg->zhome);
     // if ( !mot->isHome ) exit(1);
     printf("HOME DONE. (%d,%d, %d)\n",cfg->xhome,cfg->yhome,cfg->zhome);
+    if ( cfg->gorest ) 
+	  mot->moveToAbsolute(cfg->xrest, cfg->yrest, cfg->zrest, 30, 0);
   }
   else
     printf("Homing skipped: %d\n", cfg->autohome);

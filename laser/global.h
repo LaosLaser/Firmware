@@ -44,6 +44,7 @@ public:
   int autohome; // automatically home the axis at startup
   int autozhome; // automatically home the zaxis as well
   int nodisplay; // there is no display 
+  int gorest; // go to rest position after startup
   int cleandir; // remove files from SD at startup
   int i2cbaud; // i2cBaudrate
   int cover; // machine has a cover switch

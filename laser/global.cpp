@@ -73,6 +73,7 @@ GlobalConfig::GlobalConfig(const std::string& filename)
     // features
     cfg.Value("sys.autohome", &autohome, 0);
     cfg.Value("sys.autozhome", &autozhome, 0);
+    cfg.Value("sys.gorest", &gorest, 1);
     cfg.Value("sys.nodisplay", &nodisplay, 1);
 	cfg.Value("sys.cover", &cover, 1);
     cfg.Value("sys.i2cbaud", &i2cbaud, 9600);
