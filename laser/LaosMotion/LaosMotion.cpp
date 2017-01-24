@@ -316,6 +316,7 @@ void LaosMotion::write(int i)
            step = 0;
            break;
          case 7: // set index,value
+            while ( queue() );// printf("-"); // wait for queue to empty
             switch ( step )
             {
               case 1:
@@ -341,6 +342,9 @@ void LaosMotion::write(int i)
                       printf("> power: %i\n",power);
                     #endif  
                     break;
+				  case 102:
+				    pwm.period(1.0/val);
+					break;
                 }
                 break;
             }
