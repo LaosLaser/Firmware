@@ -27,12 +27,17 @@
 
 TFTPServer::TFTPServer(int myport) {
     port = myport;
+    connect_cnt = 0;
     printf("TFTPServer(): port=%d\n", myport);
     ListenSock = new UDPSocket();
+    SendSock = new UDPSocket();
     state = listen;
     if (ListenSock->bind(port))
         state = tftperror;
+    if (SendSock->bind(2048))
+        state = tftperror;
     ListenSock->set_blocking(false, 1);
+    SendSock->set_blocking(false, 1);
     filecnt = 0;
 }
 
@@ -47,12 +52,16 @@ TFTPServer::~TFTPServer() {
 void TFTPServer::reset() {
     ListenSock->close();
     delete(ListenSock);
+    SendSock->close();
+    delete(SendSock);
     strcpy(remote_ip,"");
     ListenSock = new UDPSocket();
+    SendSock = new UDPSocket();
     state = listen;
     if (ListenSock->bind(port))
         state = tftperror;
     ListenSock->set_blocking(false, 1);
+    SendSock->set_blocking(false, 1);
     strcpy(filename, "");
     filecnt = 0;
 }
@@ -91,7 +100,7 @@ void TFTPServer::ConnectRead(char* buff) {
     Ack(0);
     blockcnt = 0;
     dupcnt = 0;
-
+    connect_cnt++;
     sprintf(filename, "%s", &buff[2]);
     
     if (modeOctet(buff))
@@ -106,9 +115,9 @@ void TFTPServer::ConnectRead(char* buff) {
         blockcnt = 0;
         state = reading;
         #ifdef TFTP_DEBUG
-            char debugmsg[256];
-            sprintf(debugmsg, "Listen: Requested file %s from TFTP connection %d.%d.%d.%d port %d",
-                filename, clientIp[0], clientIp[1], clientIp[2], clientIp[3], clientPort);
+            char debugmsg[128];
+            sprintf(debugmsg, "Listen: Requested file %s from TFTP connection %d.%d.%d.%d:s%d",
+                filename, (int)remote_ip [0], (int)remote_ip [1], (int)remote_ip [2], (int)remote_ip [3],  (int)remote_port);
             TFTP_DEBUG(debugmsg);
         #endif
         getBlock();
@@ -119,14 +128,18 @@ void TFTPServer::ConnectRead(char* buff) {
 // create a new connection writing a file to the server
 void TFTPServer::ConnectWrite(char* buff) {
     extern LaosFileSystem sd;
+    // printf("ConnectWrite()\n");
     remote_ip = client.get_address();
     remote_port = client.get_port();
     Ack(0);
     blockcnt = 0;
     dupcnt = 0;
+    connect_cnt++;
 
     sprintf(filename, "%s", &buff[2]);
     sd.shorten(filename, MAXFILESIZE);
+    // printf("filename: %s\n", filename);
+    
     if (modeOctet(buff))
         fp = sd.openfile(filename, "wb");
     else
@@ -139,13 +152,15 @@ void TFTPServer::ConnectWrite(char* buff) {
         // file ready for writing
         blockcnt = 0;
         state = writing;
+        // printf("ready for writing");
         #ifdef TFTP_DEBUG 
             char debugmsg[256];
             sprintf(debugmsg, "Listen: Incoming file %s on TFTP connection from %d.%d.%d.%d clientPort %d",
-                filename, clientIp[0], clientIp[1], clientIp[2], clientIp[3], clientPort);
+                filename, remote_ip [0], remote_ip [1], remote_ip [2], remote_ip [3],  remote_port);
             TFTP_DEBUG(debugmsg);
         #endif
     }
+    // printf("Done.\n");
 }
 
 // get DATA block from file on disk into memory
@@ -163,7 +178,7 @@ void TFTPServer::getBlock() {
 
 // send DATA block to the client
 void TFTPServer::sendBlock() {
-    ListenSock->sendTo(client, sendbuff, blocksize);
+    SendSock->sendTo(client, sendbuff, blocksize);
 }
 
 
@@ -175,35 +190,45 @@ int TFTPServer::cmpHost() {
     return ((strcmp(ip, remote_ip) == 0) && (port == remote_port));
 }
 
+
 // send ACK to remote
 void TFTPServer::Ack(int val) {
     char ack[4];
+   // printf("Ack(%d)\n", val);
     ack[0] = 0x00;
     ack[1] = 0x04;
     if ((val>603135) || (val<0)) val = 0;
     ack[2] = val >> 8;
     ack[3] = val & 255;
-    ListenSock->sendTo(client, ack, 4);
+   // printf("Ack() %d.%d.%d.%d:%d\n", (int)client.get_address()[0], (int)client.get_address()[1], (int)client.get_address()[2], (int)client.get_address()[3], (int)client.get_port() );
+    SendSock->sendTo(client, ack, 4);
 }
 
 // send ERR message to named client
 void TFTPServer::Err(const std::string& msg) {
     char message[32];
-    strncpy(message, msg.c_str(), 32);
     char err[37];
+    printf("Err(%s)\n", msg.c_str());
+    strncpy(message, msg.c_str(), 32);
     sprintf(err, "0000%s0", message);
     err[0] = 0x00;
     err[1] = 0x05;
-    err[2]=0x00;
-    err[3]=0x00;
+    err[2] = 0x00;
+    err[3] = 0x00;
     int len = strlen(err);
     err[len-1] = 0x00;
-    ListenSock->sendTo(client, err, len);
+    SendSock->sendTo(client, err, len);
     #ifdef TFTP_DEBUG
         char debugmsg[256];
         sprintf(debugmsg, "Error: %s", message);
         TFTP_DEBUG(debugmsg);
     #endif
+    if ( fp != NULL ) {
+		fclose(fp);
+		fp=NULL;
+	}
+	state = listen; 	// terminate connectiom
+	strcpy(remote_ip,"");
 }
 
 // check if connection mode of client is octet/binary
@@ -219,18 +244,27 @@ int TFTPServer::modeOctet(char* buff) {
 }
 
 // event driven routines to handle incoming packets
+// A bit naive: only support one client. The 1st packet will be received on TFTP port (69) then we will reply by sending packets on the WriteSocket(2048) and all
+// subsequent packets will be received on that port also
 void TFTPServer::poll() {
     if ((state == suspended) || (state == deleted) || (state == tftperror)) {
         return;
     }
-    ListenSock->set_blocking(false,1);
     char buff[592];
     int len = ListenSock->receiveFrom(client, buff, sizeof(buff));
-    
     if (len == 0) {
-        return;
+		len = SendSock->receiveFrom(client, buff, sizeof(buff));
     }
-    printf("Got block with size %d\n\r", len);
+    if (len == 0) {
+		return;
+    }
+
+    // printf("Got block with size %d, state=%d, buff[1]=%d\n\r", len, (int)state, (int)buff[1]);
+           #ifdef TFTP_DEBUG 
+            char debugmsg[256];	
+      //      sprintf(debugmsg, "from %d.%d.%d.%d clientPort %d", (int)remote_ip [0], (int)remote_ip [1], (int)remote_ip [2], (int)remote_ip [3],  remote_port);
+      //      TFTP_DEBUG(debugmsg);
+        #endif
     switch (state) {
         case listen: {
             switch (buff[1]) {
@@ -268,24 +302,15 @@ void TFTPServer::poll() {
 	                    }
 	                    if (dupcnt>10) { // too many dups, stop sending
 	                        Err("Too many dups");
-	                        fclose(fp);
-	                        state=listen;
-                            strcpy(remote_ip,"");
 	                    }
 	                    break;
 	                case 0x02:
 	                    // this should never happen, ignore
 	                    Err("WRQ received on open read sochet");
-                        fclose(fp);
-                        state=listen;
-                        strcpy(remote_ip,"");
 	                    break; // case 0x02
 	                case 0x03:
 	                    // we are the sending side, ignore
 	                    Err("Received data package on sending socket");
-                        fclose(fp);
-                        state=listen;
-                        strcpy(remote_ip,"");
 	                    break;
 	                case 0x04:
 	                    // last packet received, send next if there is one
@@ -301,9 +326,6 @@ void TFTPServer::poll() {
 	                    break;
 	                default:  // this includes 0x05 errors
 	                    Err("Received 0x05 error message");
-	                    fclose(fp);
-	                    state = listen;
-                        strcpy(remote_ip,"");
 	                    break;
 	            } // switch (buff[1])
             else 
@@ -333,16 +355,11 @@ void TFTPServer::poll() {
 	                    } else { // mismatch in block nr
 	                        if ((blockcnt+1) < block) { // too high
                                 Err("Packet count mismatch");
-	                            fclose(fp);
-	                            state = listen;
 	                            remove(filename);
-                                strcpy(remote_ip,"");
 	                         } else { // duplicate packet, send ACK again
 	                            if (dupcnt > 10) {
 	                                Err("Too many dups");
-	                                fclose(fp);
 	                                remove(filename);
-	                                state = listen;
 	                            } else {
 	                                Ack(blockcnt);
                                     dupcnt++;
@@ -352,8 +369,8 @@ void TFTPServer::poll() {
                         if (len<516) {
                             Ack(blockcnt);
                             fclose(fp);
-                            state = listen;
                             strcpy(remote_ip,"");
+                            state = listen;
                             filecnt++;
                             printf("File receive finished\n");
                         }

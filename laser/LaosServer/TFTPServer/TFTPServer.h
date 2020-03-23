@@ -101,6 +101,7 @@ private:
     // void onListenUDPSocketEvent(UDPSocketEvent e);
     int port; // The TFTP port
     UDPSocket* ListenSock;      // main listening socket (dflt: UDP port 69)
+    UDPSocket* SendSock;		// local socket to send UDP packets
     TFTPServerState state;      // current TFTP server state
     char* remote_ip;         // connected remote Host IP
     int remote_port;            // connected remote Host Port
@@ -111,6 +112,7 @@ private:
     char filename[256];         // current (or most recent) filename
     //Ticker TFTPServerTimer;     // timeout timer
     int filecnt;                // received file counter
+    int connect_cnt;			// Connection counter
     Endpoint client;
 };
 

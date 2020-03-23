@@ -531,7 +531,7 @@ void installFirmware(char *filename) {
     removeFirmware();
     char buff[512];
     extern LaosFileSystem sd;
-    //printf("Copy firmware file %s\n\r", filename);
+    printf("Copy firmware file %s\n\r", filename);
     FILE *fp = sd.openfile(filename, "rb");
     if (fp) {
         FILE *fp2 = fopen("/local/firmware.bin", "wb");
